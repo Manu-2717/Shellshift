@@ -46,9 +46,9 @@ export interface SeedChallengeDef {
 export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "operation-inversion",
-    title: "Operation Inversion (Level 1)",
+    title: "Operation Inversion: Sector Breach (Level 1)",
     description:
-      "Telemetry indicates an altered command shell matrix where directory navigation and creation operations have been transposed. Decode the clue blocks to infer the command mapping and deploy the breach folder.",
+      "An automated intrusion countermeasure has scrambled standard Linux shell behavior. Decode 3 progressive clue transmissions, uncover the remapped commands, create the breach recovery directory /workspace/breach, and inspect the critical system signal.",
     difficulty: "EASY",
     order: 1,
     commandMappings: {
@@ -60,35 +60,46 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-1-1",
-        title: "Transposed Operations Protocol",
+        title: "Transmission 1: Directory Manipulation Remap",
         type: "base64",
         plaintextAnswer:
-          "COMMAND REMAP ACTIVE: 'cd' creates directories ('mkdir'). 'mkdir' removes files or directories ('rm'). 'cat' lists directory entries ('ls'). 'ls' reads file contents ('cat').",
+          "SHELL ALERT: 'cd' creates directories (acting as mkdir). 'mkdir' deletes directories (acting as rm).",
         encodedContent: encodeBase64(
-          "COMMAND REMAP ACTIVE: 'cd' creates directories ('mkdir'). 'mkdir' removes files or directories ('rm'). 'cat' lists directory entries ('ls'). 'ls' reads file contents ('cat')."
+          "SHELL ALERT: 'cd' creates directories (acting as mkdir). 'mkdir' deletes directories (acting as rm)."
         ),
-        hintNote: "Radix-64 binary-to-text encoding format.",
+        hintNote: "Base64 radix encoding. Look up the Base64 index table in the Static Reference tab.",
       },
       {
         id: "clue-1-2",
-        title: "Mission Objective Transmission",
+        title: "Transmission 2: Inspection Tools Remap",
+        type: "hex",
+        plaintextAnswer:
+          "SHELL ALERT: 'cat' lists directory entries (acting as ls). 'ls' reads file contents (acting as cat).",
+        encodedContent: encodeHex(
+          "SHELL ALERT: 'cat' lists directory entries (acting as ls). 'ls' reads file contents (acting as cat)."
+        ),
+        hintNote: "Hexadecimal byte encoding (0x..). Look up ASCII Hex in the Static Reference tab.",
+      },
+      {
+        id: "clue-1-3",
+        title: "Transmission 3: Actionable Directive",
         type: "morse",
         plaintextAnswer:
-          "DEPLOY TARGET: RUN 'cd /workspace/breach' TO CREATE BREACH FOLDER, THEN READ /clues/signal.txt",
+          "DIRECTIVE: RUN 'cd /workspace/breach' TO CREATE BREACH DIRECTORY, THEN RUN 'ls /system/signal.txt' TO READ SYSTEM SIGNAL",
         encodedContent: encodeMorse(
-          "DEPLOY TARGET: RUN 'cd /workspace/breach' TO CREATE BREACH FOLDER, THEN READ /clues/signal.txt"
+          "DIRECTIVE: RUN 'cd /workspace/breach' TO CREATE BREACH DIRECTORY, THEN RUN 'ls /system/signal.txt' TO READ SYSTEM SIGNAL"
         ),
-        hintNote: "Standard International Morse telecommunication code.",
+        hintNote: "International Morse code (. and -). Look up Morse letters and digits in the Static Reference tab.",
       },
     ],
     initialFilesystem: {
-      "/clues/signal.txt":
-        "SIGNAL CONFIRMED: Breach authorization code = INVERSION_OMEGA_99. Mission operational.",
+      "/system/signal.txt":
+        "SYSTEM STATUS: RECOVERY SIGNAL CONFIRMED [FLAG_SIG_ALPHA_99]. Sector breach mitigated.",
       "/workspace/notes.txt":
-        "Diagnostic note: Standard shell commands are behaving atypically. Decode the transmissions on the cipher panel.",
+        "Terminal diagnostic: Standard shell commands are remapped. Refer to the 3 decoded cipher transmissions.",
     },
     objectiveConfig: {
-      description: "Create directory /workspace/breach and inspect /clues/signal.txt",
+      description: "Create directory /workspace/breach and inspect /system/signal.txt",
       rules: [
         {
           type: "dir_exists",
@@ -98,20 +109,22 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         {
           type: "min_commands",
           content: "1",
-          description: "Executed at least one command in the terminal",
+          description: "Executed recovery commands in the terminal",
         },
       ],
     },
     hints: [
       {
-        title: "Decoding Base64",
-        content: "Use the built-in cipher scratchpad to decode the Base64 clue. Notice how 'cd' is mapped to 'mkdir'.",
+        title: "Decoding the Transmissions",
+        content:
+          "Inspect Clues 1 and 2 to discover that 'cd' creates directories while 'ls' reads file contents. Use the Static Reference tab for lookup tables.",
         penaltySeconds: 15,
         order: 1,
       },
       {
-        title: "Creating the Breach Folder",
-        content: "Since 'cd' performs 'mkdir', executing 'cd breach' or 'cd /workspace/breach' creates the folder!",
+        title: "Deploying Recovery",
+        content:
+          "Type 'cd /workspace/breach' into the terminal to create the folder, then 'ls /system/signal.txt' to read the signal file.",
         penaltySeconds: 30,
         order: 2,
       },
@@ -119,9 +132,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
   {
     slug: "the-cryptic-agent",
-    title: "The Cryptic Agent (Level 2)",
+    title: "The Cryptic Agent: Shadow Backdoor (Level 2)",
     description:
-      "An intercepted operative transmission reveals hidden system aliases. Inspect the nested filesystem, discover remapped utility behaviors, and plant the operative key.",
+      "An intercepted operative frequency reveals hidden command aliases. Follow 3 cryptographic clues, discover how touch, pwd, and rm are transposed, inspect the concealed shadow vault, and deploy the operative authorization key.",
     difficulty: "MEDIUM",
     order: 2,
     commandMappings: {
@@ -132,53 +145,71 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-2-1",
-        title: "Sysadmin Aliases Log",
+        title: "Intercept 1: Navigation and Touch Transposition",
         type: "hex",
         plaintextAnswer:
-          "OPERATIVE ALIAS MATRIX: 'touch' prints working directory ('pwd'). 'pwd' creates empty files ('touch'). 'rm' outputs file content ('cat').",
+          "OPERATIVE ALIAS 1: 'touch' prints working directory (acting as pwd). 'pwd' creates empty files (acting as touch).",
         encodedContent: encodeHex(
-          "OPERATIVE ALIAS MATRIX: 'touch' prints working directory ('pwd'). 'pwd' creates empty files ('touch'). 'rm' outputs file content ('cat')."
+          "OPERATIVE ALIAS 1: 'touch' prints working directory (acting as pwd). 'pwd' creates empty files (acting as touch)."
         ),
-        hintNote: "Base-16 hexadecimal UTF-8 character representation.",
+        hintNote: "Hexadecimal UTF-8 byte stream. Check the Hex & ASCII table in Static Reference.",
       },
       {
         id: "clue-2-2",
-        title: "Operative Directive",
+        title: "Intercept 2: Safe Inspection Protocol",
         type: "rot13",
         plaintextAnswer:
-          "TARGET OBJECTIVE: INSPECT /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'",
+          "OPERATIVE ALIAS 2: 'rm' outputs file content (acting as cat). It displays files safely without deleting them.",
         encodedContent: encodeRot13(
-          "TARGET OBJECTIVE: INSPECT /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'"
+          "OPERATIVE ALIAS 2: 'rm' outputs file content (acting as cat). It displays files safely without deleting them."
         ),
-        hintNote: "ROT13 symmetric alphabet rotation.",
+        hintNote: "ROT13 symmetric alphabet rotation. Check the ROT13 table in the Static Reference tab.",
+      },
+      {
+        id: "clue-2-3",
+        title: "Intercept 3: Key Deployment Mission",
+        type: "url_percent",
+        plaintextAnswer:
+          "TARGET: READ /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'",
+        encodedContent: encodeUrlPercent(
+          "TARGET: READ /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'"
+        ),
+        hintNote: "URL percent-encoding (%XX). Check the URL Percent table in Static Reference.",
       },
     ],
     initialFilesystem: {
       "/etc/shadow_cipher.txt":
-        "AGENT VERIFICATION PASSCODE: 0x9F_SHADOW_RUNNER\nProceed with clearance deployment.",
-      "/var/log/syslog": "System kernel loaded. Shadow agent protocol engaged.",
-      "/workspace/readme.md": "Operative terminal initialized. Locate shadow cipher.",
+        "AGENT VERIFICATION CODE: 0x9F_SHADOW_RUNNER\nClearance badge authorized.",
+      "/var/log/syslog": "Kernel operative daemon active. Shadow protocol engaged.",
+      "/workspace/readme.md": "Operative session engaged. Consult the 3 intercepted clue transmissions.",
     },
     objectiveConfig: {
-      description: "Deploy /workspace/agent.key",
+      description: "Deploy operative key /workspace/agent.key and verify terminal identity",
       rules: [
         {
           type: "file_exists",
           path: "/workspace/agent.key",
           description: "File /workspace/agent.key has been successfully deployed",
         },
+        {
+          type: "min_commands",
+          content: "2",
+          description: "Executed at least two investigative operations in the terminal",
+        },
       ],
     },
     hints: [
       {
-        title: "Reading Files with Remapped Commands",
-        content: "Notice the Hex clue reveals that 'rm' is remapped to 'cat'. Running 'rm /etc/shadow_cipher.txt' displays its content safely!",
+        title: "Reading Without Deleting",
+        content:
+          "Clue 2 reveals that 'rm' is remapped to 'cat'. Running 'rm /etc/shadow_cipher.txt' displays its content without deleting anything!",
         penaltySeconds: 20,
         order: 1,
       },
       {
-        title: "Deploying the Agent Key",
-        content: "'pwd' is remapped to 'touch'. Run 'pwd /workspace/agent.key' to create the target file.",
+        title: "Creating the Target Key",
+        content:
+          "Clue 1 shows 'pwd' acts as 'touch'. Execute 'pwd /workspace/agent.key' to deploy the target key file.",
         penaltySeconds: 40,
         order: 2,
       },
@@ -188,7 +219,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "deep-breach-babel",
     title: "Deep Breach: Operation Babel (Level 3)",
     description:
-      "A high-stakes multi-stage vault breach combining nested directory structures, binary byte streams, ASCII decimal codes, and URL percent-encoding.",
+      "A high-stakes multi-stage vault breach under critical lockdown. Decrypt 4 phased intercepts, establish the secured core directory /opt/vault/core, replicate the master security fragment, and purge the exposed temporary buffer.",
     difficulty: "HARD",
     order: 3,
     commandMappings: {
@@ -199,69 +230,87 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-3-1",
-        title: "Phase 1 - Matrix Reassignment",
+        title: "Phase 1 Intercept: Directory Synthesis",
         type: "binary",
         plaintextAnswer:
-          "PHASE 1 REMAPPINGS: 'mv' copies nodes ('cp'). 'cp' removes nodes ('rm'). 'grep' creates directories ('mkdir').",
+          "PHASE 1: Matrix transposition active: 'grep' creates directories with parents (acting as 'mkdir -p').",
         encodedContent: encodeBinary(
-          "PHASE 1 REMAPPINGS: 'mv' copies nodes ('cp'). 'cp' removes nodes ('rm'). 'grep' creates directories ('mkdir')."
+          "PHASE 1: Matrix transposition active: 'grep' creates directories with parents (acting as 'mkdir -p')."
         ),
-        hintNote: "8-bit Base-2 binary byte sequences.",
+        hintNote: "8-bit binary byte sequences. Compare against the Binary guide in Static Reference.",
       },
       {
         id: "clue-3-2",
-        title: "Phase 2 - Vault Infiltration",
+        title: "Phase 2 Intercept: File Management Remap",
         type: "ascii_decimal",
         plaintextAnswer:
-          "PHASE 2 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core', THEN COPY /opt/vault/secrets/fragment_a.dat INTO /opt/vault/core/master.key USING 'mv'",
+          "PHASE 2: File utilities transposed: 'mv' copies files (acting as 'cp'). 'cp' deletes files (acting as 'rm').",
         encodedContent: encodeAsciiDecimal(
-          "PHASE 2 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core', THEN COPY /opt/vault/secrets/fragment_a.dat INTO /opt/vault/core/master.key USING 'mv'"
+          "PHASE 2: File utilities transposed: 'mv' copies files (acting as 'cp'). 'cp' deletes files (acting as 'rm')."
         ),
-        hintNote: "Base-10 integer ASCII character code array.",
+        hintNote: "Base-10 integer ASCII character code sequence. Look up in the Hex & ASCII table.",
       },
       {
         id: "clue-3-3",
-        title: "Phase 3 - Evidence Purge",
-        type: "url_percent",
+        title: "Phase 3 Intercept: Vault Core Initialization",
+        type: "morse",
         plaintextAnswer:
-          "PHASE 3 CLEANUP: REMOVE TEMPORARY FILE /opt/vault/secrets/fragment_a.dat USING 'cp'",
-        encodedContent: encodeUrlPercent(
-          "PHASE 3 CLEANUP: REMOVE TEMPORARY FILE /opt/vault/secrets/fragment_a.dat USING 'cp'"
+          "PHASE 3 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core'",
+        encodedContent: encodeMorse(
+          "PHASE 3 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core'"
         ),
-        hintNote: "URL percent-encoding standard (%XX).",
+        hintNote: "Standard Morse code transmission. Look up Morse code in Static Reference.",
+      },
+      {
+        id: "clue-3-4",
+        title: "Phase 4 Intercept: Cryptographic Migration & Cleanup",
+        type: "base64",
+        plaintextAnswer:
+          "PHASE 4 TARGET: RUN 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' TO COPY KEY, THEN RUN 'cp /opt/vault/secrets/fragment_a.dat' TO PURGE TEMPORARY FRAGMENT",
+        encodedContent: encodeBase64(
+          "PHASE 4 TARGET: RUN 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' TO COPY KEY, THEN RUN 'cp /opt/vault/secrets/fragment_a.dat' TO PURGE TEMPORARY FRAGMENT"
+        ),
+        hintNote: "Radix-64 encoding. Use the Base64 section in the Static Reference tab.",
       },
     ],
     initialFilesystem: {
       "/opt/vault/secrets/fragment_a.dat": "BABEL_MASTER_CORE_KEY_9921_ALPHA",
-      "/opt/vault/config.json": '{"security_level": "max", "subsystems": 4}',
+      "/opt/vault/config.json": '{"security_level": "maximum", "lockdown": true, "core": "/opt/vault/core"}',
       "/workspace/briefing.txt":
-        "Operation Babel engaged. Breach vault core and cleanup traces before lockdown.",
+        "Operation Babel active. Follow all 4 decoded phases in order to secure the vault.",
     },
     objectiveConfig: {
       description: "Establish /opt/vault/core/master.key and purge /opt/vault/secrets/fragment_a.dat",
       rules: [
         {
+          type: "dir_exists",
+          path: "/opt/vault/core",
+          description: "Core vault directory /opt/vault/core created",
+        },
+        {
           type: "file_exists",
           path: "/opt/vault/core/master.key",
-          description: "Master key copied into /opt/vault/core/master.key",
+          description: "Master key secured at /opt/vault/core/master.key",
         },
         {
           type: "file_deleted",
           path: "/opt/vault/secrets/fragment_a.dat",
-          description: "Secret fragment purged from /opt/vault/secrets/fragment_a.dat",
+          description: "Temporary fragment purged from /opt/vault/secrets/fragment_a.dat",
         },
       ],
     },
     hints: [
       {
-        title: "Directory Creation in Babel",
-        content: "Use 'grep -p /opt/vault/core' to create the target folder since 'grep' performs 'mkdir'.",
+        title: "Phase 1 & 3: Creating the Core Folder",
+        content:
+          "Since 'grep' performs 'mkdir', running 'grep -p /opt/vault/core' creates the core directory and all required parents.",
         penaltySeconds: 30,
         order: 1,
       },
       {
-        title: "Copying and Removing",
-        content: "'mv' executes 'cp', so 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' duplicates the key. Then 'cp /opt/vault/secrets/fragment_a.dat' removes the original!",
+        title: "Phase 2 & 4: Copy and Purge",
+        content:
+          "'mv' acts as 'cp', so 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' duplicates the key. Then 'cp /opt/vault/secrets/fragment_a.dat' deletes the original file since 'cp' acts as 'rm'!",
         penaltySeconds: 60,
         order: 2,
       },

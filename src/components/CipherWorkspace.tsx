@@ -18,11 +18,7 @@ import {
   Folder,
   File,
   HelpCircle,
-  FileText,
   BookOpen,
-  ArrowRight,
-  Plus,
-  Trash2,
   CheckCircle2,
   Circle,
 } from "lucide-react";
@@ -42,13 +38,6 @@ interface TreeItem {
   size?: number;
 }
 
-interface SuspectedMapping {
-  id: string;
-  command: string;
-  suspectedAction: string;
-  tested: boolean;
-}
-
 interface CipherWorkspaceProps {
   clues: Clue[];
   treeList: TreeItem[];
@@ -62,43 +51,23 @@ export function CipherWorkspace({
   unlockedHints = [],
   runId = "default-run",
 }: CipherWorkspaceProps) {
-  const [activeTab, setActiveTab] = useState<"clues" | "scratchpad" | "reference" | "tree">("clues");
+  const [activeTab, setActiveTab] = useState<"clues" | "reference" | "tree">("clues");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Client-Side Investigation State (scoped to runId in localStorage)
+  // Client-Side Investigation State (persisted per run)
   const [investigatedClues, setInvestigatedClues] = useState<Record<string, boolean>>({});
-  const [scratchNotes, setScratchNotes] = useState<string>("");
-  const [suspectedMappings, setSuspectedMappings] = useState<SuspectedMapping[]>([]);
-  const [newCmd, setNewCmd] = useState("");
-  const [newAction, setNewAction] = useState("");
   const [refCategory, setRefCategory] = useState<"morse" | "hex" | "rot13" | "base64" | "url">("morse");
 
-  // Load persisted notes and state from localStorage
+  // Load persisted investigated status
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const savedNotes = localStorage.getItem(`shellshift_notes_${runId}`);
-      if (savedNotes !== null) setScratchNotes(savedNotes);
-
       const savedInvestigated = localStorage.getItem(`shellshift_inv_${runId}`);
       if (savedInvestigated) setInvestigatedClues(JSON.parse(savedInvestigated));
-
-      const savedMappings = localStorage.getItem(`shellshift_map_${runId}`);
-      if (savedMappings) setSuspectedMappings(JSON.parse(savedMappings));
     } catch (e) {
       console.warn("Could not load stored workspace state:", e);
     }
   }, [runId]);
-
-  // Persist notes changes
-  const handleNotesChange = (text: string) => {
-    setScratchNotes(text);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`shellshift_notes_${runId}`, text);
-      } catch {}
-    }
-  };
 
   const toggleInvestigated = (clueId: string) => {
     setInvestigatedClues((prev) => {
@@ -118,104 +87,38 @@ export function CipherWorkspace({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleAddMapping = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newCmd.trim() || !newAction.trim()) return;
-    const item: SuspectedMapping = {
-      id: Date.now().toString(),
-      command: newCmd.trim().toLowerCase(),
-      suspectedAction: newAction.trim(),
-      tested: false,
-    };
-    const updated = [...suspectedMappings, item];
-    setSuspectedMappings(updated);
-    setNewCmd("");
-    setNewAction("");
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`shellshift_map_${runId}`, JSON.stringify(updated));
-      } catch {}
-    }
-  };
-
-  const handleToggleTested = (id: string) => {
-    const updated = suspectedMappings.map((m) =>
-      m.id === id ? { ...m, tested: !m.tested } : m
-    );
-    setSuspectedMappings(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`shellshift_map_${runId}`, JSON.stringify(updated));
-      } catch {}
-    }
-  };
-
-  const handleRemoveMapping = (id: string) => {
-    const updated = suspectedMappings.filter((m) => m.id !== id);
-    setSuspectedMappings(updated);
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(`shellshift_map_${runId}`, JSON.stringify(updated));
-      } catch {}
-    }
-  };
-
-  const handleSendClueToNotes = (clue: Clue, idx: number) => {
-    const header = `\n--- Clue #${idx + 1}: ${clue.title} (${clue.type.toUpperCase()}) ---\nEncoded: ${clue.encodedContent}\nNotes: `;
-    const updatedNotes = scratchNotes ? `${scratchNotes}\n${header}` : header.trim();
-    handleNotesChange(updatedNotes);
-    setActiveTab("scratchpad");
-  };
-
   return (
     <div className="flex flex-col h-full bg-[#09090b] border border-neutral-800 rounded-lg overflow-hidden font-mono text-xs shadow-xl">
       {/* Workspace Tab Header */}
       <div className="bg-[#121215] border-b border-neutral-800 px-2.5 py-1.5 flex items-center justify-between select-none shrink-0">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab("clues")}
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
               activeTab === "clues"
                 ? "bg-neutral-800 text-cyan-400 font-bold border border-neutral-700"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
             <KeyRound className="w-3.5 h-3.5 text-cyan-400" />
-            Clues ({clues.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("scratchpad")}
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
-              activeTab === "scratchpad"
-                ? "bg-neutral-800 text-cyan-400 font-bold border border-neutral-700"
-                : "text-neutral-400 hover:text-white"
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 text-amber-400" />
-            Scratchpad & Notes
-            {suspectedMappings.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-300 text-[10px] flex items-center justify-center font-bold">
-                {suspectedMappings.length}
-              </span>
-            )}
+            Cipher Clues ({clues.length})
           </button>
 
           <button
             onClick={() => setActiveTab("reference")}
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
               activeTab === "reference"
                 ? "bg-neutral-800 text-cyan-400 font-bold border border-neutral-700"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
             <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
-            Reference
+            Static Reference
           </button>
 
           <button
             onClick={() => setActiveTab("tree")}
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded transition-colors flex items-center gap-1.5 text-xs font-medium whitespace-nowrap ${
               activeTab === "tree"
                 ? "bg-neutral-800 text-cyan-400 font-bold border border-neutral-700"
                 : "text-neutral-400 hover:text-white"
@@ -233,7 +136,7 @@ export function CipherWorkspace({
 
       {/* Tab Content Body */}
       <div className="flex-1 p-3 overflow-y-auto">
-        {/* TAB 1: CIPHER CLUES (MANUAL DECODING) */}
+        {/* TAB 1: CIPHER CLUES */}
         {activeTab === "clues" && (
           <div className="space-y-3">
             <div className="pb-2 border-b border-neutral-800 flex items-center justify-between">
@@ -286,7 +189,7 @@ export function CipherWorkspace({
                             ? "bg-emerald-950 text-emerald-300 border-emerald-800"
                             : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white"
                         }`}
-                        title="Mark as investigated for your team"
+                        title="Mark as investigated"
                       >
                         {isInvestigated ? (
                           <>
@@ -305,14 +208,14 @@ export function CipherWorkspace({
 
                   {/* Encoded Content Display */}
                   <div className="relative group">
-                    <pre className="p-2.5 rounded bg-[#09090b] border border-neutral-800/80 text-cyan-300 whitespace-pre-wrap break-all text-[11px] select-all max-h-36 overflow-y-auto font-mono">
+                    <pre className="p-2.5 rounded bg-[#09090b] border border-neutral-800/80 text-cyan-300 whitespace-pre-wrap break-all text-[11px] select-all max-h-40 overflow-y-auto font-mono">
                       {clue.encodedContent}
                     </pre>
 
                     <div className="absolute top-2 right-2 flex items-center gap-1">
                       <button
                         onClick={() => handleCopy(clue.encodedContent, clue.id)}
-                        className="px-2 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 transition-colors flex items-center gap-1 text-[10px] font-medium"
+                        className="px-2.5 py-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 transition-colors flex items-center gap-1 text-[10px] font-medium"
                         title="Copy Encoded String"
                       >
                         {copiedId === clue.id ? (
@@ -323,22 +226,14 @@ export function CipherWorkspace({
                         ) : (
                           <>
                             <Copy className="w-3 h-3" />
-                            <span>Copy</span>
+                            <span>Copy Clue</span>
                           </>
                         )}
-                      </button>
-                      <button
-                        onClick={() => handleSendClueToNotes(clue, idx)}
-                        className="px-2 py-1 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white border border-neutral-700 transition-colors flex items-center gap-1 text-[10px]"
-                        title="Send to Scratchpad"
-                      >
-                        <FileText className="w-3 h-3 text-amber-400" />
-                        <span>Notes</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Author Note / Hint */}
+                  {/* Author Note / Context */}
                   <div className="text-[10px] text-neutral-400 flex items-start gap-1.5 pt-0.5">
                     <span className="text-neutral-500 font-semibold shrink-0">Context:</span>
                     <span className="text-neutral-300">{clue.hintNote}</span>
@@ -367,136 +262,7 @@ export function CipherWorkspace({
           </div>
         )}
 
-        {/* TAB 2: MANUAL INVESTIGATION SCRATCHPAD & HYPOTHESIS MAPPING */}
-        {activeTab === "scratchpad" && (
-          <div className="space-y-4">
-            {/* Suspected Command Mappings Builder */}
-            <div className="p-3 rounded-lg bg-[#121215] border border-neutral-800 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-white font-bold text-xs flex items-center gap-1.5">
-                    <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                    Suspected Command Mappings
-                  </span>
-                  <p className="text-[10px] text-neutral-400">
-                    Record your hypotheses of how Linux commands behave in this level.
-                  </p>
-                </div>
-                <span className="text-[10px] text-neutral-500">
-                  {suspectedMappings.length} recorded
-                </span>
-              </div>
-
-              {/* Add suspected mapping form */}
-              <form onSubmit={handleAddMapping} className="flex gap-1.5 items-center pt-1">
-                <input
-                  type="text"
-                  placeholder="Typed cmd (e.g. cd)"
-                  value={newCmd}
-                  onChange={(e) => setNewCmd(e.target.value)}
-                  className="w-1/3 bg-[#09090b] border border-neutral-800 text-cyan-300 px-2.5 py-1.5 rounded outline-none focus:border-cyan-500 text-xs font-mono"
-                />
-                <span className="text-neutral-500 font-bold">→</span>
-                <input
-                  type="text"
-                  placeholder="Suspected action (e.g. mkdir)"
-                  value={newAction}
-                  onChange={(e) => setNewAction(e.target.value)}
-                  className="flex-1 bg-[#09090b] border border-neutral-800 text-emerald-300 px-2.5 py-1.5 rounded outline-none focus:border-cyan-500 text-xs font-mono"
-                />
-                <button
-                  type="submit"
-                  className="px-2.5 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 rounded text-xs font-medium flex items-center gap-1 shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5 text-cyan-400" />
-                  Add
-                </button>
-              </form>
-
-              {/* Suspected mapping list */}
-              {suspectedMappings.length > 0 ? (
-                <div className="space-y-1.5 pt-1 max-h-40 overflow-y-auto">
-                  {suspectedMappings.map((m) => (
-                    <div
-                      key={m.id}
-                      className="p-2 rounded bg-[#09090b] border border-neutral-800/80 flex items-center justify-between text-xs font-mono"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-cyan-300 font-bold">&quot;{m.command}&quot;</span>
-                        <span className="text-neutral-500">maps to</span>
-                        <span className="text-emerald-300 font-bold">&quot;{m.suspectedAction}&quot;</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleToggleTested(m.id)}
-                          className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
-                            m.tested
-                              ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                              : "bg-neutral-900 text-neutral-500 border-neutral-800 hover:text-neutral-300"
-                          }`}
-                        >
-                          {m.tested ? "Verified ✓" : "Untested"}
-                        </button>
-                        <button
-                          onClick={() => handleRemoveMapping(m.id)}
-                          className="text-neutral-500 hover:text-rose-400 p-0.5"
-                          title="Remove hypothesis"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-2 text-[10px] text-neutral-500 italic text-center">
-                  No mappings recorded yet. Add hypotheses above as you decode clues.
-                </div>
-              )}
-            </div>
-
-            {/* Freeform Notes Scratchpad */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-white font-bold text-xs flex items-center gap-1.5">
-                  <FileText className="w-3.5 h-3.5 text-amber-400" />
-                  Manual Decryption Notes & Scratchpad
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-emerald-400 font-semibold">
-                    Saved locally
-                  </span>
-                  {scratchNotes && (
-                    <button
-                      onClick={() => handleCopy(scratchNotes, "scratch-notes")}
-                      className="text-[10px] text-neutral-400 hover:text-white flex items-center gap-1"
-                    >
-                      {copiedId === "scratch-notes" ? (
-                        <Check className="w-3 h-3 text-emerald-400" />
-                      ) : (
-                        <Copy className="w-3 h-3" />
-                      )}
-                      Copy Notes
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <textarea
-                value={scratchNotes}
-                onChange={(e) => handleNotesChange(e.target.value)}
-                rows={9}
-                placeholder="Write your manual decoding steps, character translations, suspected flag locations, and team hypotheses here..."
-                className="w-full bg-[#121215] border border-neutral-800 text-neutral-200 rounded-lg p-3 outline-none focus:border-cyan-500 text-xs font-mono resize-y leading-relaxed"
-              />
-              <p className="text-[10px] text-neutral-500">
-                Notes persist across page refreshes for your current challenge session.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: STATIC CIPHER REFERENCE HANDBOOK */}
+        {/* TAB 2: STATIC CIPHER REFERENCE HANDBOOK */}
         {activeTab === "reference" && (
           <div className="space-y-3">
             <div className="pb-2 border-b border-neutral-800 flex items-center justify-between">
@@ -676,7 +442,7 @@ export function CipherWorkspace({
           </div>
         )}
 
-        {/* TAB 4: VFS TREE EXPLORER */}
+        {/* TAB 3: VFS TREE EXPLORER */}
         {activeTab === "tree" && (
           <div className="space-y-2">
             <div className="text-[11px] text-neutral-400 pb-1.5 border-b border-neutral-800 flex items-center justify-between">
