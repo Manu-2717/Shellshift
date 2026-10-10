@@ -94,21 +94,21 @@ export default function RegisterPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center font-mono">
-        <div className="text-cyan-400 animate-pulse text-sm">Validating authentication session...</div>
+      <div className="min-h-screen bg-[#09090b] text-neutral-100 flex items-center justify-center font-mono">
+        <div className="text-cyan-400 text-xs">Validating authentication session...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
 
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-8 space-y-6 shadow-2xl">
+        <div className="w-full max-w-md bg-[#121215] border border-neutral-800 rounded-xl p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-lg bg-cyan-950/80 border border-cyan-500/40 mx-auto flex items-center justify-center text-cyan-400">
-              <Users className="w-6 h-6" />
+            <div className="w-10 h-10 rounded-lg bg-neutral-900 border border-neutral-700 mx-auto flex items-center justify-center text-cyan-400">
+              <Users className="w-5 h-5" />
             </div>
             <h1 className="text-xl font-bold text-white">Team Registration</h1>
             <p className="text-xs text-neutral-400">

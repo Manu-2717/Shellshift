@@ -52,7 +52,7 @@ export default async function AdminPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
       <AdminDashboardClient
         initialEvent={event}

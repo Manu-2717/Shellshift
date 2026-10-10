@@ -8,6 +8,9 @@ import {
   Shield,
   Zap,
   ArrowRight,
+  Code2,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { CIPHER_METADATA } from "@/lib/ciphers/ciphers";
 
@@ -27,170 +30,204 @@ export default async function LandingPage() {
     process.env.NODE_ENV !== "production";
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-neutral-800 py-16 md:py-24">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-neutral-950/0 to-transparent pointer-events-none" />
+      <section className="border-b border-neutral-800 py-14 md:py-20 bg-[#09090b]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+          <div className="max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-neutral-900 border border-neutral-800 text-cyan-400 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              Simulated Shell Speedrun Competition
+            </div>
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/40 text-cyan-300 text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            Competitive Linux Command Cipher Race
-          </div>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
+              Decode the Hidden Clues.
+              <br />
+              <span className="text-cyan-400">Remap the Linux Shell.</span>
+              <br />
+              Race for the Fastest Time.
+            </h1>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-tight">
-            Decode the Clues. Remap the Shell.
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
-              Race Against the Clock.
-            </span>
-          </h1>
+            <p className="text-neutral-400 text-xs md:text-sm leading-relaxed max-w-2xl">
+              In this timed wargame, familiar Linux commands perform surprising operations.
+              Teams decipher encoded clue sheets, discover active command mappings,
+              navigate an isolated virtual sandbox, and complete objectives under authoritative server timing.
+            </p>
 
-          <p className="max-w-2xl mx-auto text-neutral-400 text-sm md:text-base leading-relaxed">
-            A sandboxed browser terminal competition inspired by Linux wargames. Familiar commands
-            take on unexpected meanings. Teams decode cipher transmissions, infer active command
-            matrices, and race for server-verified victory.
-          </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              {session ? (
+                <Link
+                  href="/lobby"
+                  className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
+                >
+                  Enter Competition Lobby
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {mockAuthEnabled ? (
+                    <>
+                      <Link
+                        href="/api/auth/login?mock=true&role=user"
+                        className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
+                      >
+                        <Zap className="w-4 h-4" />
+                        Quick Play (Dev Login)
+                      </Link>
+                      <Link
+                        href="/api/auth/login?mock=true&role=admin"
+                        className="px-4 py-2.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-cyan-300 font-bold text-xs transition-colors flex items-center gap-2"
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin Console
+                      </Link>
+                    </>
+                  ) : (
+                    <Link
+                      href="/api/auth/login"
+                      className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
+                    >
+                      Sign In with OIDC Provider
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  )}
+                </div>
+              )}
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            {session ? (
               <Link
-                href="/lobby"
-                className="px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
+                href="/leaderboard"
+                className="px-4 py-2.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 font-bold text-xs transition-colors flex items-center gap-2"
               >
-                Enter Competition Lobby
-                <ArrowRight className="w-4 h-4" />
+                <Trophy className="w-4 h-4 text-amber-400" />
+                Live Leaderboard
               </Link>
-            ) : (
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {mockAuthEnabled ? (
-                  <>
-                    <Link
-                      href="/api/auth/login?mock=true&role=user"
-                      className="px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
-                    >
-                      <Zap className="w-4 h-4" />
-                      Sign In as Player (Dev Mock)
-                    </Link>
-                    <Link
-                      href="/api/auth/login?mock=true&role=admin"
-                      className="px-5 py-3 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-cyan-300 transition-colors flex items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Admin Login
-                    </Link>
-                  </>
-                ) : (
-                  <Link
-                    href="/api/auth/login"
-                    className="px-6 py-3 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
-                  >
-                    Authenticate via OIDC Provider
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                )}
-              </div>
-            )}
-
-            <Link
-              href="/leaderboard"
-              className="px-5 py-3 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 transition-colors flex items-center gap-2"
-            >
-              <Trophy className="w-4 h-4 text-amber-400" />
-              Live Leaderboard
-            </Link>
+            </div>
           </div>
 
-          {/* Event Status Banner */}
-          <div className="pt-8">
-            <div className="inline-flex items-center gap-4 px-4 py-2 rounded-lg bg-neutral-900/80 border border-neutral-800 text-xs">
-              <span className="text-neutral-500 font-sans">Active Event:</span>
-              <span className="text-neutral-200 font-bold">{currentEvent?.name || "ShellShift Event"}</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950 border border-emerald-500/40 text-emerald-300 uppercase font-semibold">
+          {/* Terminal Gameplay Preview Card */}
+          <div className="bg-[#121215] border border-neutral-800 rounded-xl overflow-hidden shadow-2xl">
+            <div className="bg-[#18181b] border-b border-neutral-800 px-4 py-2.5 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+                <span className="text-neutral-400 ml-2 font-semibold text-[11px]">
+                  sandbox_session — Operation Inversion Preview
+                </span>
+              </div>
+              <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Objective: Create /workspace/breach
+              </span>
+            </div>
+
+            <div className="p-4 space-y-2 text-xs leading-relaxed">
+              <div className="text-neutral-500 text-[11px]">
+                # Clue Block decoded: &apos;cd&apos; creates directories. &apos;ls&apos; reads file content.
+              </div>
+              <div className="flex items-center gap-2 text-neutral-200">
+                <span className="text-cyan-400 font-semibold">team_alpha@shellshift:~$</span>
+                <span className="text-white font-medium">cd /workspace/breach</span>
+              </div>
+              <div className="text-neutral-400 pl-4 border-l-2 border-neutral-700">
+                Created directory: &apos;/workspace/breach&apos; [Mapped operation: mkdir]
+              </div>
+              <div className="flex items-center gap-2 text-neutral-200 pt-1">
+                <span className="text-cyan-400 font-semibold">team_alpha@shellshift:~$</span>
+                <span className="text-white font-medium">ls /clues/signal.txt</span>
+              </div>
+              <div className="text-emerald-300 pl-4 border-l-2 border-emerald-600/60 font-semibold">
+                SIGNAL CONFIRMED: Breach authorization code = INVERSION_OMEGA_99
+              </div>
+              <div className="text-amber-400 bg-amber-950/20 border-l-2 border-amber-500 px-2 py-0.5 mt-2 text-[11px]">
+                ✓ Objective satisfied! Server recorded verified finish duration: 00:42.18
+              </div>
+            </div>
+          </div>
+
+          {/* Event Status Bar */}
+          <div className="p-3.5 rounded-lg bg-[#121215] border border-neutral-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3">
+              <span className="text-neutral-500">Active Event:</span>
+              <span className="text-white font-bold">{currentEvent?.name || "ShellShift Championship"}</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 uppercase font-bold">
                 {currentEvent?.status || "ACTIVE"}
               </span>
-              <span className="text-neutral-500">|</span>
-              <span className="text-cyan-400">{challengeCount} Challenges Available</span>
+            </div>
+            <div className="text-neutral-400">
+              <span className="text-cyan-400 font-bold">{challengeCount}</span> Solvable Challenges Configured
             </div>
           </div>
         </div>
       </section>
 
-      {/* Core Mechanics Progression */}
-      <section className="py-16 border-b border-neutral-800 bg-neutral-950">
+      {/* Mechanics Grid */}
+      <section className="py-14 border-b border-neutral-800 bg-[#0c0c0e]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">How ShellShift Works</h2>
-            <p className="text-neutral-400 text-xs max-w-xl mx-auto">
-              Four steps from registration to server-verified leaderboard glory.
+          <div className="space-y-1 mb-8">
+            <h2 className="text-xl font-bold text-white">How ShellShift Operates</h2>
+            <p className="text-neutral-400 text-xs">
+              Safe execution, cryptographic deduction, and server-side verification.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="p-5 rounded-lg bg-neutral-900/60 border border-neutral-800 space-y-3">
-              <div className="w-8 h-8 rounded bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 font-bold text-sm">
-                01
-              </div>
-              <h3 className="font-bold text-neutral-200 text-sm">Team Registration</h3>
-              <p className="text-neutral-400 text-xs leading-relaxed">
-                Authenticate via OIDC, create your team, or join teammates with a unique invite code.
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="p-4 rounded-lg bg-[#121215] border border-neutral-800 space-y-2">
+              <div className="text-cyan-400 font-black text-xs">01 / REGISTRATION</div>
+              <h3 className="font-bold text-white text-xs">Team Authentication</h3>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                Sign in with OIDC credentials, name your team, or join teammates with a unique invite code.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-neutral-900/60 border border-neutral-800 space-y-3">
-              <div className="w-8 h-8 rounded bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 font-bold text-sm">
-                02
-              </div>
-              <h3 className="font-bold text-neutral-200 text-sm">Decode Transmissions</h3>
-              <p className="text-neutral-400 text-xs leading-relaxed">
-                Inspect cipher clue blocks using the built-in scratchpad decoder to infer the remapped command matrix.
+            <div className="p-4 rounded-lg bg-[#121215] border border-neutral-800 space-y-2">
+              <div className="text-cyan-400 font-black text-xs">02 / DECODE</div>
+              <h3 className="font-bold text-white text-xs">Cryptographic Deduction</h3>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                Decode clues via Base64, Morse, Hex, or Caesar to infer how commands have been remapped.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-neutral-900/60 border border-neutral-800 space-y-3">
-              <div className="w-8 h-8 rounded bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 font-bold text-sm">
-                03
-              </div>
-              <h3 className="font-bold text-neutral-200 text-sm">Simulated Execution</h3>
-              <p className="text-neutral-400 text-xs leading-relaxed">
-                Run commands in the sandboxed virtual shell. Commands never execute on the host machine.
+            <div className="p-4 rounded-lg bg-[#121215] border border-neutral-800 space-y-2">
+              <div className="text-cyan-400 font-black text-xs">03 / EXECUTE</div>
+              <h3 className="font-bold text-white text-xs">Simulated Sandbox</h3>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                Enter commands in the browser terminal. Commands operate strictly on an isolated virtual filesystem.
               </p>
             </div>
 
-            <div className="p-5 rounded-lg bg-neutral-900/60 border border-neutral-800 space-y-3">
-              <div className="w-8 h-8 rounded bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400 font-bold text-sm">
-                04
-              </div>
-              <h3 className="font-bold text-neutral-200 text-sm">Server Validation</h3>
-              <p className="text-neutral-400 text-xs leading-relaxed">
-                The backend evaluates the resulting filesystem state and timestamps completion with microsecond precision.
+            <div className="p-4 rounded-lg bg-[#121215] border border-neutral-800 space-y-2">
+              <div className="text-cyan-400 font-black text-xs">04 / VERIFY</div>
+              <h3 className="font-bold text-white text-xs">Authoritative Timer</h3>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                The server checks the resulting state and records your finish time atomically with race protection.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Supported Cipher Formats */}
-      <section className="py-16 bg-neutral-900/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center space-y-2 mb-10">
-            <h2 className="text-2xl font-bold text-white">Supported Cipher & Encoding Systems</h2>
-            <p className="text-neutral-400 text-xs max-w-xl mx-auto">
-              Every challenge employs standardized encodings and classic ciphers with accurate technical distinctions.
+      {/* Cipher Reference Table */}
+      <section className="py-14 bg-[#09090b]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-white">Supported Encoding & Cipher Standards</h2>
+            <p className="text-neutral-400 text-xs">
+              Every challenge employs standardized encodings with accurate technical definitions.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {Object.values(CIPHER_METADATA).map((cipher) => (
               <div
                 key={cipher.type}
-                className="p-4 rounded-lg bg-neutral-900 border border-neutral-800 space-y-2 hover:border-cyan-500/40 transition-colors"
+                className="p-3.5 rounded-lg bg-[#121215] border border-neutral-800 space-y-1.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-neutral-200 text-xs">{cipher.name}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/40">
+                  <span className="font-bold text-white text-xs">{cipher.name}</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-900 text-cyan-300 border border-neutral-800">
                     {cipher.category}
                   </span>
                 </div>
@@ -204,21 +241,21 @@ export default async function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-neutral-800 py-8 bg-neutral-950 text-xs text-neutral-500">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <footer className="mt-auto border-t border-neutral-800 py-6 bg-[#09090b] text-xs text-neutral-500">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-cyan-400" />
-            <span className="text-neutral-400 font-bold">ShellShift</span>
-            <span>— Competitive Linux Command Cipher Race</span>
+            <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="text-white font-bold">ShellShift</span>
+            <span>— Linux Command Cipher Race</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/lobby" className="hover:text-cyan-400 transition-colors">
+            <Link href="/lobby" className="hover:text-white transition-colors">
               Lobby
             </Link>
-            <Link href="/leaderboard" className="hover:text-cyan-400 transition-colors">
+            <Link href="/leaderboard" className="hover:text-white transition-colors">
               Leaderboard
             </Link>
-            <Link href="/admin" className="hover:text-cyan-400 transition-colors">
+            <Link href="/admin" className="hover:text-white transition-colors">
               Admin
             </Link>
           </div>

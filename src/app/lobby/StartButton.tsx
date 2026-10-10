@@ -37,7 +37,7 @@ export function StartRunButton({ challengeId }: { challengeId: string }) {
       onClick={handleStart}
       disabled={loading}
       type="button"
-      className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-neutral-950 text-xs font-bold transition-all shadow-md shadow-cyan-600/20 flex items-center justify-center gap-1.5"
+      className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-neutral-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
     >
       <Play className="w-3.5 h-3.5 fill-current" />
       {loading ? "Initializing Sandbox..." : "Start Challenge Race"}

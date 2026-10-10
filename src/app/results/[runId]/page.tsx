@@ -51,14 +51,14 @@ export default async function ResultsPage({
   const rank = fasterRunsCount + 1;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 w-full flex-1 space-y-8">
         {/* Header Hero */}
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-emerald-950 border border-emerald-500/50 mx-auto flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-950/40">
-            <Trophy className="w-8 h-8" />
+          <div className="w-14 h-14 rounded-full bg-emerald-950 border border-emerald-500/50 mx-auto flex items-center justify-center text-emerald-400">
+            <Trophy className="w-7 h-7" />
           </div>
 
           <div className="space-y-1">
@@ -76,7 +76,7 @@ export default async function ResultsPage({
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 text-center space-y-1">
+          <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-center space-y-1">
             <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
               Current Rank
             </span>
@@ -86,7 +86,7 @@ export default async function ResultsPage({
             <span className="text-[10px] text-neutral-400">on Global Leaderboard</span>
           </div>
 
-          <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 text-center space-y-1">
+          <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-center space-y-1">
             <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
               Authoritative Time
             </span>
@@ -98,7 +98,7 @@ export default async function ResultsPage({
             </span>
           </div>
 
-          <div className="p-5 rounded-xl bg-neutral-900 border border-neutral-800 text-center space-y-1">
+          <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-center space-y-1">
             <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
               Commands Run
             </span>
@@ -110,7 +110,7 @@ export default async function ResultsPage({
         </div>
 
         {/* Detailed Breakdown */}
-        <div className="p-6 rounded-xl bg-neutral-900/60 border border-neutral-800 space-y-4 text-xs">
+        <div className="p-6 rounded-xl bg-[#121215] border border-neutral-800 space-y-4 text-xs">
           <h2 className="font-bold text-neutral-200 text-sm flex items-center gap-2">
             <Clock className="w-4 h-4 text-cyan-400" />
             Verification Timestamp Log

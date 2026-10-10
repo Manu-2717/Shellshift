@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Terminal as TerminalIcon, Trash2, Copy, Check } from "lucide-react";
+import {
+  Terminal as TerminalIcon,
+  Trash2,
+  Copy,
+  Check,
+  RotateCcw,
+  Sparkles,
+} from "lucide-react";
 
 export interface TerminalLine {
   id: string;
@@ -30,12 +37,12 @@ export function Terminal({
     {
       id: "init-1",
       type: "system",
-      content: "ShellShift Cipher Shell v2.4 initialized. Type 'help' for guidance.",
+      content: "ShellShift Cipher Shell v2.4 (Simulated Sandbox). Type 'help' for command listing.",
     },
     {
       id: "init-2",
       type: "system",
-      content: "WARNING: Terminal command matrix is remapped. Decode cipher sheet to discover active behaviors.",
+      content: "WARNING: Command tokens may have remapped meanings. Decode the cipher sheet clues to reveal the active matrix.",
     },
   ]);
 
@@ -48,7 +55,7 @@ export function Terminal({
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll
+  // Auto-scroll when lines change
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [lines]);
@@ -58,7 +65,9 @@ export function Terminal({
   };
 
   const handleCopyHistory = () => {
-    const text = lines.map((l) => (l.type === "command" ? `$ ${l.content}` : l.content)).join("\n");
+    const text = lines
+      .map((l) => (l.type === "command" ? `$ ${l.content}` : l.content))
+      .join("\n");
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -75,12 +84,10 @@ export function Terminal({
       const cmd = inputVal;
       if (!cmd.trim() && cmd === "") return;
 
-      // Add to history
       setHistory((prev) => [...prev, cmd]);
       setHistoryIdx(-1);
       setInputVal("");
 
-      // Append command prompt line
       const cmdId = "cmd-" + Date.now();
       setLines((prev) => [
         ...prev,
@@ -126,7 +133,7 @@ export function Terminal({
             {
               id: "win-" + Date.now(),
               type: "system",
-              content: `🏆 CHALLENGE SOLVED! Verified time: ${(data.durationMs / 1000).toFixed(2)}s. Finalizing race results...`,
+              content: `🏆 CHALLENGE SOLVED! Verified Time: ${(data.durationMs / 1000).toFixed(2)}s. Objective conditions fully satisfied!`,
             },
           ]);
         }
@@ -177,17 +184,24 @@ export function Terminal({
   return (
     <div
       onClick={handleContainerClick}
-      className="flex flex-col h-full bg-neutral-950 border border-neutral-800 rounded-lg overflow-hidden shadow-2xl font-mono text-xs select-text cursor-text"
+      className="flex flex-col h-full bg-[#0a0a0c] border border-neutral-800 rounded-lg overflow-hidden font-mono text-xs select-text cursor-text shadow-xl"
     >
-      {/* Terminal Titlebar */}
-      <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-2 flex items-center justify-between select-none">
-        <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
-          <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
-          <span className="ml-2 text-neutral-400 font-medium text-[11px] flex items-center gap-1.5">
+      {/* Title Bar */}
+      <div className="bg-[#121215] border-b border-neutral-800 px-3.5 py-2 flex items-center justify-between select-none">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-rose-500 transition-colors" />
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-amber-500 transition-colors" />
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-emerald-500 transition-colors" />
+          </div>
+
+          <span className="text-neutral-400 font-medium text-[11px] flex items-center gap-1.5 ml-1">
             <TerminalIcon className="w-3.5 h-3.5 text-cyan-400" />
-            simulated_sandbox (shiftsh)
+            terminal — shiftsh
+          </span>
+
+          <span className="text-[10px] text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">
+            cwd: {currentCwd}
           </span>
         </div>
 
@@ -195,23 +209,29 @@ export function Terminal({
           <button
             onClick={handleCopyHistory}
             type="button"
-            className="p-1 rounded hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 transition-colors"
-            title="Copy history"
+            className="px-2 py-1 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors flex items-center gap-1 text-[10px]"
+            title="Copy terminal session"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? (
+              <Check className="w-3 h-3 text-emerald-400" />
+            ) : (
+              <Copy className="w-3 h-3" />
+            )}
+            <span>Copy</span>
           </button>
+
           <button
             onClick={handleClear}
             type="button"
-            className="p-1 rounded hover:bg-neutral-800 text-neutral-400 hover:text-neutral-200 transition-colors"
-            title="Clear screen (Ctrl+L)"
+            className="p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors"
+            title="Clear terminal (Ctrl+L)"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* Terminal Body */}
+      {/* Terminal Output Area */}
       <div className="flex-1 p-4 overflow-y-auto space-y-2">
         {lines.map((line) => (
           <div key={line.id} className="leading-relaxed">
@@ -224,24 +244,24 @@ export function Terminal({
               </div>
             )}
             {line.type === "output" && (
-              <pre className="text-neutral-300 whitespace-pre-wrap pl-0 break-words font-mono">
+              <pre className="text-neutral-300 whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed">
                 {line.content}
               </pre>
             )}
             {line.type === "error" && (
-              <pre className="text-rose-400 whitespace-pre-wrap pl-0 break-words font-mono font-medium">
+              <pre className="text-rose-400 whitespace-pre-wrap break-words font-mono font-medium text-[12px]">
                 {line.content}
               </pre>
             )}
             {line.type === "system" && (
-              <div className="text-amber-400/90 bg-amber-950/20 border-l-2 border-amber-500/60 px-2 py-0.5 rounded-r my-1 text-[11px]">
+              <div className="text-amber-300 bg-amber-950/20 border-l-2 border-amber-500 px-2.5 py-1 rounded-r my-1 text-[11px] leading-relaxed">
                 {line.content}
               </div>
             )}
           </div>
         ))}
 
-        {/* Active Input Line */}
+        {/* Live Input Prompt */}
         <div className="flex items-center gap-2 pt-1">
           <span className="text-cyan-400 font-semibold shrink-0">
             {promptPrefix()}
@@ -257,8 +277,14 @@ export function Terminal({
               autoFocus
               spellCheck={false}
               autoComplete="off"
-              className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400"
-              placeholder={disabled ? "Run completed" : isExecuting ? "Executing..." : ""}
+              className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400 text-xs"
+              placeholder={
+                disabled
+                  ? "Run completed. Terminal locked."
+                  : isExecuting
+                  ? "Evaluating in sandbox..."
+                  : ""
+              }
             />
           </div>
         </div>

@@ -69,14 +69,14 @@ export default async function LeaderboardPage({
     .map((entry, idx) => ({ ...entry, rank: idx + 1 }));
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
-              <Trophy className="w-6 h-6 text-amber-400" />
+            <h1 className="text-xl font-bold text-white flex items-center gap-2.5">
+              <Trophy className="w-5 h-5 text-amber-400" />
               Competition Leaderboard
             </h1>
             <p className="text-xs text-neutral-400">
@@ -88,10 +88,10 @@ export default async function LeaderboardPage({
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <Link
               href="/leaderboard"
-              className={`px-3 py-1.5 rounded-lg border transition-colors ${
+              className={`px-3 py-1.5 rounded border transition-colors ${
                 !challengeSlug
                   ? "bg-neutral-800 text-cyan-400 border-neutral-700 font-bold"
-                  : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white"
+                  : "bg-[#121215] text-neutral-400 border-neutral-800 hover:text-white"
               }`}
             >
               All Challenges
@@ -100,10 +100,10 @@ export default async function LeaderboardPage({
               <Link
                 key={c.id}
                 href={`/leaderboard?challengeSlug=${c.slug}`}
-                className={`px-3 py-1.5 rounded-lg border transition-colors ${
+                className={`px-3 py-1.5 rounded border transition-colors ${
                   challengeSlug === c.slug
                     ? "bg-neutral-800 text-cyan-400 border-neutral-700 font-bold"
-                    : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:text-white"
+                    : "bg-[#121215] text-neutral-400 border-neutral-800 hover:text-white"
                 }`}
               >
                 Level {c.order}
@@ -113,10 +113,10 @@ export default async function LeaderboardPage({
         </div>
 
         {/* Leaderboard Table */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden shadow-2xl">
+        <div className="bg-[#121215] border border-neutral-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-neutral-950 border-b border-neutral-800 text-neutral-400 font-semibold uppercase tracking-wider text-[10px]">
+              <thead className="bg-[#18181b] border-b border-neutral-800 text-neutral-400 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-4 w-16">Rank</th>
                   <th className="py-3 px-4">Team</th>
@@ -139,9 +139,7 @@ export default async function LeaderboardPage({
                     return (
                       <tr
                         key={entry.runId}
-                        className={`hover:bg-neutral-800/40 transition-colors ${
-                          entry.rank === 1 ? "bg-amber-500/5" : ""
-                        }`}
+                        className="hover:bg-neutral-800/40 transition-colors"
                       >
                         <td className="py-3.5 px-4 font-bold">
                           {entry.rank === 1 ? (
