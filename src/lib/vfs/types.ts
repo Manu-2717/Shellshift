@@ -49,6 +49,7 @@ export interface ObjectiveRule {
     | "dir_deleted"
     | "file_contains"
     | "file_exact"
+    | "file_moved"
     | "min_commands"
     | "custom";
   path?: string;

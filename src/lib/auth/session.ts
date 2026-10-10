@@ -52,9 +52,10 @@ export async function getSession(): Promise<SessionUser | null> {
 export async function setSessionCookie(user: SessionUser): Promise<void> {
   const token = await createSessionToken(user);
   const cookieStore = await cookies();
+  const isSecure = process.env.COOKIE_SECURE === "true" || (process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false" && process.env.MOCK_AUTH_ENABLED !== "true");
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax",
     path: "/",
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds

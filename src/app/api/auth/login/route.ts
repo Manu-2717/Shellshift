@@ -92,9 +92,10 @@ export async function GET(request: Request) {
 
   // Store PKCE verifier, state and nonce in secure cookies for callback validation
   const cookieStore = await cookies();
+  const isSecure = process.env.COOKIE_SECURE === "true" || (process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false" && process.env.MOCK_AUTH_ENABLED !== "true");
   const cookieOpts = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isSecure,
     sameSite: "lax" as const,
     maxAge: 600, // 10 minutes
     path: "/",

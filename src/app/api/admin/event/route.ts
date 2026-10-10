@@ -3,6 +3,11 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
+  const session = await getSession();
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden: Admin privileges required." }, { status: 403 });
+  }
+
   const event = await prisma.event.findFirst({
     orderBy: { createdAt: "desc" },
   });

@@ -9,10 +9,12 @@ interface NavbarProps {
     id: string;
     name: string;
     role: "USER" | "ADMIN";
+    teamId?: string | null;
+    teamName?: string | null;
     team?: {
       id: string;
       name: string;
-      inviteCode: string;
+      inviteCode?: string;
     } | null;
   } | null;
 }
@@ -21,6 +23,7 @@ export function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
+  const activeTeamName = user?.teamName || user?.team?.name;
 
   return (
     <header className="border-b border-neutral-800 bg-[#09090b] sticky top-0 z-40 select-none">
@@ -40,7 +43,7 @@ export function Navbar({ user }: NavbarProps) {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1 text-xs font-mono">
+          <nav className="hidden sm:flex items-center gap-1 text-xs font-mono">
             <Link
               href="/lobby"
               className={`px-3 py-1.5 rounded transition-colors ${
@@ -81,19 +84,16 @@ export function Navbar({ user }: NavbarProps) {
         <div className="flex items-center gap-3 text-xs font-mono">
           {user ? (
             <div className="flex items-center gap-2.5">
-              {user.team ? (
-                <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-[#121215] border border-neutral-800 text-neutral-300">
-                  <Users className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="text-neutral-400">Team:</span>
-                  <span className="text-white font-semibold">{user.team.name}</span>
-                  <span className="text-[10px] text-neutral-400 bg-neutral-900 border border-neutral-700 px-1.5 py-0.2 rounded font-mono">
-                    #{user.team.inviteCode}
-                  </span>
+              {activeTeamName ? (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#121215] border border-neutral-800 text-neutral-300 text-xs">
+                  <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="text-neutral-400 hidden md:inline">Team:</span>
+                  <span className="text-white font-semibold max-w-[120px] sm:max-w-none truncate">{activeTeamName}</span>
                 </div>
               ) : (
                 <Link
                   href="/register"
-                  className="px-2.5 py-1 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 hover:bg-amber-900/40 transition-colors font-semibold"
+                  className="px-2.5 py-1 rounded bg-amber-950/40 border border-amber-500/40 text-amber-300 hover:bg-amber-900/40 transition-colors font-semibold text-[11px]"
                 >
                   Join / Create Team
                 </Link>

@@ -115,6 +115,12 @@ export async function POST(
     let justCompleted = false;
     let finalDurationMs = run.durationMs;
 
+    const MAX_OUTPUT_SIZE = 32768;
+    const safeOutput =
+      cmdResult.output.length > MAX_OUTPUT_SIZE
+        ? cmdResult.output.slice(0, MAX_OUTPUT_SIZE) + "\n...[output truncated by ShellShift]"
+        : cmdResult.output;
+
     if (evaluation.isCompleted) {
       const now = new Date();
       finalDurationMs = now.getTime() - run.startedAt.getTime();
@@ -140,9 +146,12 @@ export async function POST(
         justCompleted = true;
       }
     } else {
-      // Normal state update
-      await prisma.run.update({
-        where: { id: run.id },
+      // Optimistic concurrency: ensure run is still IN_PROGRESS
+      await prisma.run.updateMany({
+        where: {
+          id: run.id,
+          status: "IN_PROGRESS",
+        },
         data: {
           filesystemState: JSON.stringify(vfsState),
           currentWorkingDir: cmdResult.newCwd,
@@ -158,13 +167,13 @@ export async function POST(
         userId: session.id,
         enteredCommand: command,
         mappedOperation: cmdResult.mappedOperation,
-        output: cmdResult.output,
+        output: safeOutput,
         executionTimeMs,
       },
     });
 
     return NextResponse.json({
-      output: cmdResult.output,
+      output: safeOutput,
       exitCode: cmdResult.exitCode,
       cwd: cmdResult.newCwd,
       commandCount: nextCommandCount,

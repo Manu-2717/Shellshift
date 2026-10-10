@@ -84,6 +84,16 @@ export function evaluateObjective(
         break;
       }
 
+      case "file_moved": {
+        // file_moved succeeds if destination path exists and is a file
+        if (rule.path) {
+          const normPath = resolvePath("/", rule.path);
+          const file = getFile(state.root, normPath);
+          passed = file !== null;
+        }
+        break;
+      }
+
       case "min_commands": {
         const minReq = parseInt(rule.content || "1", 10);
         passed = commandCount >= minReq;

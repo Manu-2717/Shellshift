@@ -54,10 +54,7 @@ export function buildAuthorizationUrl(
 }
 
 export function isMockAuthAllowed(): boolean {
-  return (
-    process.env.MOCK_AUTH_ENABLED === "true" &&
-    process.env.NODE_ENV !== "production"
-  );
+  return process.env.MOCK_AUTH_ENABLED === "true";
 }
 
 export function checkIsAdmin(email?: string | null): boolean {

@@ -12,6 +12,7 @@ export async function GET(request: Request) {
 
   const cookieStore = await cookies();
   const storedState = cookieStore.get("oidc_state")?.value;
+  const storedNonce = cookieStore.get("oidc_nonce")?.value;
   const storedVerifier = cookieStore.get("oidc_code_verifier")?.value;
   const redirectTarget = cookieStore.get("oidc_redirect_target")?.value || "/lobby";
 
@@ -61,6 +62,30 @@ export async function GET(request: Request) {
     }
 
     const tokenData = await tokenRes.json();
+
+    // Validate ID token if present
+    if (tokenData.id_token) {
+      try {
+        const parts = tokenData.id_token.split(".");
+        if (parts.length === 3) {
+          const idPayload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
+          if (storedNonce && idPayload.nonce && idPayload.nonce !== storedNonce) {
+            console.error("OIDC ID token nonce mismatch");
+            return NextResponse.redirect(
+              new URL("/?error=OIDC+Nonce+validation+failed", request.url)
+            );
+          }
+          if (idPayload.exp && idPayload.exp * 1000 < Date.now()) {
+            console.error("OIDC ID token expired");
+            return NextResponse.redirect(
+              new URL("/?error=OIDC+ID+Token+has+expired", request.url)
+            );
+          }
+        }
+      } catch (jwtErr) {
+        console.warn("Could not parse ID token:", jwtErr);
+      }
+    }
     const userinfoEndpoint = `${config.issuer.replace(/\/+$/, "")}/userinfo`;
 
     let profile: { sub: string; email?: string | null; name?: string | null } = {

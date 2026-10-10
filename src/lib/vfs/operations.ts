@@ -158,6 +158,7 @@ export const operations: Record<string, OperationHandler> = {
 
     const formatted = visibleEntries
       .map((name) => {
+        if (name === "." || name === "..") return `${name}/`;
         const child = dir.children[name];
         return child && child.type === "dir" ? `${name}/` : name;
       })
@@ -212,7 +213,7 @@ export const operations: Record<string, OperationHandler> = {
       stateChanged: false,
       enteredCommand: ctx.enteredCommand,
       mappedOperation: ctx.mappedOperation,
-      objectiveCheckNeeded: true,
+      objectiveCheckNeeded: false,
     };
   },
 
@@ -394,7 +395,23 @@ export const operations: Record<string, OperationHandler> = {
   },
 
   find: (ctx) => {
-    const startArg = ctx.parsed.positionalArgs[0] || ".";
+    let startArg = ".";
+    let namePattern: string | null = null;
+    let typeFilter: string | null = null;
+
+    for (let i = 0; i < ctx.parsed.args.length; i++) {
+      const arg = ctx.parsed.args[i];
+      if (arg === "-name" && i + 1 < ctx.parsed.args.length) {
+        namePattern = ctx.parsed.args[i + 1];
+        i++;
+      } else if (arg === "-type" && i + 1 < ctx.parsed.args.length) {
+        typeFilter = ctx.parsed.args[i + 1];
+        i++;
+      } else if (!arg.startsWith("-") && startArg === ".") {
+        startArg = arg;
+      }
+    }
+
     const startPath = resolvePath(ctx.state.cwd, startArg);
     const startNode = getNode(ctx.state.root, startPath);
 
@@ -410,17 +427,39 @@ export const operations: Record<string, OperationHandler> = {
       };
     }
 
+    const matchesPattern = (name: string, pat: string) => {
+      if (pat.startsWith("*") && pat.endsWith("*") && pat.length > 2) {
+        return name.includes(pat.slice(1, -1));
+      }
+      if (pat.startsWith("*")) {
+        return name.endsWith(pat.slice(1));
+      }
+      if (pat.endsWith("*")) {
+        return name.startsWith(pat.slice(0, -1));
+      }
+      return name === pat;
+    };
+
     const results: string[] = [];
-    const walk = (currPath: string, node: VfsNode) => {
-      results.push(currPath);
+    const walk = (currPath: string, node: VfsNode, name: string) => {
+      let include = true;
+      if (typeFilter === "f" && node.type !== "file") include = false;
+      if (typeFilter === "d" && node.type !== "dir") include = false;
+      if (namePattern && !matchesPattern(name, namePattern)) include = false;
+
+      if (include) {
+        results.push(currPath);
+      }
+
       if (node.type === "dir") {
-        for (const [name, child] of Object.entries(node.children)) {
-          walk(currPath === "/" ? `/${name}` : `${currPath}/${name}`, child);
+        for (const [childName, child] of Object.entries(node.children)) {
+          walk(currPath === "/" ? `/${childName}` : `${currPath}/${childName}`, child, childName);
         }
       }
     };
 
-    walk(startPath === "/" ? "/" : startPath, startNode);
+    const baseName = startPath === "/" ? "/" : startPath.split("/").pop() || "";
+    walk(startPath === "/" ? "/" : startPath, startNode, baseName);
 
     return {
       output: results.join("\n"),
@@ -434,7 +473,12 @@ export const operations: Record<string, OperationHandler> = {
   },
 
   grep: (ctx) => {
-    if (ctx.parsed.positionalArgs.length < 2) {
+    const caseInsensitive = ctx.parsed.flags.has("i");
+    const showLineNums = ctx.parsed.flags.has("n");
+    const invert = ctx.parsed.flags.has("v");
+    const nonFlagArgs = ctx.parsed.args.filter((a) => !a.startsWith("-"));
+
+    if (nonFlagArgs.length < 2) {
       return {
         output: "grep: missing pattern or file operand",
         exitCode: 1,
@@ -446,8 +490,8 @@ export const operations: Record<string, OperationHandler> = {
       };
     }
 
-    const pattern = ctx.parsed.positionalArgs[0];
-    const fileArg = ctx.parsed.positionalArgs[1];
+    const pattern = nonFlagArgs[0];
+    const fileArg = nonFlagArgs[1];
     const filePath = resolvePath(ctx.state.cwd, fileArg);
     const file = getFile(ctx.state.root, filePath);
 
@@ -464,7 +508,17 @@ export const operations: Record<string, OperationHandler> = {
     }
 
     const lines = file.content.split("\n");
-    const matched = lines.filter((l) => l.includes(pattern));
+    const testPattern = caseInsensitive ? pattern.toLowerCase() : pattern;
+    const matched: string[] = [];
+
+    lines.forEach((line, idx) => {
+      const testLine = caseInsensitive ? line.toLowerCase() : line;
+      const contains = testLine.includes(testPattern);
+      const isMatch = invert ? !contains : contains;
+      if (isMatch) {
+        matched.push(showLineNums ? `${idx + 1}:${line}` : line);
+      }
+    });
 
     return {
       output: matched.join("\n"),
@@ -478,7 +532,33 @@ export const operations: Record<string, OperationHandler> = {
   },
 
   head: (ctx) => {
-    if (ctx.parsed.positionalArgs.length === 0) {
+    let count = 10;
+    const fileArgs: string[] = [];
+
+    for (let i = 0; i < ctx.parsed.args.length; i++) {
+      const arg = ctx.parsed.args[i];
+      if (arg === "-n" && i + 1 < ctx.parsed.args.length) {
+        const parsedNum = parseInt(ctx.parsed.args[i + 1], 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+        i++;
+      } else if (arg.startsWith("-n") && arg.length > 2) {
+        const parsedNum = parseInt(arg.slice(2), 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+      } else if (/^-\d+$/.test(arg)) {
+        const parsedNum = parseInt(arg.slice(1), 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+      } else if (!arg.startsWith("-")) {
+        fileArgs.push(arg);
+      }
+    }
+
+    if (fileArgs.length === 0) {
       return {
         output: "head: missing file operand",
         exitCode: 1,
@@ -490,7 +570,7 @@ export const operations: Record<string, OperationHandler> = {
       };
     }
 
-    const fileArg = ctx.parsed.positionalArgs[0];
+    const fileArg = fileArgs[0];
     const filePath = resolvePath(ctx.state.cwd, fileArg);
     const file = getFile(ctx.state.root, filePath);
 
@@ -507,7 +587,6 @@ export const operations: Record<string, OperationHandler> = {
     }
 
     const lines = file.content.split("\n");
-    const count = 10;
     return {
       output: lines.slice(0, count).join("\n"),
       exitCode: 0,
@@ -520,7 +599,33 @@ export const operations: Record<string, OperationHandler> = {
   },
 
   tail: (ctx) => {
-    if (ctx.parsed.positionalArgs.length === 0) {
+    let count = 10;
+    const fileArgs: string[] = [];
+
+    for (let i = 0; i < ctx.parsed.args.length; i++) {
+      const arg = ctx.parsed.args[i];
+      if (arg === "-n" && i + 1 < ctx.parsed.args.length) {
+        const parsedNum = parseInt(ctx.parsed.args[i + 1], 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+        i++;
+      } else if (arg.startsWith("-n") && arg.length > 2) {
+        const parsedNum = parseInt(arg.slice(2), 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+      } else if (/^-\d+$/.test(arg)) {
+        const parsedNum = parseInt(arg.slice(1), 10);
+        if (!isNaN(parsedNum) && parsedNum > 0) {
+          count = parsedNum;
+        }
+      } else if (!arg.startsWith("-")) {
+        fileArgs.push(arg);
+      }
+    }
+
+    if (fileArgs.length === 0) {
       return {
         output: "tail: missing file operand",
         exitCode: 1,
@@ -532,7 +637,7 @@ export const operations: Record<string, OperationHandler> = {
       };
     }
 
-    const fileArg = ctx.parsed.positionalArgs[0];
+    const fileArg = fileArgs[0];
     const filePath = resolvePath(ctx.state.cwd, fileArg);
     const file = getFile(ctx.state.root, filePath);
 
@@ -549,7 +654,6 @@ export const operations: Record<string, OperationHandler> = {
     }
 
     const lines = file.content.split("\n");
-    const count = 10;
     return {
       output: lines.slice(-count).join("\n"),
       exitCode: 0,
@@ -562,14 +666,39 @@ export const operations: Record<string, OperationHandler> = {
   },
 
   echo: (ctx) => {
-    // If echo has arguments and optionally writing to a file syntax:
-    // E.g. echo "secret_token" /path/to/dest
-    // Check if last argument looks like a destination path when more than 1 argument
-    if (ctx.parsed.positionalArgs.length >= 2) {
+    let outputFile: string | null = null;
+    const textParts: string[] = [];
+
+    for (let i = 0; i < ctx.parsed.args.length; i++) {
+      const arg = ctx.parsed.args[i];
+      if ((arg === "-o" || arg === "--output") && i + 1 < ctx.parsed.args.length) {
+        outputFile = ctx.parsed.args[i + 1];
+        i++;
+      } else {
+        textParts.push(arg);
+      }
+    }
+
+    if (outputFile) {
+      const destPath = resolvePath(ctx.state.cwd, outputFile);
+      createFile(ctx.state.root, destPath, textParts.join(" "));
+      return {
+        output: "",
+        exitCode: 0,
+        newCwd: ctx.state.cwd,
+        stateChanged: true,
+        enteredCommand: ctx.enteredCommand,
+        mappedOperation: ctx.mappedOperation,
+        objectiveCheckNeeded: true,
+      };
+    }
+
+    // Heuristic: if exactly 2 positional arguments and 2nd argument has '/' or recognized extension
+    if (ctx.parsed.positionalArgs.length === 2) {
       const text = ctx.parsed.positionalArgs[0];
       const destArg = ctx.parsed.positionalArgs[1];
-      // If destArg contains '/' or ends in .txt/.dat/.key, write to file!
-      if (destArg.includes("/") || destArg.includes(".")) {
+      const hasExt = /\.(txt|dat|key|log|conf|json|csv|md|bin)$/i.test(destArg);
+      if (destArg.includes("/") || hasExt) {
         const destPath = resolvePath(ctx.state.cwd, destArg);
         createFile(ctx.state.root, destPath, text);
         return {
@@ -584,7 +713,7 @@ export const operations: Record<string, OperationHandler> = {
       }
     }
 
-    const text = ctx.parsed.args.join(" ");
+    const text = textParts.join(" ");
     return {
       output: text,
       exitCode: 0,

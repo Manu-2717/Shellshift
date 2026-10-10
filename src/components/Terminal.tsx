@@ -6,7 +6,8 @@ import {
   Trash2,
   Copy,
   Check,
-  RotateCcw,
+  Loader2,
+  Lock,
   Sparkles,
 } from "lucide-react";
 
@@ -42,7 +43,7 @@ export function Terminal({
     {
       id: "init-2",
       type: "system",
-      content: "WARNING: Command tokens may have remapped meanings. Decode the cipher sheet clues to reveal the active matrix.",
+      content: "WARNING: Command tokens may have remapped meanings. Decode cipher clues to discover active operations.",
     },
   ]);
 
@@ -51,6 +52,7 @@ export function Terminal({
   const [historyIdx, setHistoryIdx] = useState<number>(-1);
   const [isExecuting, setIsExecuting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isFocused, setIsFocused] = useState(true);
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,10 +60,12 @@ export function Terminal({
   // Auto-scroll when lines change
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [lines]);
+  }, [lines, isExecuting]);
 
   const handleContainerClick = () => {
-    inputRef.current?.focus();
+    if (!disabled) {
+      inputRef.current?.focus();
+    }
   };
 
   const handleCopyHistory = () => {
@@ -75,10 +79,14 @@ export function Terminal({
 
   const handleClear = () => {
     setLines([]);
-    inputRef.current?.focus();
+    if (!disabled) {
+      inputRef.current?.focus();
+    }
   };
 
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (disabled || isExecuting) return;
+
     if (e.key === "Enter") {
       e.preventDefault();
       const cmd = inputVal;
@@ -133,7 +141,7 @@ export function Terminal({
             {
               id: "win-" + Date.now(),
               type: "system",
-              content: `🏆 CHALLENGE SOLVED! Verified Time: ${(data.durationMs / 1000).toFixed(2)}s. Objective conditions fully satisfied!`,
+              content: `🏆 OBJECTIVE SATISFIED! Verified finish time: ${(data.durationMs / 1000).toFixed(2)}s. All conditions met!`,
             },
           ]);
         }
@@ -174,38 +182,58 @@ export function Terminal({
     }
   };
 
-  const promptPrefix = (cwd: string = currentCwd) => {
-    const displayPath = cwd.startsWith("/workspace")
-      ? "~" + cwd.slice("/workspace".length)
-      : cwd;
-    return `${teamName.toLowerCase().replace(/\s+/g, "_")}@shellshift:${displayPath}$`;
+  const formatCwd = (cwd: string = currentCwd) => {
+    return cwd.startsWith("/workspace") ? "~" + cwd.slice("/workspace".length) : cwd;
   };
+
+  const safeTeam = (teamName || "player").toLowerCase().replace(/\s+/g, "_");
 
   return (
     <div
       onClick={handleContainerClick}
-      className="flex flex-col h-full bg-[#0a0a0c] border border-neutral-800 rounded-lg overflow-hidden font-mono text-xs select-text cursor-text shadow-xl"
+      className={`flex flex-col h-full bg-[#08080a] border rounded-lg overflow-hidden font-mono text-xs select-text shadow-2xl transition-colors ${
+        disabled
+          ? "border-emerald-600/40 opacity-95"
+          : "border-neutral-800 cursor-text"
+      }`}
     >
-      {/* Title Bar */}
-      <div className="bg-[#121215] border-b border-neutral-800 px-3.5 py-2 flex items-center justify-between select-none">
+      {/* Terminal Title Bar */}
+      <div className="bg-[#121216] border-b border-neutral-800 px-3.5 py-2 flex items-center justify-between select-none shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-rose-500 transition-colors" />
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-amber-500 transition-colors" />
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700 hover:bg-emerald-500 transition-colors" />
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
           </div>
 
-          <span className="text-neutral-400 font-medium text-[11px] flex items-center gap-1.5 ml-1">
+          <span className="text-neutral-300 font-medium text-[11px] flex items-center gap-1.5 ml-1">
             <TerminalIcon className="w-3.5 h-3.5 text-cyan-400" />
             terminal — shiftsh
           </span>
 
-          <span className="text-[10px] text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded">
-            cwd: {currentCwd}
+          <span className="text-[10px] text-neutral-400 bg-[#09090c] border border-neutral-800 px-2 py-0.5 rounded font-mono">
+            cwd: {formatCwd()}
           </span>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {/* Status Indicator */}
+          {disabled ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+              <Lock className="w-3 h-3" />
+              LOCKED
+            </span>
+          ) : isExecuting ? (
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 animate-pulse">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              EXECUTING
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-neutral-800">
+              READY
+            </span>
+          )}
+
           <button
             onClick={handleCopyHistory}
             type="button"
@@ -223,8 +251,8 @@ export function Terminal({
           <button
             onClick={handleClear}
             type="button"
-            className="p-1.5 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors"
-            title="Clear terminal (Ctrl+L)"
+            className="p-1 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors"
+            title="Clear terminal buffer (Ctrl+L)"
           >
             <Trash2 className="w-3 h-3" />
           </button>
@@ -232,62 +260,78 @@ export function Terminal({
       </div>
 
       {/* Terminal Output Area */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-2">
+      <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-2">
         {lines.map((line) => (
-          <div key={line.id} className="leading-relaxed">
+          <div key={line.id} className="leading-relaxed font-mono">
             {line.type === "command" && (
               <div className="flex items-start gap-2 text-neutral-200">
-                <span className="text-cyan-400 font-semibold shrink-0">
-                  {promptPrefix(line.cwd)}
+                <span className="shrink-0 font-semibold select-none">
+                  <span className="text-cyan-400">{safeTeam}</span>
+                  <span className="text-neutral-500">@shellshift:</span>
+                  <span className="text-emerald-400">{formatCwd(line.cwd)}</span>
+                  <span className="text-white font-bold">$ </span>
                 </span>
-                <span className="text-white font-medium">{line.content}</span>
+                <span className="text-white font-medium break-all">{line.content}</span>
               </div>
             )}
             {line.type === "output" && (
-              <pre className="text-neutral-300 whitespace-pre-wrap break-words font-mono text-[12px] leading-relaxed">
+              <pre className="text-neutral-200 whitespace-pre-wrap break-all font-mono text-[11.5px] sm:text-[12px] leading-relaxed pl-1">
                 {line.content}
               </pre>
             )}
             {line.type === "error" && (
-              <pre className="text-rose-400 whitespace-pre-wrap break-words font-mono font-medium text-[12px]">
+              <pre className="text-rose-400 whitespace-pre-wrap break-all font-mono font-medium text-[11.5px] sm:text-[12px] pl-1 border-l-2 border-rose-500/80 my-1 py-0.5">
                 {line.content}
               </pre>
             )}
             {line.type === "system" && (
-              <div className="text-amber-300 bg-amber-950/20 border-l-2 border-amber-500 px-2.5 py-1 rounded-r my-1 text-[11px] leading-relaxed">
+              <div className="text-amber-300 bg-amber-950/25 border-l-2 border-amber-500 px-2.5 py-1 rounded-r my-1 text-[11px] leading-relaxed font-mono">
                 {line.content}
               </div>
             )}
           </div>
         ))}
 
-        {/* Live Input Prompt */}
-        <div className="flex items-center gap-2 pt-1">
-          <span className="text-cyan-400 font-semibold shrink-0">
-            {promptPrefix()}
-          </span>
-          <div className="flex-1 flex items-center relative">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={disabled || isExecuting}
-              autoFocus
-              spellCheck={false}
-              autoComplete="off"
-              className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400 text-xs"
-              placeholder={
-                disabled
-                  ? "Run completed. Terminal locked."
-                  : isExecuting
-                  ? "Evaluating in sandbox..."
-                  : ""
-              }
-            />
+        {/* Live Input Prompt or Locked State */}
+        {disabled ? (
+          <div className="p-3 rounded bg-emerald-950/30 border border-emerald-600/40 text-emerald-300 text-xs flex items-center gap-2 mt-2">
+            <Lock className="w-4 h-4 shrink-0 text-emerald-400" />
+            <span>
+              <strong>Run Completed:</strong> Terminal is locked. Review your execution history or view verified results.
+            </span>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-start sm:items-center gap-2 pt-1.5 text-xs">
+            <span className="shrink-0 font-semibold select-none flex items-center">
+              <span className="text-cyan-400">{safeTeam}</span>
+              <span className="text-neutral-500">@shellshift:</span>
+              <span className="text-emerald-400">{formatCwd()}</span>
+              <span className="text-white font-bold">$ </span>
+            </span>
+
+            <div className="flex-1 flex items-center relative min-w-0">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                disabled={isExecuting}
+                autoFocus
+                spellCheck={false}
+                autoComplete="off"
+                className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400 text-xs font-medium placeholder-neutral-600"
+                placeholder={
+                  isExecuting
+                    ? "Evaluating in sandbox..."
+                    : "Type command (e.g. ls, cat clue.txt)..."
+                }
+              />
+            </div>
+          </div>
+        )}
 
         <div ref={terminalEndRef} />
       </div>

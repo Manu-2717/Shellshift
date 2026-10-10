@@ -142,4 +142,82 @@ describe("Objective Evaluator", () => {
     expect(evalRes.isCompleted).toBe(true);
     expect(evalRes.completedRules).toBe(2);
   });
+
+  it("verifies file_moved objective rule", () => {
+    const vfs = createInitialVfs({
+      "/workspace/src.txt": "payload",
+    });
+    const objective = {
+      description: "Move file to target",
+      rules: [
+        {
+          type: "file_moved" as const,
+          path: "/workspace/dest.txt",
+          description: "Target exists",
+        },
+      ],
+    };
+    expect(evaluateObjective(vfs, objective).isCompleted).toBe(false);
+    createFile(vfs.root, "/workspace/dest.txt", "payload");
+    expect(evaluateObjective(vfs, objective).isCompleted).toBe(true);
+  });
 });
+
+describe("Advanced VFS Commands: head, tail, grep, find, echo", () => {
+  it("supports head and tail with custom line counts", () => {
+    const vfs = createInitialVfs({
+      "/workspace/lines.txt": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12",
+    });
+    const headRes = executeCommand(vfs, "head -n 3 /workspace/lines.txt");
+    expect(headRes.exitCode).toBe(0);
+    expect(headRes.output).toBe("1\n2\n3");
+
+    const tailRes = executeCommand(vfs, "tail -n 2 /workspace/lines.txt");
+    expect(tailRes.exitCode).toBe(0);
+    expect(tailRes.output).toBe("11\n12");
+  });
+
+  it("supports grep with -i, -n, and -v flags", () => {
+    const vfs = createInitialVfs({
+      "/workspace/log.txt": "INFO start\nWARN high cpu\ninfo finished",
+    });
+    // Case-insensitive grep
+    const gCase = executeCommand(vfs, "grep -i info /workspace/log.txt");
+    expect(gCase.output).toBe("INFO start\ninfo finished");
+
+    // Line numbered grep
+    const gNum = executeCommand(vfs, "grep -n WARN /workspace/log.txt");
+    expect(gNum.output).toBe("2:WARN high cpu");
+
+    // Invert match grep
+    const gInv = executeCommand(vfs, "grep -v WARN /workspace/log.txt");
+    expect(gInv.output).toBe("INFO start\ninfo finished");
+  });
+
+  it("supports find with -name pattern and -type filters", () => {
+    const vfs = createInitialVfs({
+      "/workspace/app.js": "code",
+      "/workspace/data.json": "{}",
+      "/workspace/docs/readme.md": "docs",
+    });
+
+    const findJson = executeCommand(vfs, "find /workspace -name *.json");
+    expect(findJson.output).toContain("/workspace/data.json");
+    expect(findJson.output).not.toContain("/workspace/app.js");
+
+    const findFiles = executeCommand(vfs, "find /workspace -type f");
+    expect(findFiles.output).toContain("/workspace/app.js");
+    expect(findFiles.output).not.toContain("/workspace/docs\n");
+  });
+
+  it("supports echo with explicit output redirection flag", () => {
+    const vfs = createInitialVfs();
+    const res = executeCommand(vfs, "echo custom_data -o /workspace/out.txt");
+    expect(res.exitCode).toBe(0);
+    expect(res.stateChanged).toBe(true);
+
+    const catRes = executeCommand(vfs, "cat /workspace/out.txt");
+    expect(catRes.output).toBe("custom_data");
+  });
+});
+

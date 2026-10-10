@@ -12,8 +12,9 @@ import {
   ArrowLeft,
   HelpCircle,
   AlertTriangle,
-  RotateCcw,
   Users,
+  Terminal as TerminalIcon,
+  KeyRound,
 } from "lucide-react";
 
 export default function PlayChallengePage() {
@@ -26,6 +27,7 @@ export default function PlayChallengePage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
   const [hintUnlocking, setHintUnlocking] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"terminal" | "ciphers">("terminal");
 
   // Fetch run data from server
   const fetchRunState = async () => {
@@ -131,52 +133,68 @@ export default function PlayChallengePage() {
     );
   }
 
+  const clueCount = runData.challenge.clues?.length || 0;
+
   return (
-    <div className="h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono overflow-hidden">
-      {/* Top Workspace Header */}
-      <header className="h-12 border-b border-neutral-800 bg-[#121215] px-4 flex items-center justify-between shrink-0 select-none">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/lobby"
-            className="p-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors"
-            title="Return to Lobby"
-          >
-            <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-screen lg:h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+      {/* 1. Compact Top Workspace Header */}
+      <header className="border-b border-neutral-800 bg-[#121215] px-3 sm:px-4 py-2 flex items-center justify-between shrink-0 select-none">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          {/* ShellShift Branding */}
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
+            <div className="w-6 h-6 rounded bg-neutral-900 border border-neutral-700 flex items-center justify-center text-cyan-400 group-hover:border-cyan-500 transition-colors">
+              <TerminalIcon className="w-3 h-3" />
+            </div>
+            <span className="font-mono font-bold text-xs tracking-wider text-white hidden md:inline">
+              SHELL<span className="text-cyan-400">SHIFT</span>
+            </span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-white tracking-wide">
+          <Link
+            href="/lobby"
+            className="p-1 rounded bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors shrink-0"
+            title="Return to Competition Lobby"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </Link>
+
+          {/* Current Challenge Title & Difficulty */}
+          <div className="flex items-center gap-2 min-w-0 truncate">
+            <span className="text-xs font-bold text-white tracking-wide truncate">
               {runData.challenge.title}
             </span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 font-bold uppercase border border-neutral-700">
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-neutral-800 text-neutral-300 font-bold uppercase border border-neutral-700 shrink-0">
               {runData.challenge.difficulty}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Server-Synchronized Live Timer */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Live Synchronized Authoritative Timer */}
           <LiveTimer
             startedAt={runData.startedAt}
             completedAt={runData.completedAt}
             durationMs={finalDuration}
           />
 
-          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-neutral-900 border border-neutral-800 text-xs">
-            <Users className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-neutral-400">Team:</span>
-            <span className="text-cyan-300 font-bold">{runData.team.name}</span>
+          {/* Team Identity Pill */}
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-xs">
+            <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-neutral-400 hidden sm:inline">Team:</span>
+            <span className="text-cyan-300 font-bold text-[11px] sm:text-xs max-w-[100px] sm:max-w-none truncate">
+              {runData.team.name}
+            </span>
           </div>
 
-          {/* Hint Dropdown / Action */}
+          {/* Hint Dropdown */}
           {runData.challenge.hints && runData.challenge.hints.length > 0 && !isCompleted && (
             <div className="relative group">
               <button
                 type="button"
-                className="px-2.5 py-1 rounded bg-neutral-900 hover:bg-neutral-800 border border-amber-500/40 text-amber-300 text-xs flex items-center gap-1.5 transition-colors font-medium"
+                className="px-2 py-1 rounded bg-neutral-900 hover:bg-neutral-800 border border-amber-500/40 text-amber-300 text-xs flex items-center gap-1 transition-colors font-medium"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Hints</span>
+                <span className="hidden sm:inline">Hints</span>
               </button>
 
               <div className="absolute right-0 top-full mt-1 w-64 bg-[#121215] border border-neutral-800 rounded-lg shadow-2xl p-2 hidden group-hover:block z-50">
@@ -214,17 +232,47 @@ export default function PlayChallengePage() {
         </div>
       </header>
 
-      {/* Prominent Pinned Mission Objective Bar */}
+      {/* 2. Prominent Mission Objective Panel Immediately Below Header */}
       <ObjectiveBar
         description={runData.challenge.objective?.description || "Satisfy challenge objective criteria"}
         rules={runData.objectiveEvaluation?.details || []}
         isCompleted={isCompleted}
       />
 
-      {/* Main Split-Screen Workspace */}
+      {/* Mobile/Tablet Workspace Viewport Switcher (< lg) */}
+      <div className="lg:hidden bg-[#121215] border-b border-neutral-800 px-3 py-1.5 flex items-center justify-around select-none">
+        <button
+          onClick={() => setMobileTab("terminal")}
+          className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors ${
+            mobileTab === "terminal"
+              ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
+              : "text-neutral-400 hover:text-white"
+          }`}
+        >
+          <TerminalIcon className="w-3.5 h-3.5" />
+          Interactive Terminal
+        </button>
+        <button
+          onClick={() => setMobileTab("ciphers")}
+          className={`flex-1 py-1.5 text-xs font-bold rounded flex items-center justify-center gap-1.5 transition-colors ${
+            mobileTab === "ciphers"
+              ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
+              : "text-neutral-400 hover:text-white"
+          }`}
+        >
+          <KeyRound className="w-3.5 h-3.5" />
+          Clues & Decoder ({clueCount})
+        </button>
+      </div>
+
+      {/* 3. Main Split-Screen Workspace */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
-        {/* Terminal Area (7 columns on desktop) */}
-        <div className="lg:col-span-7 h-full p-2 lg:p-2.5 overflow-hidden flex flex-col">
+        {/* Terminal Area (7 columns on desktop, conditional on mobile) */}
+        <div
+          className={`lg:col-span-7 h-[500px] lg:h-full p-2 lg:p-2.5 overflow-hidden flex flex-col ${
+            mobileTab === "terminal" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <Terminal
             runId={runId}
             teamName={runData.team.name}
@@ -234,8 +282,12 @@ export default function PlayChallengePage() {
           />
         </div>
 
-        {/* Cipher & Scratchpad Area (5 columns on desktop) */}
-        <div className="lg:col-span-5 h-full p-2 lg:p-2.5 pl-0 overflow-hidden flex flex-col">
+        {/* Cipher & Scratchpad Area (5 columns on desktop, conditional on mobile) */}
+        <div
+          className={`lg:col-span-5 h-[500px] lg:h-full p-2 lg:p-2.5 lg:pl-0 overflow-hidden flex flex-col ${
+            mobileTab === "ciphers" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <CipherWorkspace
             clues={runData.challenge.clues}
             treeList={runData.treeList || []}

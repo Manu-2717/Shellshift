@@ -98,11 +98,11 @@ export function AdminDashboardClient({
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-6">
       {/* Admin Title & Event Control */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-[#121215] border border-neutral-800 p-6 rounded-xl">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-[#121215] border border-neutral-800 p-5 sm:p-6 rounded-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
-            <Shield className="w-5 h-5 text-cyan-400" />
-            <h1 className="text-xl font-bold text-white">Administrator Command Console</h1>
+            <Shield className="w-5 h-5 text-cyan-400 shrink-0" />
+            <h1 className="text-lg sm:text-xl font-bold text-white">Administrator Command Console</h1>
           </div>
           <p className="text-xs text-neutral-400">
             Control competition status, inspect decoded answer keys, author challenges, and monitor live runs.
@@ -110,8 +110,8 @@ export function AdminDashboardClient({
         </div>
 
         {/* Status controls */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-neutral-500 mr-2">Event Controls:</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs w-full lg:w-auto">
+          <span className="text-neutral-500 mr-1 text-[11px] font-semibold uppercase tracking-wider">Event:</span>
           <button
             onClick={() => handleUpdateEventStatus("ACTIVE")}
             disabled={updatingEvent || event?.status === "ACTIVE"}
@@ -152,10 +152,10 @@ export function AdminDashboardClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-neutral-800 pb-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-neutral-800 pb-2 text-xs">
         <button
           onClick={() => setActiveTab("challenges")}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+          className={`px-3.5 py-2 rounded-lg font-bold transition-colors ${
             activeTab === "challenges"
               ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
               : "text-neutral-400 hover:text-white"
@@ -165,7 +165,7 @@ export function AdminDashboardClient({
         </button>
         <button
           onClick={() => setActiveTab("runs")}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${
+          className={`px-3.5 py-2 rounded-lg font-bold transition-colors ${
             activeTab === "runs"
               ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
               : "text-neutral-400 hover:text-white"
@@ -175,7 +175,7 @@ export function AdminDashboardClient({
         </button>
         <button
           onClick={() => setActiveTab("create")}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
             activeTab === "create"
               ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
               : "text-neutral-400 hover:text-white"

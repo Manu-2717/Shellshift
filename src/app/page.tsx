@@ -108,40 +108,40 @@ export default async function LandingPage() {
 
           {/* Terminal Gameplay Preview Card */}
           <div className="bg-[#121215] border border-neutral-800 rounded-xl overflow-hidden shadow-2xl">
-            <div className="bg-[#18181b] border-b border-neutral-800 px-4 py-2.5 flex items-center justify-between text-xs">
+            <div className="bg-[#18181b] border-b border-neutral-800 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
                 <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
                 <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-                <span className="text-neutral-400 ml-2 font-semibold text-[11px]">
+                <span className="text-neutral-400 ml-2 font-semibold text-[11px] truncate">
                   sandbox_session — Operation Inversion Preview
                 </span>
               </div>
-              <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1.5">
+              <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1.5 shrink-0">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 Objective: Create /workspace/breach
               </span>
             </div>
 
-            <div className="p-4 space-y-2 text-xs leading-relaxed">
+            <div className="p-4 space-y-2 text-xs leading-relaxed font-mono">
               <div className="text-neutral-500 text-[11px]">
                 # Clue Block decoded: &apos;cd&apos; creates directories. &apos;ls&apos; reads file content.
               </div>
               <div className="flex items-center gap-2 text-neutral-200">
-                <span className="text-cyan-400 font-semibold">team_alpha@shellshift:~$</span>
-                <span className="text-white font-medium">cd /workspace/breach</span>
+                <span className="text-cyan-400 font-semibold shrink-0">team_alpha@shellshift:~$</span>
+                <span className="text-white font-medium break-all">cd /workspace/breach</span>
               </div>
-              <div className="text-neutral-400 pl-4 border-l-2 border-neutral-700">
+              <div className="text-neutral-400 pl-3.5 border-l-2 border-neutral-700 text-[11px]">
                 Created directory: &apos;/workspace/breach&apos; [Mapped operation: mkdir]
               </div>
               <div className="flex items-center gap-2 text-neutral-200 pt-1">
-                <span className="text-cyan-400 font-semibold">team_alpha@shellshift:~$</span>
-                <span className="text-white font-medium">ls /clues/signal.txt</span>
+                <span className="text-cyan-400 font-semibold shrink-0">team_alpha@shellshift:~$</span>
+                <span className="text-white font-medium break-all">ls /clues/signal.txt</span>
               </div>
-              <div className="text-emerald-300 pl-4 border-l-2 border-emerald-600/60 font-semibold">
+              <div className="text-emerald-300 pl-3.5 border-l-2 border-emerald-600/60 font-semibold text-[11px] break-all">
                 SIGNAL CONFIRMED: Breach authorization code = INVERSION_OMEGA_99
               </div>
-              <div className="text-amber-400 bg-amber-950/20 border-l-2 border-amber-500 px-2 py-0.5 mt-2 text-[11px]">
+              <div className="text-amber-400 bg-amber-950/20 border-l-2 border-amber-500 px-2 py-1 mt-2 text-[11px] break-all">
                 ✓ Objective satisfied! Server recorded verified finish duration: 00:42.18
               </div>
             </div>
