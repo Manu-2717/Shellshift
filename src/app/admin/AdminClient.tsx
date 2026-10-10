@@ -261,7 +261,11 @@ export function AdminDashboardClient({
                   </span>
                 </div>
                 <h3 className="font-bold text-white text-sm">{c.title}</h3>
-                <p className="text-xs text-neutral-400 line-clamp-2 mt-1">{c.description}</p>
+                {c.objectiveConfig?.description && (
+                  <p className="text-xs text-neutral-400 line-clamp-2 mt-1">
+                    {c.objectiveConfig.description}
+                  </p>
+                )}
                 <div className="mt-3 text-[11px] text-cyan-400 flex items-center gap-1 font-semibold">
                   <Eye className="w-3.5 h-3.5" />
                   Click to inspect decoded answer keys & mappings

@@ -43,8 +43,8 @@ export function validateChallengeDefinition(
     errors.push("Challenge title is required.");
   }
 
-  if (!def.description || typeof def.description !== "string" || def.description.trim() === "") {
-    errors.push("Challenge description is required.");
+  if (def.description !== undefined && typeof def.description !== "string") {
+    errors.push("Challenge description must be a string.");
   }
 
   if (!def.difficulty || !SUPPORTED_DIFFICULTIES.includes(def.difficulty)) {

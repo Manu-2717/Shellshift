@@ -29,7 +29,7 @@ async function main() {
     const challengeData = {
       slug: challengeDef.slug,
       title: challengeDef.title,
-      description: challengeDef.description,
+      description: challengeDef.description || "",
       difficulty: challengeDef.difficulty,
       order: challengeDef.order,
       timeLimitSeconds: challengeDef.timeLimitSeconds,

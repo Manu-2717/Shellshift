@@ -48,7 +48,6 @@ export function LobbyCatalog({ challenges }: LobbyCatalogProps) {
     return challenges.filter((c) => {
       const matchesSearch =
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.objectiveDescription.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesDiff = difficultyFilter === "ALL" || c.difficulty === difficultyFilter;

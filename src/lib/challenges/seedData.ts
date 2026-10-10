@@ -20,7 +20,7 @@ export interface ClueItem {
 export interface SeedChallengeDef {
   slug: string;
   title: string;
-  description: string;
+  description?: string;
   difficulty: "EASY" | "MEDIUM" | "HARD";
   order: number;
   estimatedDuration: string;
@@ -78,8 +78,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "operation-inversion",
     title: "Challenge 1: Operation Inversion",
-    description:
-      "Create directory /workspace/breach and inspect /workspace/signal.txt.",
+    description: "",
     difficulty: "EASY",
     order: 1,
     estimatedDuration: "2-4 min",
@@ -162,8 +161,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "pathfinder-basics",
     title: "Challenge 2: Make a Folder",
-    description:
-      "Create directory /workspace/project.",
+    description: "",
     difficulty: "EASY",
     order: 2,
     estimatedDuration: "2-4 min",
@@ -233,8 +231,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "morse-mail",
     title: "Challenge 3: Read the Note",
-    description:
-      "Read /workspace/note.txt and create confirmation file /workspace/read.txt.",
+    description: "",
     difficulty: "EASY",
     order: 3,
     estimatedDuration: "2-4 min",
@@ -304,8 +301,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "binary-breadcrumbs",
     title: "Challenge 4: Morse Message",
-    description:
-      "Decode the message in /workspace/message.txt and create the revealed directory.",
+    description: "",
     difficulty: "EASY",
     order: 4,
     estimatedDuration: "2-4 min",
@@ -375,8 +371,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "hex-in-plain-sight",
     title: "Challenge 5: Remove the Temporary File",
-    description:
-      "Delete /workspace/temp.txt while preserving /workspace/keep.txt.",
+    description: "",
     difficulty: "EASY",
     order: 5,
     estimatedDuration: "2-4 min",
@@ -454,8 +449,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "directory-flip",
     title: "Challenge 6: Hex Name",
-    description:
-      "Decode the target filename from the clue and deploy /workspace/found.txt.",
+    description: "",
     difficulty: "EASY",
     order: 6,
     estimatedDuration: "2-4 min",
@@ -526,8 +520,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "the-missing-file",
     title: "Challenge 7: Copy the File",
-    description:
-      "Copy /workspace/data.txt to /workspace/backup/data.txt while preserving the original file.",
+    description: "",
     difficulty: "EASY",
     order: 7,
     estimatedDuration: "2-4 min",
@@ -605,8 +598,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "first-flag",
     title: "Challenge 8: First Mission",
-    description:
-      "Create directory /workspace/mission and place briefing.txt inside it.",
+    description: "",
     difficulty: "EASY",
     order: 8,
     estimatedDuration: "2-4 min",
@@ -683,8 +675,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "the-cryptic-agent",
     title: "Challenge 9: The Cryptic Agent",
-    description:
-      "Read /workspace/notes.txt and deploy /workspace/agent.key.",
+    description: "",
     difficulty: "MEDIUM",
     order: 9,
     estimatedDuration: "4-7 min",
@@ -766,8 +757,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "dead-letter",
     title: "Challenge 10: Create Two Folders",
-    description:
-      "Create directories /workspace/alpha and /workspace/beta.",
+    description: "",
     difficulty: "MEDIUM",
     order: 10,
     estimatedDuration: "4-7 min",
@@ -844,8 +834,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "log-diver",
     title: "Challenge 11: Find the File",
-    description:
-      "Locate secret.txt inside nested directories and copy it to /workspace/found.txt.",
+    description: "",
     difficulty: "MEDIUM",
     order: 11,
     estimatedDuration: "4-7 min",
@@ -922,8 +911,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "the-relocation-protocol",
     title: "Challenge 12: The Hex Note",
-    description:
-      "Copy /workspace/report.doc into /workspace/archive/report.doc.",
+    description: "",
     difficulty: "MEDIUM",
     order: 12,
     estimatedDuration: "4-7 min",
@@ -994,8 +982,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "needle-in-the-archive",
     title: "Challenge 13: Log Hunt",
-    description:
-      "Inspect /workspace/server.log for errors and create acknowledgment file /workspace/alert.txt.",
+    description: "",
     difficulty: "MEDIUM",
     order: 13,
     estimatedDuration: "4-7 min",
@@ -1074,8 +1061,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "ghost-signal",
     title: "Challenge 14: Swap the Rules",
-    description:
-      "Create directory /workspace/safe and delete /workspace/junk.txt.",
+    description: "",
     difficulty: "MEDIUM",
     order: 14,
     estimatedDuration: "4-7 min",
@@ -1152,8 +1138,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "three-keys",
     title: "Challenge 15: Organize the Files",
-    description:
-      "Move /workspace/code.js to src/code.js and style.css to styles/style.css.",
+    description: "",
     difficulty: "MEDIUM",
     order: 15,
     estimatedDuration: "4-7 min",
@@ -1233,8 +1218,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "decoy-protocol",
     title: "Challenge 16: Decode the Filename",
-    description:
-      "Decode the target filename, inspect its contents, and create /workspace/confirmation.txt.",
+    description: "",
     difficulty: "MEDIUM",
     order: 16,
     estimatedDuration: "4-7 min",
@@ -1322,8 +1306,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "broken-chain",
     title: "Challenge 17: The Missing Directory",
-    description:
-      "Identify the missing directory from instructions.txt, create it, and place data.bin inside it.",
+    description: "",
     difficulty: "MEDIUM",
     order: 17,
     estimatedDuration: "4-7 min",
@@ -1401,8 +1384,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "deep-breach-babel",
     title: "Challenge 18: Deep Breach: Operation Babel",
-    description:
-      "Establish /workspace/vault/core, place secret.key inside it, and purge /workspace/temp.tmp.",
+    description: "",
     difficulty: "HARD",
     order: 18,
     estimatedDuration: "8-10 min",
@@ -1500,8 +1482,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "recursive-vault",
     title: "Challenge 19: Simple Vault",
-    description:
-      "Locate the destination directory from vault/clue.txt, create it, and place key.dat inside it.",
+    description: "",
     difficulty: "HARD",
     order: 19,
     estimatedDuration: "8-10 min",
@@ -1587,8 +1568,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   {
     slug: "final-convergence",
     title: "Challenge 20: Final Challenge",
-    description:
-      "Create /workspace/production, place artifact.dat inside it, and remove /workspace/old_cache.tmp.",
+    description: "",
     difficulty: "HARD",
     order: 20,
     estimatedDuration: "8-10 min",
