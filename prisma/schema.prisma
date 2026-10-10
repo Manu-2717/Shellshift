@@ -1,0 +1,159 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String           @id @default(uuid())
+  oidcSub     String
+  oidcIssuer  String
+  email       String?
+  name        String
+  role        String           @default("USER") // USER, ADMIN
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  memberships TeamMembership[]
+  commandLogs CommandLog[]
+  auditLogs   AuditLog[]
+
+  @@unique([oidcIssuer, oidcSub])
+  @@index([oidcIssuer, oidcSub])
+}
+
+model Team {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  inviteCode  String           @unique
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  memberships TeamMembership[]
+  runs        Run[]
+}
+
+model TeamMembership {
+  id        String   @id @default(uuid())
+  userId    String
+  teamId    String
+  role      String   @default("MEMBER") // LEADER, MEMBER
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+model Event {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  status      String    @default("ACTIVE") // UPCOMING, ACTIVE, PAUSED, ENDED
+  startTime   DateTime?
+  endTime     DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model Challenge {
+  id                String   @id @default(uuid())
+  slug              String   @unique
+  title             String
+  description       String
+  difficulty        String   @default("MEDIUM") // EASY, MEDIUM, HARD
+  order             Int      @default(1)
+  commandMappings   String   // JSON string
+  clues             String   // JSON string
+  initialFilesystem String   // JSON string
+  objectiveConfig   String   // JSON string
+  isPublished       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  runs              Run[]
+  hints             Hint[]
+
+  @@index([order])
+}
+
+model Run {
+  id                String       @id @default(uuid())
+  teamId            String
+  challengeId       String
+  status            String       @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED
+  startedAt         DateTime     @default(now())
+  completedAt       DateTime?
+  durationMs        Int?
+  filesystemState   String       // JSON string
+  currentWorkingDir String       @default("/workspace")
+  commandCount      Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge   Challenge    @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  commandLogs CommandLog[]
+  hintUsages  HintUsage[]
+
+  @@index([teamId, challengeId])
+  @@index([status, durationMs])
+}
+
+model CommandLog {
+  id              String   @id @default(uuid())
+  runId           String
+  userId          String?
+  enteredCommand  String
+  mappedOperation String
+  output          String
+  executionTimeMs Int      @default(0)
+  timestamp       DateTime @default(now())
+
+  run  Run   @relation(fields: [runId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([runId])
+}
+
+model Hint {
+  id             String      @id @default(uuid())
+  challengeId    String
+  title          String
+  content        String
+  penaltySeconds Int         @default(30)
+  order          Int         @default(1)
+  createdAt      DateTime    @default(now())
+
+  challenge Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  usages    HintUsage[]
+
+  @@index([challengeId])
+}
+
+model HintUsage {
+  id          String   @id @default(uuid())
+  runId       String
+  hintId      String
+  requestedAt DateTime @default(now())
+
+  run  Run  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  hint Hint @relation(fields: [hintId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, hintId])
+  @@index([runId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  details   String?  // JSON string
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
