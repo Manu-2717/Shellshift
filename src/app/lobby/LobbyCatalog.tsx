@@ -118,10 +118,6 @@ export function LobbyCatalog({ challenges }: LobbyCatalogProps) {
             {challenge.title}
           </h3>
 
-          <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
-            {challenge.description}
-          </p>
-
           {/* Quick Metrics Bar: Duration, Time Limit & Max Attainable Score */}
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-neutral-400 pt-1">
             <div className="p-2 rounded bg-[#09090b] border border-neutral-800/80 flex items-center gap-1.5">
