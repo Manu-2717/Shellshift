@@ -36,11 +36,11 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     expect(c1?.difficulty).toBe("EASY");
 
     expect(c2).toBeDefined();
-    expect(c2?.order).toBe(2);
+    expect(c2?.order).toBe(9);
     expect(c2?.difficulty).toBe("MEDIUM");
 
     expect(c3).toBeDefined();
-    expect(c3?.order).toBe(3);
+    expect(c3?.order).toBe(18);
     expect(c3?.difficulty).toBe("HARD");
   });
 

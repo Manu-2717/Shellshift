@@ -154,193 +154,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 2: MEDIUM — The Cryptic Agent
-  // ==========================================
-  {
-    slug: "the-cryptic-agent",
-    title: "Challenge 2: The Cryptic Agent",
-    description:
-      "An operative note reveals an unusual shell profile where file creation and inspection are transposed. Follow the clue to deploy the agent authorization key.",
-    difficulty: "MEDIUM",
-    order: 2,
-    estimatedDuration: "4-7 min",
-    timeLimitSeconds: 1500,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      pwd: "touch",
-      rm: "cat",
-    },
-    clues: [
-      {
-        id: "clue-2-1",
-        title: "Operative Clue: File Transposition",
-        type: "hex",
-        plaintextAnswer: "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch).",
-        encodedContent: encodeHex(
-          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch)."
-        ),
-        hintNote: "Hexadecimal byte stream. 'rm' reads files safely; 'pwd' creates files.",
-      },
-    ],
-    initialFilesystem: {
-      "/workspace/readme.txt": "Operative note: Shell mappings active. Check your mission clue.",
-      "/workspace/notes.txt": "AGENT PASSCODE: 0x9F_AGENT_ACTIVE",
-    },
-    objectiveConfig: {
-      description: "Read /workspace/notes.txt and deploy /workspace/agent.key",
-      rules: [
-        {
-          id: "obj-2-agent-key",
-          points: 250,
-          type: "file_exists",
-          path: "/workspace/agent.key",
-          description: "File /workspace/agent.key has been successfully deployed",
-        },
-        {
-          id: "obj-2-cmd-investigated",
-          points: 250,
-          type: "min_commands",
-          content: "2",
-          description: "Executed investigative operations in the terminal",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Reading Without Deleting",
-        content: "The hex clue reveals that 'rm' safely reads files without deleting them.",
-        penaltySeconds: 20,
-        pointPenalty: 25,
-        order: 1,
-      },
-      {
-        title: "Creating the Key",
-        content: "Use 'rm /workspace/notes.txt' to view the passcode, then 'pwd /workspace/agent.key' to create the key.",
-        penaltySeconds: 40,
-        pointPenalty: 35,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 3: HARD — Deep Breach: Operation Babel
-  // ==========================================
-  {
-    slug: "deep-breach-babel",
-    title: "Challenge 3: Deep Breach: Operation Babel",
-    description:
-      "A secured vault requires establishing a core directory, copying a secret key, and purging temporary data using remapped commands.",
-    difficulty: "HARD",
-    order: 3,
-    estimatedDuration: "8-10 min",
-    timeLimitSeconds: 1800,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.5,
-      timeLimitSeconds: 1800,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      grep: "mkdir",
-      mv: "cp",
-      cp: "rm",
-    },
-    clues: [
-      {
-        id: "clue-3-1",
-        title: "Vault Protocol: Creation & Duplication",
-        type: "base64",
-        plaintextAnswer: "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp).",
-        encodedContent: encodeBase64(
-          "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp)."
-        ),
-        hintNote: "Base64 encoded vault protocol.",
-      },
-      {
-        id: "clue-3-2",
-        title: "Cleanup Protocol: File Deletion",
-        type: "hex",
-        plaintextAnswer: "CLEANUP PROTOCOL: 'cp' removes files (acting as rm).",
-        encodedContent: encodeHex("CLEANUP PROTOCOL: 'cp' removes files (acting as rm)."),
-        hintNote: "Hexadecimal byte stream for cleanup command.",
-      },
-    ],
-    initialFilesystem: {
-      "/workspace/secret.key": "VAULT_MASTER_KEY_ALPHA_2026",
-      "/workspace/temp.tmp": "TEMPORARY BUFFER TO PURGE",
-    },
-    objectiveConfig: {
-      description: "Establish /workspace/vault/core, copy secret.key into it, and purge temp.tmp",
-      rules: [
-        {
-          id: "obj-3-vault-dir",
-          points: 200,
-          type: "dir_exists",
-          path: "/workspace/vault/core",
-          description: "Directory /workspace/vault/core created",
-        },
-        {
-          id: "obj-3-secret-key",
-          points: 200,
-          type: "file_exists",
-          path: "/workspace/vault/core/secret.key",
-          description: "Key copied to /workspace/vault/core/secret.key",
-        },
-        {
-          id: "obj-3-temp-purged",
-          points: 100,
-          type: "file_deleted",
-          path: "/workspace/temp.tmp",
-          description: "Temporary buffer /workspace/temp.tmp purged",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Understanding Mappings",
-        content: "Check decoded clues: 'grep' makes directories, 'mv' copies files, and 'cp' removes files.",
-        penaltySeconds: 30,
-        pointPenalty: 30,
-        order: 1,
-      },
-      {
-        title: "Executing Babel Recovery",
-        content: "Run 'grep -p /workspace/vault/core', 'mv /workspace/secret.key /workspace/vault/core/secret.key', and 'cp /workspace/temp.tmp'.",
-        penaltySeconds: 60,
-        pointPenalty: 50,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 4: EASY — Challenge 4: Make a Folder
+  // LEVEL 2: EASY — Make a Folder
   // ==========================================
   {
     slug: "pathfinder-basics",
-    title: "Challenge 4: Make a Folder",
+    title: "Challenge 2: Make a Folder",
     description:
       "Players receive a clue telling them to create a directory named project. In this challenge, cd project creates the directory instead of changing into it.",
     difficulty: "EASY",
-    order: 4,
+    order: 2,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -360,7 +182,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-4-1",
+        id: "clue-2-1",
         title: "Directive: Folder Creation",
         type: "base64",
         plaintextAnswer: "CLUE: 'cd project' creates the directory 'project' directly in /workspace.",
@@ -375,7 +197,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create directory /workspace/project",
       rules: [
         {
-          id: "obj-4-project-dir",
+          id: "obj-2-project-dir",
           points: 500,
           type: "dir_exists",
           path: "/workspace/project",
@@ -402,15 +224,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 5: EASY — Challenge 5: Read the Note
+  // LEVEL 3: EASY — Read the Note
   // ==========================================
   {
     slug: "morse-mail",
-    title: "Challenge 5: Read the Note",
+    title: "Challenge 3: Read the Note",
     description:
-      "Locate a file called note.txt and display its contents. A remapped command is required to read the file.",
+      "Locate a file called note.txt and read its contents. The clue reveals that touch reads files and cat creates files. Read note.txt and create /workspace/read.txt.",
     difficulty: "EASY",
-    order: 5,
+    order: 3,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -431,7 +253,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-5-1",
+        id: "clue-3-1",
         title: "Inspection Remap",
         type: "rot13",
         plaintextAnswer: "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
@@ -446,7 +268,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Read note.txt and create /workspace/read.txt using cat",
       rules: [
         {
-          id: "obj-5-read-file",
+          id: "obj-3-read-file",
           points: 500,
           type: "file_exists",
           path: "/workspace/read.txt",
@@ -473,15 +295,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 6: EASY — Challenge 6: Morse Message
+  // LEVEL 4: EASY — Morse Message
   // ==========================================
   {
     slug: "binary-breadcrumbs",
-    title: "Challenge 6: Morse Message",
+    title: "Challenge 4: Morse Message",
     description:
       "A message file contains Morse code revealing the target directory name. Decode the message and create the directory.",
     difficulty: "EASY",
-    order: 6,
+    order: 4,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -501,7 +323,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-6-1",
+        id: "clue-4-1",
         title: "Morse Code Directive",
         type: "morse",
         plaintextAnswer: "SECRET",
@@ -516,7 +338,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create directory /workspace/secret revealed by the Morse message",
       rules: [
         {
-          id: "obj-6-secret-dir",
+          id: "obj-4-secret-dir",
           points: 500,
           type: "dir_exists",
           path: "/workspace/secret",
@@ -543,15 +365,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 7: EASY — Challenge 7: Remove the Temporary File
+  // LEVEL 5: EASY — Remove the Temporary File
   // ==========================================
   {
     slug: "hex-in-plain-sight",
-    title: "Challenge 7: Remove the Temporary File",
+    title: "Challenge 5: Remove the Temporary File",
     description:
       "Remove temporary file temp.txt while preserving required file keep.txt. In this challenge, mkdir removes files.",
     difficulty: "EASY",
-    order: 7,
+    order: 5,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -571,7 +393,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-7-1",
+        id: "clue-5-1",
         title: "Removal Mapping",
         type: "base64",
         plaintextAnswer: "CLUE: 'mkdir' removes files (acting as rm). Run 'mkdir temp.txt' to delete it.",
@@ -587,14 +409,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Delete /workspace/temp.txt while preserving /workspace/keep.txt",
       rules: [
         {
-          id: "obj-7-temp-del",
+          id: "obj-5-temp-del",
           points: 300,
           type: "file_deleted",
           path: "/workspace/temp.txt",
           description: "Temporary file /workspace/temp.txt removed",
         },
         {
-          id: "obj-7-keep-exists",
+          id: "obj-5-keep-exists",
           points: 200,
           type: "file_exists",
           path: "/workspace/keep.txt",
@@ -621,15 +443,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 8: EASY — Challenge 8: Hex Name
+  // LEVEL 6: EASY — Hex Name
   // ==========================================
   {
     slug: "directory-flip",
-    title: "Challenge 8: Hex Name",
+    title: "Challenge 6: Hex Name",
     description:
-      "A hexadecimal clue identifies a target filename. Decode the name manually, locate the file, and view it using touch.",
+      "A hexadecimal clue identifies a target filename. Decode the name manually and copy it to /workspace/found.txt using touch.",
     difficulty: "EASY",
-    order: 8,
+    order: 6,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -649,7 +471,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-8-1",
+        id: "clue-6-1",
         title: "Hex Encoded Target",
         type: "hex",
         plaintextAnswer: "flag.txt (Copy to found.txt)",
@@ -665,7 +487,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Copy flag.txt to /workspace/found.txt using touch",
       rules: [
         {
-          id: "obj-8-found",
+          id: "obj-6-found",
           points: 500,
           type: "file_exists",
           path: "/workspace/found.txt",
@@ -692,15 +514,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 9: EASY — Challenge 9: Copy the File
+  // LEVEL 7: EASY — Copy the File
   // ==========================================
   {
     slug: "the-missing-file",
-    title: "Challenge 9: Copy the File",
+    title: "Challenge 7: Copy the File",
     description:
       "Copy data.txt into the backup directory. In this challenge, mv copies files without removing the source.",
     difficulty: "EASY",
-    order: 9,
+    order: 7,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -720,7 +542,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-9-1",
+        id: "clue-7-1",
         title: "Duplication Directive",
         type: "base64",
         plaintextAnswer: "CLUE: 'mv' copies files (acting as cp). Run 'mv data.txt backup/data.txt'.",
@@ -736,14 +558,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Copy /workspace/data.txt to /workspace/backup/data.txt while keeping original",
       rules: [
         {
-          id: "obj-9-backup-file",
+          id: "obj-7-backup-file",
           points: 300,
           type: "file_exists",
           path: "/workspace/backup/data.txt",
           description: "File copied to /workspace/backup/data.txt",
         },
         {
-          id: "obj-9-orig-file",
+          id: "obj-7-orig-file",
           points: 200,
           type: "file_exists",
           path: "/workspace/data.txt",
@@ -770,15 +592,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 10: EASY — Challenge 10: First Mission
+  // LEVEL 8: EASY — First Mission
   // ==========================================
   {
     slug: "first-flag",
-    title: "Challenge 10: First Mission",
+    title: "Challenge 8: First Mission",
     description:
       "A short introductory mission: create directory /workspace/mission using cd, then copy briefing.txt into it.",
     difficulty: "EASY",
-    order: 10,
+    order: 8,
     estimatedDuration: "2-4 min",
     timeLimitSeconds: 600,
     scoringConfig: {
@@ -798,7 +620,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-10-1",
+        id: "clue-8-1",
         title: "Combined Mission Directive",
         type: "hex",
         plaintextAnswer: "DIRECTIVE: 'cd /workspace/mission' creates folder. 'cp briefing.txt mission/briefing.txt' copies file.",
@@ -807,20 +629,20 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       },
     ],
     initialFilesystem: {
-      "/workspace/briefing.txt": "MISSION DIRECTIVE: Level 10 complete.",
+      "/workspace/briefing.txt": "MISSION DIRECTIVE: Level 8 complete.",
     },
     objectiveConfig: {
       description: "Create /workspace/mission and copy briefing.txt into it",
       rules: [
         {
-          id: "obj-10-mission-dir",
+          id: "obj-8-mission-dir",
           points: 250,
           type: "dir_exists",
           path: "/workspace/mission",
           description: "Directory /workspace/mission created",
         },
         {
-          id: "obj-10-briefing-copy",
+          id: "obj-8-briefing-copy",
           points: 250,
           type: "file_exists",
           path: "/workspace/mission/briefing.txt",
@@ -847,15 +669,96 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 11: MEDIUM — Challenge 11: Create Two Folders
+  // LEVEL 9: MEDIUM — The Cryptic Agent
+  // ==========================================
+  {
+    slug: "the-cryptic-agent",
+    title: "Challenge 9: The Cryptic Agent",
+    description:
+      "An operative note reveals an unusual shell profile where file creation and inspection are transposed. Follow the clue to deploy the agent authorization key.",
+    difficulty: "MEDIUM",
+    order: 9,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {
+      pwd: "touch",
+      rm: "cat",
+    },
+    clues: [
+      {
+        id: "clue-9-1",
+        title: "Operative Clue: File Transposition",
+        type: "hex",
+        plaintextAnswer: "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch).",
+        encodedContent: encodeHex(
+          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch)."
+        ),
+        hintNote: "Hexadecimal byte stream. 'rm' reads files safely; 'pwd' creates files.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/readme.txt": "Operative note: Shell mappings active. Check your mission clue.",
+      "/workspace/notes.txt": "AGENT PASSCODE: 0x9F_AGENT_ACTIVE",
+    },
+    objectiveConfig: {
+      description: "Read /workspace/notes.txt and deploy /workspace/agent.key",
+      rules: [
+        {
+          id: "obj-9-agent-key",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/agent.key",
+          description: "File /workspace/agent.key has been successfully deployed",
+        },
+        {
+          id: "obj-9-cmd-investigated",
+          points: 250,
+          type: "min_commands",
+          content: "2",
+          description: "Executed investigative operations in the terminal",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Reading Without Deleting",
+        content: "The hex clue reveals that 'rm' safely reads files without deleting them.",
+        penaltySeconds: 20,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Creating the Key",
+        content: "Use 'rm /workspace/notes.txt' to view the passcode, then 'pwd /workspace/agent.key' to create the key.",
+        penaltySeconds: 40,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 10: MEDIUM — Create Two Folders
   // ==========================================
   {
     slug: "dead-letter",
-    title: "Challenge 11: Create Two Folders",
+    title: "Challenge 10: Create Two Folders",
     description:
       "Create two named directories in /workspace: alpha and beta. In this challenge, cd creates directories.",
     difficulty: "MEDIUM",
-    order: 11,
+    order: 10,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -875,7 +778,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-11-1",
+        id: "clue-10-1",
         title: "Dual Directory Directive",
         type: "rot13",
         plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Create '/workspace/alpha' and '/workspace/beta'.",
@@ -890,14 +793,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create /workspace/alpha and /workspace/beta",
       rules: [
         {
-          id: "obj-11-alpha",
+          id: "obj-10-alpha",
           points: 250,
           type: "dir_exists",
           path: "/workspace/alpha",
           description: "Directory /workspace/alpha created",
         },
         {
-          id: "obj-11-beta",
+          id: "obj-10-beta",
           points: 250,
           type: "dir_exists",
           path: "/workspace/beta",
@@ -924,15 +827,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 12: MEDIUM — Challenge 12: Find the File
+  // LEVEL 11: MEDIUM — Find the File
   // ==========================================
   {
     slug: "log-diver",
-    title: "Challenge 12: Find the File",
+    title: "Challenge 11: Find the File",
     description:
       "Locate secret.txt inside nested directories using find and copy it to /workspace/found.txt.",
     difficulty: "MEDIUM",
-    order: 12,
+    order: 11,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -950,7 +853,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {},
     clues: [
       {
-        id: "clue-12-1",
+        id: "clue-11-1",
         title: "Search Directive",
         type: "base64",
         plaintextAnswer: "Run 'find /workspace -name secret.txt' to locate it, then 'cp' to /workspace/found.txt.",
@@ -965,14 +868,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Locate secret.txt and copy it to /workspace/found.txt",
       rules: [
         {
-          id: "obj-12-found",
+          id: "obj-11-found",
           points: 300,
           type: "file_exists",
           path: "/workspace/found.txt",
           description: "File /workspace/found.txt deployed",
         },
         {
-          id: "obj-12-cmd",
+          id: "obj-11-cmd",
           points: 200,
           type: "min_commands",
           content: "2",
@@ -999,15 +902,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 13: MEDIUM — Challenge 13: The Hex Note
+  // LEVEL 12: MEDIUM — The Hex Note
   // ==========================================
   {
     slug: "the-relocation-protocol",
-    title: "Challenge 13: The Hex Note",
+    title: "Challenge 12: The Hex Note",
     description:
       "A hexadecimal clue identifies a target report file. Move or copy the report into /workspace/archive using mv.",
     difficulty: "MEDIUM",
-    order: 13,
+    order: 12,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1027,7 +930,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-13-1",
+        id: "clue-12-1",
         title: "Hex Target Specifier",
         type: "hex",
         plaintextAnswer: "report.doc",
@@ -1043,7 +946,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Copy /workspace/report.doc to /workspace/archive/report.doc",
       rules: [
         {
-          id: "obj-13-archived",
+          id: "obj-12-archived",
           points: 500,
           type: "file_exists",
           path: "/workspace/archive/report.doc",
@@ -1070,15 +973,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 14: MEDIUM — Challenge 14: Log Hunt
+  // LEVEL 13: MEDIUM — Log Hunt
   // ==========================================
   {
     slug: "needle-in-the-archive",
-    title: "Challenge 14: Log Hunt",
+    title: "Challenge 13: Log Hunt",
     description:
       "Search server.log for ERROR occurrences using grep and create the acknowledgment file /workspace/alert.txt.",
     difficulty: "MEDIUM",
-    order: 14,
+    order: 13,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1096,7 +999,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {},
     clues: [
       {
-        id: "clue-14-1",
+        id: "clue-13-1",
         title: "Log Investigation Directive",
         type: "base64",
         plaintextAnswer: "Run 'grep ERROR /workspace/server.log', then 'touch /workspace/alert.txt'.",
@@ -1111,14 +1014,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Inspect error log with grep and create /workspace/alert.txt",
       rules: [
         {
-          id: "obj-14-alert",
+          id: "obj-13-alert",
           points: 300,
           type: "file_exists",
           path: "/workspace/alert.txt",
           description: "Acknowledgment file /workspace/alert.txt created",
         },
         {
-          id: "obj-14-cmd",
+          id: "obj-13-cmd",
           points: 200,
           type: "min_commands",
           content: "2",
@@ -1145,15 +1048,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 15: MEDIUM — Challenge 15: Swap the Rules
+  // LEVEL 14: MEDIUM — Swap the Rules
   // ==========================================
   {
     slug: "ghost-signal",
-    title: "Challenge 15: Swap the Rules",
+    title: "Challenge 14: Swap the Rules",
     description:
       "Two commands are swapped: rm creates directories while mkdir deletes files. Create directory safe and delete junk.txt.",
     difficulty: "MEDIUM",
-    order: 15,
+    order: 14,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1174,7 +1077,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-15-1",
+        id: "clue-14-1",
         title: "Reciprocal Command Swaps",
         type: "rot13",
         plaintextAnswer: "SWAP: 'rm' creates directories (acting as mkdir). 'mkdir' deletes files (acting as rm).",
@@ -1189,14 +1092,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create /workspace/safe and delete /workspace/junk.txt using swapped commands",
       rules: [
         {
-          id: "obj-15-safe-dir",
+          id: "obj-14-safe-dir",
           points: 250,
           type: "dir_exists",
           path: "/workspace/safe",
           description: "Directory /workspace/safe created",
         },
         {
-          id: "obj-15-junk-del",
+          id: "obj-14-junk-del",
           points: 250,
           type: "file_deleted",
           path: "/workspace/junk.txt",
@@ -1223,15 +1126,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 16: MEDIUM — Challenge 16: Organize the Files
+  // LEVEL 15: MEDIUM — Organize the Files
   // ==========================================
   {
     slug: "three-keys",
-    title: "Challenge 16: Organize the Files",
+    title: "Challenge 15: Organize the Files",
     description:
       "Place code.js into /workspace/src and style.css into /workspace/styles. In this challenge, cp acts as mv.",
     difficulty: "MEDIUM",
-    order: 16,
+    order: 15,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1251,7 +1154,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-16-1",
+        id: "clue-15-1",
         title: "Sorting Directive",
         type: "base64",
         plaintextAnswer: "'cp' moves files (acting as mv). Move code.js to src and style.css to styles.",
@@ -1269,14 +1172,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Move code.js to src/code.js and style.css to styles/style.css",
       rules: [
         {
-          id: "obj-16-code-moved",
+          id: "obj-15-code-moved",
           points: 250,
           type: "file_exists",
           path: "/workspace/src/code.js",
           description: "File placed in /workspace/src/code.js",
         },
         {
-          id: "obj-16-style-moved",
+          id: "obj-15-style-moved",
           points: 250,
           type: "file_exists",
           path: "/workspace/styles/style.css",
@@ -1303,15 +1206,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 17: MEDIUM — Challenge 17: Decode the Filename
+  // LEVEL 16: MEDIUM — Decode the Filename
   // ==========================================
   {
     slug: "decoy-protocol",
-    title: "Challenge 17: Decode the Filename",
+    title: "Challenge 16: Decode the Filename",
     description:
       "A Base64 clue encodes the target filename. Decode it, inspect the target file, and create confirmation.txt.",
     difficulty: "MEDIUM",
-    order: 17,
+    order: 16,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1329,7 +1232,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {},
     clues: [
       {
-        id: "clue-17-1",
+        id: "clue-16-1",
         title: "Encoded Target Filename",
         type: "base64",
         plaintextAnswer: "target_omega.txt",
@@ -1345,14 +1248,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Inspect target_omega.txt and create /workspace/confirmation.txt",
       rules: [
         {
-          id: "obj-17-conf",
+          id: "obj-16-conf",
           points: 300,
           type: "file_exists",
           path: "/workspace/confirmation.txt",
           description: "Confirmation file /workspace/confirmation.txt created",
         },
         {
-          id: "obj-17-cmd",
+          id: "obj-16-cmd",
           points: 200,
           type: "min_commands",
           content: "2",
@@ -1379,15 +1282,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 18: MEDIUM — Challenge 18: The Missing Directory
+  // LEVEL 17: MEDIUM — The Missing Directory
   // ==========================================
   {
     slug: "broken-chain",
-    title: "Challenge 18: The Missing Directory",
+    title: "Challenge 17: The Missing Directory",
     description:
       "Read instructions.txt to find the missing directory name, create it using cd, and place data.bin inside it.",
     difficulty: "MEDIUM",
-    order: 18,
+    order: 17,
     estimatedDuration: "4-7 min",
     timeLimitSeconds: 900,
     scoringConfig: {
@@ -1407,7 +1310,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     clues: [
       {
-        id: "clue-18-1",
+        id: "clue-17-1",
         title: "Missing Directory Directive",
         type: "hex",
         plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Create '/workspace/vault', then 'cp data.bin vault/data.bin'.",
@@ -1423,14 +1326,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create /workspace/vault and place data.bin inside it",
       rules: [
         {
-          id: "obj-18-vault-dir",
+          id: "obj-17-vault-dir",
           points: 250,
           type: "dir_exists",
           path: "/workspace/vault",
           description: "Directory /workspace/vault created",
         },
         {
-          id: "obj-18-data-copied",
+          id: "obj-17-data-copied",
           points: 250,
           type: "file_exists",
           path: "/workspace/vault/data.bin",
@@ -1457,7 +1360,104 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 19: HARD — Challenge 19: Simple Vault
+  // LEVEL 18: HARD — Deep Breach: Operation Babel
+  // ==========================================
+  {
+    slug: "deep-breach-babel",
+    title: "Challenge 18: Deep Breach: Operation Babel",
+    description:
+      "A secured vault requires establishing a core directory, copying a secret key, and purging temporary data using remapped commands.",
+    difficulty: "HARD",
+    order: 18,
+    estimatedDuration: "8-10 min",
+    timeLimitSeconds: 1800,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.5,
+      timeLimitSeconds: 1800,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {
+      grep: "mkdir",
+      mv: "cp",
+      cp: "rm",
+    },
+    clues: [
+      {
+        id: "clue-18-1",
+        title: "Vault Protocol: Creation & Duplication",
+        type: "base64",
+        plaintextAnswer: "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp).",
+        encodedContent: encodeBase64(
+          "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp)."
+        ),
+        hintNote: "Base64 encoded vault protocol.",
+      },
+      {
+        id: "clue-18-2",
+        title: "Cleanup Protocol: File Deletion",
+        type: "hex",
+        plaintextAnswer: "CLEANUP PROTOCOL: 'cp' removes files (acting as rm).",
+        encodedContent: encodeHex("CLEANUP PROTOCOL: 'cp' removes files (acting as rm)."),
+        hintNote: "Hexadecimal byte stream for cleanup command.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/secret.key": "VAULT_MASTER_KEY_ALPHA_2026",
+      "/workspace/temp.tmp": "TEMPORARY BUFFER TO PURGE",
+    },
+    objectiveConfig: {
+      description: "Establish /workspace/vault/core, copy secret.key into it, and purge temp.tmp",
+      rules: [
+        {
+          id: "obj-18-vault-dir",
+          points: 200,
+          type: "dir_exists",
+          path: "/workspace/vault/core",
+          description: "Directory /workspace/vault/core created",
+        },
+        {
+          id: "obj-18-secret-key",
+          points: 200,
+          type: "file_exists",
+          path: "/workspace/vault/core/secret.key",
+          description: "Key copied to /workspace/vault/core/secret.key",
+        },
+        {
+          id: "obj-18-temp-purged",
+          points: 100,
+          type: "file_deleted",
+          path: "/workspace/temp.tmp",
+          description: "Temporary buffer /workspace/temp.tmp purged",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Understanding Mappings",
+        content: "Check decoded clues: 'grep' makes directories, 'mv' copies files, and 'cp' removes files.",
+        penaltySeconds: 30,
+        pointPenalty: 30,
+        order: 1,
+      },
+      {
+        title: "Executing Babel Recovery",
+        content: "Run 'grep -p /workspace/vault/core', 'mv /workspace/secret.key /workspace/vault/core/secret.key', and 'cp /workspace/temp.tmp'.",
+        penaltySeconds: 60,
+        pointPenalty: 50,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 19: HARD — Simple Vault
   // ==========================================
   {
     slug: "recursive-vault",
@@ -1543,7 +1543,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 20: HARD — Challenge 20: Final Challenge
+  // LEVEL 20: HARD — Final Challenge
   // ==========================================
   {
     slug: "final-convergence",
