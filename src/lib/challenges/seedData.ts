@@ -23,12 +23,27 @@ export interface SeedChallengeDef {
   description: string;
   difficulty: "EASY" | "MEDIUM" | "HARD";
   order: number;
+  timeLimitSeconds: number;
+  scoringConfig: {
+    maxBaseScore: number;
+    intermediateBudget: number;
+    completionBonus: number;
+    speedBonusMax: number;
+    hintPenaltyCap: number;
+    defaultHintPenalty: number;
+    difficultyMultiplier: number;
+    timeLimitSeconds: number;
+    partialCreditOnExpiry: boolean;
+    countsTowardLeaderboard: boolean;
+  };
   commandMappings: Record<string, string>;
   clues: ClueItem[];
   initialFilesystem: Record<string, string>;
   objectiveConfig: {
     description: string;
     rules: Array<{
+      id: string;
+      points: number;
       type: "file_exists" | "dir_exists" | "file_deleted" | "dir_deleted" | "file_contains" | "file_exact" | "min_commands";
       path?: string;
       content?: string;
@@ -39,6 +54,7 @@ export interface SeedChallengeDef {
     title: string;
     content: string;
     penaltySeconds: number;
+    pointPenalty: number;
     order: number;
   }>;
 }
@@ -51,6 +67,19 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       "An automated intrusion countermeasure has scrambled standard Linux shell behavior. Decode 3 progressive clue transmissions, uncover the remapped commands, create the breach recovery directory /workspace/breach, and inspect the critical system signal.",
     difficulty: "EASY",
     order: 1,
+    timeLimitSeconds: 1200,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 1200,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
     commandMappings: {
       cd: "mkdir",
       mkdir: "rm",
@@ -102,11 +131,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Create directory /workspace/breach and inspect /system/signal.txt",
       rules: [
         {
+          id: "obj-1-breach-dir",
+          points: 250,
           type: "dir_exists",
           path: "/workspace/breach",
           description: "Virtual directory /workspace/breach has been created",
         },
         {
+          id: "obj-1-cmd-executed",
+          points: 250,
           type: "min_commands",
           content: "1",
           description: "Executed recovery commands in the terminal",
@@ -119,6 +152,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "Inspect Clues 1 and 2 to discover that 'cd' creates directories while 'ls' reads file contents. Use the Static Reference tab for lookup tables.",
         penaltySeconds: 15,
+        pointPenalty: 20,
         order: 1,
       },
       {
@@ -126,6 +160,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "Type 'cd /workspace/breach' into the terminal to create the folder, then 'ls /system/signal.txt' to read the signal file.",
         penaltySeconds: 30,
+        pointPenalty: 30,
         order: 2,
       },
     ],
@@ -137,6 +172,19 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       "An intercepted operative frequency reveals hidden command aliases. Follow 3 cryptographic clues, discover how touch, pwd, and rm are transposed, inspect the concealed shadow vault, and deploy the operative authorization key.",
     difficulty: "MEDIUM",
     order: 2,
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
     commandMappings: {
       touch: "pwd",
       pwd: "touch",
@@ -187,11 +235,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Deploy operative key /workspace/agent.key and verify terminal identity",
       rules: [
         {
+          id: "obj-2-agent-key",
+          points: 250,
           type: "file_exists",
           path: "/workspace/agent.key",
           description: "File /workspace/agent.key has been successfully deployed",
         },
         {
+          id: "obj-2-cmd-investigated",
+          points: 250,
           type: "min_commands",
           content: "2",
           description: "Executed at least two investigative operations in the terminal",
@@ -204,6 +256,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "Clue 2 reveals that 'rm' is remapped to 'cat'. Running 'rm /etc/shadow_cipher.txt' displays its content without deleting anything!",
         penaltySeconds: 20,
+        pointPenalty: 25,
         order: 1,
       },
       {
@@ -211,6 +264,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "Clue 1 shows 'pwd' acts as 'touch'. Execute 'pwd /workspace/agent.key' to deploy the target key file.",
         penaltySeconds: 40,
+        pointPenalty: 35,
         order: 2,
       },
     ],
@@ -222,6 +276,19 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       "A high-stakes multi-stage vault breach under critical lockdown. Decrypt 4 phased intercepts, establish the secured core directory /opt/vault/core, replicate the master security fragment, and purge the exposed temporary buffer.",
     difficulty: "HARD",
     order: 3,
+    timeLimitSeconds: 1800,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.5,
+      timeLimitSeconds: 1800,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
     commandMappings: {
       mv: "cp",
       cp: "rm",
@@ -283,16 +350,22 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       description: "Establish /opt/vault/core/master.key and purge /opt/vault/secrets/fragment_a.dat",
       rules: [
         {
+          id: "obj-3-vault-core",
+          points: 150,
           type: "dir_exists",
           path: "/opt/vault/core",
           description: "Core vault directory /opt/vault/core created",
         },
         {
+          id: "obj-3-master-key",
+          points: 200,
           type: "file_exists",
           path: "/opt/vault/core/master.key",
           description: "Master key secured at /opt/vault/core/master.key",
         },
         {
+          id: "obj-3-purge-fragment",
+          points: 150,
           type: "file_deleted",
           path: "/opt/vault/secrets/fragment_a.dat",
           description: "Temporary fragment purged from /opt/vault/secrets/fragment_a.dat",
@@ -305,6 +378,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "Since 'grep' performs 'mkdir', running 'grep -p /opt/vault/core' creates the core directory and all required parents.",
         penaltySeconds: 30,
+        pointPenalty: 30,
         order: 1,
       },
       {
@@ -312,6 +386,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         content:
           "'mv' acts as 'cp', so 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' duplicates the key. Then 'cp /opt/vault/secrets/fragment_a.dat' deletes the original file since 'cp' acts as 'rm'!",
         penaltySeconds: 60,
+        pointPenalty: 40,
         order: 2,
       },
     ],

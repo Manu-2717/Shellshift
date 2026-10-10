@@ -22,7 +22,7 @@ export async function PATCH(request: Request) {
 
   try {
     const body = await request.json();
-    const { status, name, description } = body;
+    const { status, name, description, mode, scoringConfig } = body;
 
     const event = await prisma.event.findFirst({
       orderBy: { createdAt: "desc" },
@@ -33,6 +33,8 @@ export async function PATCH(request: Request) {
         data: {
           name: name || "ShellShift Championship",
           status: status || "ACTIVE",
+          mode: mode || "POINTS_TOURNAMENT",
+          scoringConfig: typeof scoringConfig === "object" ? JSON.stringify(scoringConfig) : scoringConfig,
           description,
         },
       });
@@ -44,7 +46,16 @@ export async function PATCH(request: Request) {
       data: {
         ...(status ? { status } : {}),
         ...(name ? { name } : {}),
-        ...(description ? { description } : {}),
+        ...(mode ? { mode } : {}),
+        ...(scoringConfig !== undefined
+          ? {
+              scoringConfig:
+                typeof scoringConfig === "object"
+                  ? JSON.stringify(scoringConfig)
+                  : scoringConfig,
+            }
+          : {}),
+        ...(description !== undefined ? { description } : {}),
       },
     });
 

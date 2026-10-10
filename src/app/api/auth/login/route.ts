@@ -9,6 +9,7 @@ import {
   generateRandomState,
   getOidcConfig,
   isMockAuthAllowed,
+  isMockAdminAllowed,
 } from "@/lib/auth/oidc";
 import { SessionUser, setSessionCookie } from "@/lib/auth/session";
 
@@ -27,7 +28,15 @@ export async function GET(request: Request) {
       );
     }
 
-    const isAdmin = roleParam.toLowerCase() === "admin";
+    const requestedAdmin = roleParam.toLowerCase() === "admin";
+    if (requestedAdmin && !isMockAdminAllowed()) {
+      return NextResponse.json(
+        { error: "Mock administrator authentication is disabled." },
+        { status: 403 }
+      );
+    }
+
+    const isAdmin = requestedAdmin && isMockAdminAllowed();
     const mockEmail = isAdmin ? "admin@shellshift.io" : "player1@shellshift.io";
     const mockName = isAdmin ? "Admin Cipher Master" : "Cipher Runner 01";
     const mockSub = isAdmin ? "mock-sub-admin-001" : "mock-sub-user-001";

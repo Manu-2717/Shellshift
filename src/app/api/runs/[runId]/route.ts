@@ -57,6 +57,23 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden: Run belongs to another team." }, { status: 403 });
   }
 
+  const now = new Date();
+  const timeLimitSeconds = run.challenge.timeLimitSeconds || 1200;
+  const deadline = run.deadlineAt
+    ? new Date(run.deadlineAt)
+    : new Date(run.startedAt.getTime() + timeLimitSeconds * 1000);
+
+  let currentStatus = run.status;
+
+  // Authoritative Expiration check on retrieval
+  if (currentStatus === "IN_PROGRESS" && now.getTime() > deadline.getTime()) {
+    currentStatus = "EXPIRED";
+    await prisma.run.updateMany({
+      where: { id: run.id, status: "IN_PROGRESS" },
+      data: { status: "EXPIRED" },
+    });
+  }
+
   let vfsState: VfsState | null = null;
   let treeList: Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> = [];
 
@@ -76,15 +93,32 @@ export async function GET(
     ? evaluateObjective(vfsState, objectiveConfig, run.commandCount)
     : null;
 
+  let parsedBreakdown = null;
+  try {
+    if (run.scoringBreakdown) {
+      parsedBreakdown = JSON.parse(run.scoringBreakdown);
+    }
+  } catch {}
+
   return NextResponse.json({
     run: {
       id: run.id,
-      status: run.status,
+      status: currentStatus,
       startedAt: run.startedAt,
       completedAt: run.completedAt,
+      deadlineAt: deadline,
+      timeLimitSeconds,
       durationMs: run.durationMs,
       currentWorkingDir: run.currentWorkingDir,
       commandCount: run.commandCount,
+      objectivePoints: run.objectivePoints,
+      completionBonus: run.completionBonus,
+      speedBonus: run.speedBonus,
+      hintPenalty: run.hintPenalty,
+      baseScore: run.baseScore,
+      difficultyMultiplier: run.difficultyMultiplier,
+      finalScore: run.finalScore,
+      scoringBreakdown: parsedBreakdown,
       team: run.team,
       challenge: sanitizeChallengeForPlayer(run.challenge),
       objectiveEvaluation: evaluation,
@@ -94,6 +128,8 @@ export async function GET(
         title: hu.hint.title,
         content: hu.hint.content,
         penaltySeconds: hu.hint.penaltySeconds,
+        pointPenalty: hu.pointPenalty,
+        order: hu.hint.order,
         requestedAt: hu.requestedAt,
       })),
     },

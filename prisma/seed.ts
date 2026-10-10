@@ -32,6 +32,8 @@ async function main() {
       description: challengeDef.description,
       difficulty: challengeDef.difficulty,
       order: challengeDef.order,
+      timeLimitSeconds: challengeDef.timeLimitSeconds,
+      scoringConfig: JSON.stringify(challengeDef.scoringConfig),
       commandMappings: JSON.stringify(challengeDef.commandMappings),
       clues: JSON.stringify(challengeDef.clues),
       initialFilesystem: JSON.stringify(challengeDef.initialFilesystem),
@@ -65,6 +67,7 @@ async function main() {
           title: h.title,
           content: h.content,
           penaltySeconds: h.penaltySeconds,
+          pointPenalty: h.pointPenalty,
           order: h.order,
         },
       });

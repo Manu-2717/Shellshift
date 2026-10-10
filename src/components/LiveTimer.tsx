@@ -7,9 +7,19 @@ interface LiveTimerProps {
   startedAt: string | Date;
   completedAt?: string | Date | null;
   durationMs?: number | null;
+  deadlineAt?: string | Date | null;
+  timeLimitSeconds?: number | null;
+  isExpired?: boolean;
 }
 
-export function LiveTimer({ startedAt, completedAt, durationMs }: LiveTimerProps) {
+export function LiveTimer({
+  startedAt,
+  completedAt,
+  durationMs,
+  deadlineAt,
+  timeLimitSeconds,
+  isExpired: initialExpired,
+}: LiveTimerProps) {
   const getInitialMs = () => {
     if (durationMs !== undefined && durationMs !== null) return durationMs;
     if (completedAt) {
@@ -19,6 +29,7 @@ export function LiveTimer({ startedAt, completedAt, durationMs }: LiveTimerProps
   };
 
   const [elapsedMs, setElapsedMs] = useState<number>(getInitialMs);
+  const isCompleted = !!completedAt || (durationMs !== undefined && durationMs !== null);
 
   useEffect(() => {
     if (durationMs !== undefined && durationMs !== null) return;
@@ -27,7 +38,7 @@ export function LiveTimer({ startedAt, completedAt, durationMs }: LiveTimerProps
     const startTimestamp = new Date(startedAt).getTime();
     const interval = setInterval(() => {
       setElapsedMs(Math.max(0, Date.now() - startTimestamp));
-    }, 60);
+    }, 100);
 
     return () => clearInterval(interval);
   }, [startedAt, completedAt, durationMs]);
@@ -37,31 +48,69 @@ export function LiveTimer({ startedAt, completedAt, durationMs }: LiveTimerProps
   const seconds = totalSeconds % 60;
   const tenths = Math.floor((elapsedMs % 1000) / 100);
 
-  const isCompleted = !!completedAt || (durationMs !== undefined && durationMs !== null);
+  // Remaining time calculation
+  let remainingSeconds: number | null = null;
+  let isExpired = initialExpired;
+
+  if (deadlineAt) {
+    const deadlineMs = new Date(deadlineAt).getTime();
+    const remainingMs = deadlineMs - (Date.now());
+    remainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    if (remainingMs <= 0 && !isCompleted) {
+      isExpired = true;
+    }
+  } else if (timeLimitSeconds) {
+    remainingSeconds = Math.max(0, timeLimitSeconds - totalSeconds);
+    if (totalSeconds >= timeLimitSeconds && !isCompleted) {
+      isExpired = true;
+    }
+  }
+
+  const remMinutes = remainingSeconds !== null ? Math.floor(remainingSeconds / 60) : null;
+  const remSecs = remainingSeconds !== null ? remainingSeconds % 60 : null;
 
   return (
-    <div
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono transition-colors ${
-        isCompleted
-          ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
-          : "bg-neutral-900 border-neutral-800 text-cyan-300"
-      }`}
-    >
-      {isCompleted ? (
-        <Trophy className="w-4 h-4 text-emerald-400 animate-bounce" />
-      ) : (
-        <Timer className="w-4 h-4 text-cyan-400 animate-pulse" />
-      )}
+    <div className="flex items-center gap-2">
+      <div
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono transition-colors ${
+          isCompleted
+            ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
+            : isExpired
+            ? "bg-rose-950/40 border-rose-500/50 text-rose-300"
+            : "bg-neutral-900 border-neutral-800 text-cyan-300"
+        }`}
+      >
+        {isCompleted ? (
+          <Trophy className="w-4 h-4 text-emerald-400" />
+        ) : (
+          <Timer className={`w-4 h-4 ${isExpired ? "text-rose-400" : "text-cyan-400 animate-pulse"}`} />
+        )}
 
-      <div className="flex items-baseline gap-1">
-        <span className="text-[10px] text-neutral-400 font-sans tracking-wide uppercase">
-          {isCompleted ? "Verified Time" : "Server Clock"}
-        </span>
-        <span className="text-sm font-bold tracking-wider">
-          {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
-          <span className="text-xs text-neutral-400">{tenths}</span>
-        </span>
+        <div className="flex items-baseline gap-1">
+          <span className="text-[10px] text-neutral-400 font-sans tracking-wide uppercase">
+            {isCompleted ? "Verified Time" : isExpired ? "Expired" : "Server Clock"}
+          </span>
+          <span className="text-sm font-bold tracking-wider">
+            {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
+            <span className="text-xs text-neutral-400">{tenths}</span>
+          </span>
+        </div>
       </div>
+
+      {!isCompleted && remainingSeconds !== null && (
+        <div
+          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono ${
+            isExpired || remainingSeconds <= 120
+              ? "bg-rose-950/40 border-rose-800/80 text-rose-400 font-bold animate-pulse"
+              : "bg-neutral-900/80 border-neutral-800 text-neutral-400"
+          }`}
+        >
+          <span className="text-[10px] text-neutral-500 uppercase font-sans">Time Left:</span>
+          <span>
+            {remMinutes?.toString().padStart(2, "0")}:{remSecs?.toString().padStart(2, "0")}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

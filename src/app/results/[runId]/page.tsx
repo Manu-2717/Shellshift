@@ -113,7 +113,19 @@ export default async function ResultsPage({
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-center space-y-1">
+            <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
+              Final Verified Score
+            </span>
+            <div className="text-3xl font-extrabold text-cyan-400">
+              {run.finalScore}
+            </div>
+            <span className="text-[10px] text-neutral-400">
+              {run.difficultyMultiplier}x Multiplier
+            </span>
+          </div>
+
           <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-center space-y-1">
             <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
               Leaderboard Rank
@@ -150,10 +162,55 @@ export default async function ResultsPage({
             <span className="text-[11px] text-neutral-500 uppercase tracking-wider font-semibold">
               Commands Executed
             </span>
-            <div className="text-3xl font-extrabold text-cyan-400">
+            <div className="text-3xl font-extrabold text-neutral-200">
               {run.commandCount}
             </div>
             <span className="text-[10px] text-neutral-400">simulated shell calls</span>
+          </div>
+        </div>
+
+        {/* Audited Scoring Formula Breakdown Card */}
+        <div className="p-5 sm:p-6 rounded-xl bg-[#121215] border border-neutral-800 space-y-4">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+            <h2 className="font-bold text-white text-sm flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              Official Competition Score Breakdown
+            </h2>
+            <span className="text-xs px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-cyan-300 font-mono">
+              Status: {run.status}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs font-mono">
+            <div className="p-3 rounded-lg bg-[#09090b] border border-neutral-800/80 space-y-1">
+              <span className="text-[10px] text-neutral-500 uppercase">Milestones</span>
+              <div className="text-lg font-bold text-emerald-400">+{run.objectivePoints}</div>
+              <span className="text-[9px] text-neutral-500">Max 500 pts</span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-[#09090b] border border-neutral-800/80 space-y-1">
+              <span className="text-[10px] text-neutral-500 uppercase">Completion</span>
+              <div className="text-lg font-bold text-cyan-400">+{run.completionBonus}</div>
+              <span className="text-[9px] text-neutral-500">200 pts bonus</span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-[#09090b] border border-neutral-800/80 space-y-1">
+              <span className="text-[10px] text-neutral-500 uppercase">Speed Bonus</span>
+              <div className="text-lg font-bold text-cyan-400">+{run.speedBonus}</div>
+              <span className="text-[9px] text-neutral-500">Max 300 pts</span>
+            </div>
+
+            <div className="p-3 rounded-lg bg-[#09090b] border border-neutral-800/80 space-y-1">
+              <span className="text-[10px] text-neutral-500 uppercase">Hints Used</span>
+              <div className="text-lg font-bold text-rose-400">-{run.hintPenalty}</div>
+              <span className="text-[9px] text-neutral-500">Capped at 100</span>
+            </div>
+
+            <div className="col-span-2 sm:col-span-1 p-3 rounded-lg bg-cyan-950/30 border border-cyan-800/50 space-y-1">
+              <span className="text-[10px] text-cyan-300 uppercase font-bold">Final Score</span>
+              <div className="text-xl font-extrabold text-cyan-300">{run.finalScore}</div>
+              <span className="text-[9px] text-neutral-400">Base {run.baseScore} × {run.difficultyMultiplier}</span>
+            </div>
           </div>
         </div>
 

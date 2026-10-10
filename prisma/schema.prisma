@@ -32,6 +32,7 @@ model Team {
   updatedAt   DateTime         @updatedAt
   memberships TeamMembership[]
   runs        Run[]
+  wonEvents   Event[]          @relation("EventWinner")
 }
 
 model TeamMembership {
@@ -50,13 +51,19 @@ model TeamMembership {
 }
 
 model Event {
-  id          String    @id @default(uuid())
-  name        String
-  description String?
-  status      String    @default("ACTIVE") // UPCOMING, ACTIVE, PAUSED, ENDED
-  startTime   DateTime?
-  endTime     DateTime?
-  createdAt   DateTime  @default(now())
+  id              String    @id @default(uuid())
+  name            String
+  description     String?
+  status          String    @default("ACTIVE") // UPCOMING, ACTIVE, PAUSED, ENDED
+  mode            String    @default("POINTS_TOURNAMENT") // FIRST_FINISH, POINTS_TOURNAMENT
+  scoringConfig   String?   // JSON string
+  winnerTeamId    String?
+  winnerClaimedAt DateTime?
+  startTime       DateTime?
+  endTime         DateTime?
+  createdAt       DateTime  @default(now())
+
+  winnerTeam Team? @relation("EventWinner", fields: [winnerTeamId], references: [id], onDelete: SetNull)
 }
 
 model Challenge {
@@ -66,6 +73,8 @@ model Challenge {
   description       String
   difficulty        String   @default("MEDIUM") // EASY, MEDIUM, HARD
   order             Int      @default(1)
+  timeLimitSeconds  Int      @default(1200) // 20 minutes default
+  scoringConfig     String?  // JSON string
   commandMappings   String   // JSON string
   clues             String   // JSON string
   initialFilesystem String   // JSON string
@@ -80,26 +89,53 @@ model Challenge {
 }
 
 model Run {
-  id                String       @id @default(uuid())
-  teamId            String
-  challengeId       String
-  status            String       @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, ABANDONED
-  startedAt         DateTime     @default(now())
-  completedAt       DateTime?
-  durationMs        Int?
-  filesystemState   String       // JSON string
-  currentWorkingDir String       @default("/workspace")
-  commandCount      Int          @default(0)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                   String                @id @default(uuid())
+  teamId               String
+  challengeId          String
+  status               String                @default("IN_PROGRESS") // NOT_STARTED, IN_PROGRESS, COMPLETED, EXPIRED, FAILED, ABANDONED
+  startedAt            DateTime              @default(now())
+  completedAt          DateTime?
+  deadlineAt           DateTime?
+  durationMs           Int?
+  filesystemState      String                // JSON string
+  currentWorkingDir    String                @default("/workspace")
+  commandCount         Int                   @default(0)
+  scoringSnapshot      String?               // JSON string
+  objectivePoints      Int                   @default(0)
+  completionBonus      Int                   @default(0)
+  speedBonus           Int                   @default(0)
+  hintPenalty          Int                   @default(0)
+  baseScore            Int                   @default(0)
+  difficultyMultiplier Float                 @default(1.0)
+  finalScore           Int                   @default(0)
+  scoringBreakdown     String?               // JSON string
+  isRanked             Boolean               @default(true)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 
-  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  challenge   Challenge    @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  commandLogs CommandLog[]
-  hintUsages  HintUsage[]
+  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge            Challenge             @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  commandLogs          CommandLog[]
+  hintUsages           HintUsage[]
+  objectiveCompletions ObjectiveCompletion[]
 
   @@index([teamId, challengeId])
   @@index([status, durationMs])
+  @@index([finalScore])
+}
+
+model ObjectiveCompletion {
+  id            String   @id @default(uuid())
+  runId         String
+  objectiveId   String
+  ruleIndex     Int      @default(0)
+  pointsAwarded Int      @default(0)
+  completedAt   DateTime @default(now())
+
+  run Run @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, objectiveId])
+  @@index([runId])
 }
 
 model CommandLog {
@@ -124,6 +160,7 @@ model Hint {
   title          String
   content        String
   penaltySeconds Int         @default(30)
+  pointPenalty   Int         @default(25)
   order          Int         @default(1)
   createdAt      DateTime    @default(now())
 
@@ -134,10 +171,11 @@ model Hint {
 }
 
 model HintUsage {
-  id          String   @id @default(uuid())
-  runId       String
-  hintId      String
-  requestedAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  runId        String
+  hintId       String
+  pointPenalty Int      @default(25)
+  requestedAt  DateTime @default(now())
 
   run  Run  @relation(fields: [runId], references: [id], onDelete: Cascade)
   hint Hint @relation(fields: [hintId], references: [id], onDelete: Cascade)

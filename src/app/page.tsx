@@ -66,22 +66,13 @@ export default async function LandingPage() {
               ) : (
                 <div className="flex flex-wrap items-center gap-2.5">
                   {mockAuthEnabled ? (
-                    <>
-                      <Link
-                        href="/api/auth/login?mock=true&role=user"
-                        className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
-                      >
-                        <Zap className="w-4 h-4" />
-                        Quick Play (Dev Login)
-                      </Link>
-                      <Link
-                        href="/api/auth/login?mock=true&role=admin"
-                        className="px-4 py-2.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-cyan-300 font-bold text-xs transition-colors flex items-center gap-2"
-                      >
-                        <Shield className="w-4 h-4" />
-                        Admin Console
-                      </Link>
-                    </>
+                    <Link
+                      href="/api/auth/login?mock=true&role=user"
+                      className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
+                    >
+                      <Zap className="w-4 h-4" />
+                      Quick Play (Dev Login)
+                    </Link>
                   ) : (
                     <Link
                       href="/api/auth/login"
@@ -252,9 +243,6 @@ export default async function LandingPage() {
             </Link>
             <Link href="/leaderboard" className="hover:text-white transition-colors">
               Leaderboard
-            </Link>
-            <Link href="/admin" className="hover:text-white transition-colors">
-              Admin
             </Link>
           </div>
         </div>

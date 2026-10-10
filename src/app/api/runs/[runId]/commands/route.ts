@@ -5,6 +5,7 @@ import { executeCommand } from "@/lib/vfs/engine";
 import { evaluateObjective } from "@/lib/vfs/evaluator";
 import { CommandMapping, ObjectiveConfig, VfsState } from "@/lib/vfs/types";
 import { rateLimit } from "@/lib/rateLimit";
+import { calculateRunScore } from "@/lib/scoring/scoringEngine";
 
 export async function POST(
   request: Request,
@@ -84,6 +85,106 @@ export async function POST(
       );
     }
 
+    const now = new Date();
+    const timeLimitSeconds = run.challenge.timeLimitSeconds || 1200;
+    const deadline = run.deadlineAt
+      ? new Date(run.deadlineAt)
+      : new Date(run.startedAt.getTime() + timeLimitSeconds * 1000);
+
+    // Parse scoring config
+    let scoringConfig = {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier:
+        run.challenge.difficulty === "HARD"
+          ? 1.5
+          : run.challenge.difficulty === "MEDIUM"
+          ? 1.25
+          : 1.0,
+      timeLimitSeconds,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    };
+
+    try {
+      if (run.scoringSnapshot) {
+        scoringConfig = { ...scoringConfig, ...JSON.parse(run.scoringSnapshot) };
+      } else if (run.challenge.scoringConfig) {
+        scoringConfig = { ...scoringConfig, ...JSON.parse(run.challenge.scoringConfig) };
+      }
+    } catch {}
+
+    // Check Authoritative Deadline Expiration
+    if (now.getTime() > deadline.getTime()) {
+      if (run.status === "IN_PROGRESS") {
+        await prisma.run.updateMany({
+          where: { id: run.id, status: "IN_PROGRESS" },
+          data: { status: "EXPIRED" },
+        });
+
+        // Compute and store partial score if configured
+        if (scoringConfig.partialCreditOnExpiry) {
+          const completions = await prisma.objectiveCompletion.findMany({
+            where: { runId: run.id },
+          });
+          const hintUsages = await prisma.hintUsage.findMany({
+            where: { runId: run.id },
+            include: { hint: true },
+          });
+          const verifiedIds = completions.map((c) => c.objectiveId);
+          const hintPenalties = hintUsages.map((u) => u.pointPenalty || u.hint.pointPenalty || 25);
+
+          let objConfig: ObjectiveConfig = { description: "", rules: [] };
+          try {
+            objConfig = JSON.parse(run.challenge.objectiveConfig);
+          } catch {}
+
+          const objectives = (objConfig.rules || []).map((r, idx) => ({
+            id: r.id || `rule-${idx}`,
+            description: r.description,
+            points: r.points || 0,
+          }));
+
+          const partialBreakdown = calculateRunScore({
+            status: "EXPIRED",
+            startedAt: run.startedAt,
+            currentTimestamp: deadline,
+            verifiedObjectiveIds: verifiedIds,
+            revealedHintPenalties: hintPenalties,
+            config: scoringConfig,
+            objectives,
+          });
+
+          await prisma.run.update({
+            where: { id: run.id },
+            data: {
+              objectivePoints: partialBreakdown.objectivePoints,
+              completionBonus: 0,
+              speedBonus: 0,
+              hintPenalty: partialBreakdown.hintPenalty,
+              baseScore: partialBreakdown.baseScore,
+              finalScore: partialBreakdown.finalScore,
+              scoringBreakdown: JSON.stringify(partialBreakdown),
+            },
+          });
+        }
+      }
+
+      return NextResponse.json(
+        {
+          error: "Time limit expired. Subsequent commands are rejected.",
+          isCompleted: false,
+          isExpired: true,
+          status: "EXPIRED",
+        },
+        { status: 400 }
+      );
+    }
+
     // Load VFS state & challenge mapping
     let vfsState: VfsState;
     try {
@@ -112,8 +213,39 @@ export async function POST(
     } catch {}
 
     const evaluation = evaluateObjective(vfsState, objectiveConfig, nextCommandCount);
+
+    // Intermediate Objective Scoring:
+    // Atomically persist verified objectives; unique constraint prevents duplicate points
+    const availableObjectives = (objectiveConfig.rules || []).map((r, idx) => ({
+      id: r.id || `rule-${idx}`,
+      description: r.description,
+      points: r.points || 0,
+    }));
+
+    for (let i = 0; i < evaluation.details.length; i++) {
+      const detail = evaluation.details[i];
+      if (detail.passed) {
+        const objId = detail.id || `rule-${i}`;
+        const pts = detail.points || 0;
+        try {
+          await prisma.objectiveCompletion.create({
+            data: {
+              runId: run.id,
+              objectiveId: objId,
+              ruleIndex: i,
+              pointsAwarded: pts,
+              completedAt: now,
+            },
+          });
+        } catch {
+          // Already recorded
+        }
+      }
+    }
+
     let justCompleted = false;
     let finalDurationMs = run.durationMs;
+    let scoreBreakdown = null;
 
     const MAX_OUTPUT_SIZE = 32768;
     const safeOutput =
@@ -122,15 +254,50 @@ export async function POST(
         : cmdResult.output;
 
     if (evaluation.isCompleted) {
-      const now = new Date();
       finalDurationMs = now.getTime() - run.startedAt.getTime();
+
+      // Retrieve all verified milestones and used hints
+      const allCompletions = await prisma.objectiveCompletion.findMany({
+        where: { runId: run.id },
+      });
+      const allHints = await prisma.hintUsage.findMany({
+        where: { runId: run.id },
+        include: { hint: true },
+      });
+
+      const verifiedIds = allCompletions.map((c) => c.objectiveId);
+      const hintPenalties = allHints.map((h) => h.pointPenalty || h.hint.pointPenalty || 25);
+
+      scoreBreakdown = calculateRunScore({
+        status: "COMPLETED",
+        startedAt: run.startedAt,
+        completedAt: now,
+        verifiedObjectiveIds: verifiedIds,
+        revealedHintPenalties: hintPenalties,
+        config: scoringConfig,
+        objectives: availableObjectives,
+      });
+
+      // MODE A: FIRST_FINISH Live Race Atomic Winner Claim
+      if (event && event.mode === "FIRST_FINISH" && !event.winnerTeamId) {
+        await prisma.event.updateMany({
+          where: {
+            id: event.id,
+            winnerTeamId: null,
+          },
+          data: {
+            winnerTeamId: session.teamId,
+            winnerClaimedAt: now,
+          },
+        });
+      }
 
       // ATOMIC CONDITIONAL UPDATE:
       // Prevents concurrent race condition where two finishing commands complete simultaneously.
       const updateResult = await prisma.run.updateMany({
         where: {
           id: run.id,
-          status: "IN_PROGRESS", // Guard against race conditions
+          status: "IN_PROGRESS",
         },
         data: {
           status: "COMPLETED",
@@ -139,6 +306,14 @@ export async function POST(
           filesystemState: JSON.stringify(vfsState),
           currentWorkingDir: cmdResult.newCwd,
           commandCount: nextCommandCount,
+          objectivePoints: scoreBreakdown.objectivePoints,
+          completionBonus: scoreBreakdown.completionBonus,
+          speedBonus: scoreBreakdown.speedBonus,
+          hintPenalty: scoreBreakdown.hintPenalty,
+          baseScore: scoreBreakdown.baseScore,
+          difficultyMultiplier: scoreBreakdown.difficultyMultiplier,
+          finalScore: scoreBreakdown.finalScore,
+          scoringBreakdown: JSON.stringify(scoreBreakdown),
         },
       });
 
@@ -146,7 +321,28 @@ export async function POST(
         justCompleted = true;
       }
     } else {
-      // Optimistic concurrency: ensure run is still IN_PROGRESS
+      // In-progress update: calculate current verified progress
+      const allCompletions = await prisma.objectiveCompletion.findMany({
+        where: { runId: run.id },
+      });
+      const allHints = await prisma.hintUsage.findMany({
+        where: { runId: run.id },
+        include: { hint: true },
+      });
+
+      const verifiedIds = allCompletions.map((c) => c.objectiveId);
+      const hintPenalties = allHints.map((h) => h.pointPenalty || h.hint.pointPenalty || 25);
+
+      scoreBreakdown = calculateRunScore({
+        status: "IN_PROGRESS",
+        startedAt: run.startedAt,
+        currentTimestamp: now,
+        verifiedObjectiveIds: verifiedIds,
+        revealedHintPenalties: hintPenalties,
+        config: scoringConfig,
+        objectives: availableObjectives,
+      });
+
       await prisma.run.updateMany({
         where: {
           id: run.id,
@@ -156,6 +352,11 @@ export async function POST(
           filesystemState: JSON.stringify(vfsState),
           currentWorkingDir: cmdResult.newCwd,
           commandCount: nextCommandCount,
+          objectivePoints: scoreBreakdown.objectivePoints,
+          hintPenalty: scoreBreakdown.hintPenalty,
+          baseScore: scoreBreakdown.baseScore,
+          finalScore: scoreBreakdown.finalScore,
+          scoringBreakdown: JSON.stringify(scoreBreakdown),
         },
       });
     }
@@ -181,6 +382,7 @@ export async function POST(
       justCompleted,
       durationMs: finalDurationMs,
       objectiveEvaluation: evaluation,
+      scoreBreakdown,
       clearScreen: !!cmdResult.clearScreen,
     });
   } catch (err) {

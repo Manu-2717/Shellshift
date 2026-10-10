@@ -57,11 +57,32 @@ export function isMockAuthAllowed(): boolean {
   return process.env.MOCK_AUTH_ENABLED === "true";
 }
 
-export function checkIsAdmin(email?: string | null): boolean {
-  if (!email) return false;
-  const adminEmails = (process.env.ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-  return adminEmails.includes(email.toLowerCase());
+export function isMockAdminAllowed(): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+  return process.env.MOCK_AUTH_ENABLED === "true" && process.env.ALLOW_MOCK_ADMIN !== "false";
+}
+
+export function checkIsAdmin(email?: string | null, claims?: Record<string, any>): boolean {
+  // 1. Verify against server-side ADMIN_EMAILS allowlist
+  if (email) {
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    if (adminEmails.includes(email.toLowerCase())) {
+      return true;
+    }
+  }
+
+  // 2. Verify against trusted OIDC claims
+  if (claims) {
+    const roles = claims.roles || claims["https://shellshift.io/roles"] || claims.groups;
+    if (Array.isArray(roles) && roles.includes("ADMIN")) {
+      return true;
+    }
+  }
+
+  return false;
 }

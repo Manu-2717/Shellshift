@@ -42,6 +42,8 @@ export interface CommandResult {
 }
 
 export interface ObjectiveRule {
+  id?: string;
+  points?: number;
   type:
     | "file_exists"
     | "dir_exists"
@@ -68,6 +70,8 @@ export interface ObjectiveEvaluation {
   completedRules: number;
   totalRules: number;
   details: {
+    id?: string;
+    points?: number;
     description: string;
     passed: boolean;
   }[];

@@ -15,7 +15,7 @@ export function evaluateObjective(
     };
   }
 
-  const details: { description: string; passed: boolean }[] = [];
+  const details: ObjectiveEvaluation["details"] = [];
   let passedCount = 0;
 
   for (const rule of config.rules) {
@@ -110,6 +110,8 @@ export function evaluateObjective(
     }
 
     details.push({
+      id: rule.id,
+      points: rule.points,
       description: rule.description,
       passed,
     });

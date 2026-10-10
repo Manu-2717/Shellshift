@@ -59,9 +59,33 @@ export async function POST(request: Request) {
           id: existingActiveRun.id,
           status: existingActiveRun.status,
           startedAt: existingActiveRun.startedAt,
+          deadlineAt: existingActiveRun.deadlineAt,
           currentWorkingDir: existingActiveRun.currentWorkingDir,
           commandCount: existingActiveRun.commandCount,
           isExisting: true,
+        },
+      });
+    }
+
+    // Check if team already completed this challenge (enforce 1 ranked completion)
+    const existingCompleted = await prisma.run.findFirst({
+      where: {
+        teamId: session.teamId,
+        challengeId: challenge.id,
+        status: "COMPLETED",
+      },
+    });
+
+    if (existingCompleted) {
+      return NextResponse.json({
+        run: {
+          id: existingCompleted.id,
+          status: existingCompleted.status,
+          startedAt: existingCompleted.startedAt,
+          completedAt: existingCompleted.completedAt,
+          durationMs: existingCompleted.durationMs,
+          finalScore: existingCompleted.finalScore,
+          isAlreadyCompleted: true,
         },
       });
     }
@@ -74,17 +98,48 @@ export async function POST(request: Request) {
 
     const vfs = createInitialVfs(initialFiles);
 
-    // Create new run with authoritative server start timestamp
+    // Parse challenge scoring config
+    const timeLimitSeconds = challenge.timeLimitSeconds || 1200;
     const startedAt = new Date();
+    const deadlineAt = new Date(startedAt.getTime() + timeLimitSeconds * 1000);
+
+    let scoringConfig = {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier:
+        challenge.difficulty === "HARD"
+          ? 1.5
+          : challenge.difficulty === "MEDIUM"
+          ? 1.25
+          : 1.0,
+      timeLimitSeconds,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    };
+
+    try {
+      if (challenge.scoringConfig) {
+        scoringConfig = { ...scoringConfig, ...JSON.parse(challenge.scoringConfig) };
+      }
+    } catch {}
+
+    // Create new run with authoritative server start timestamp and deadline
     const newRun = await prisma.run.create({
       data: {
         teamId: session.teamId,
         challengeId: challenge.id,
         status: "IN_PROGRESS",
         startedAt,
+        deadlineAt,
         filesystemState: JSON.stringify(vfs),
         currentWorkingDir: vfs.cwd,
         commandCount: 0,
+        scoringSnapshot: JSON.stringify(scoringConfig),
+        difficultyMultiplier: scoringConfig.difficultyMultiplier,
       },
     });
 
@@ -93,6 +148,8 @@ export async function POST(request: Request) {
         id: newRun.id,
         status: newRun.status,
         startedAt: newRun.startedAt,
+        deadlineAt: newRun.deadlineAt,
+        timeLimitSeconds,
         currentWorkingDir: newRun.currentWorkingDir,
         commandCount: 0,
         isExisting: false,

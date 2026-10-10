@@ -175,6 +175,9 @@ export default function PlayChallengePage() {
             startedAt={runData.startedAt}
             completedAt={runData.completedAt}
             durationMs={finalDuration}
+            deadlineAt={runData.deadlineAt}
+            timeLimitSeconds={runData.timeLimitSeconds}
+            isExpired={runData.status === "EXPIRED"}
           />
 
           {/* Team Identity Pill */}
