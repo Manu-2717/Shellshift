@@ -76,7 +76,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "operation-inversion",
-    title: "Operation Inversion",
+    title: "Challenge 1: Operation Inversion",
     description:
       "An automated terminal diagnostic has scrambled standard commands. Read the decoded clue to discover which command creates a directory and which inspects files.",
     difficulty: "EASY",
@@ -158,7 +158,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-cryptic-agent",
-    title: "The Cryptic Agent",
+    title: "Challenge 2: The Cryptic Agent",
     description:
       "An operative note reveals an unusual shell profile where file creation and inspection are transposed. Follow the clue to deploy the agent authorization key.",
     difficulty: "MEDIUM",
@@ -239,7 +239,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "deep-breach-babel",
-    title: "Deep Breach: Operation Babel",
+    title: "Challenge 3: Deep Breach: Operation Babel",
     description:
       "A secured vault requires establishing a core directory, copying a secret key, and purging temporary data using remapped commands.",
     difficulty: "HARD",
