@@ -37,11 +37,11 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
 
     expect(c2).toBeDefined();
     expect(c2?.order).toBe(2);
-    expect(c2?.difficulty).toBe("EASY");
+    expect(c2?.difficulty).toBe("MEDIUM");
 
     expect(c3).toBeDefined();
     expect(c3?.order).toBe(3);
-    expect(c3?.difficulty).toBe("EASY");
+    expect(c3?.difficulty).toBe("HARD");
   });
 
   it("passes server-side configuration validation for every single challenge", () => {
@@ -72,140 +72,118 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     }
   });
 
-  // Comprehensive positive & negative solution walkthroughs for all 20 basic Ubuntu challenges
+  // Comprehensive positive & negative solution walkthroughs for all 20 simple challenges
   const solutions: Record<string, { negativeCmd: string; steps: string[] }> = {
     "operation-inversion": {
-      negativeCmd: "ls",
-      steps: ["cd /workspace/system"],
+      negativeCmd: "cat /workspace/signal.txt",
+      steps: ["cd /workspace/breach", "ls /workspace/signal.txt"],
     },
     "the-cryptic-agent": {
-      negativeCmd: "cat /workspace/notes/config.ini",
-      steps: [
-        "cat /workspace/notes/config.ini",
-        "touch /workspace/notes/inspected.log",
-      ],
+      negativeCmd: "pwd",
+      steps: ["rm /workspace/notes.txt", "pwd /workspace/agent.key"],
     },
     "deep-breach-babel": {
-      negativeCmd: "mkdir /workspace/projects/dummy",
-      steps: ["mkdir -p /workspace/projects/webapp/src"],
+      negativeCmd: "cat /workspace/secret.key",
+      steps: [
+        "grep -p /workspace/vault/core",
+        "mv /workspace/secret.key /workspace/vault/core/secret.key",
+        "cp /workspace/temp.tmp",
+      ],
     },
     "pathfinder-basics": {
-      negativeCmd: "touch /workspace/src/dummy.txt",
-      steps: [
-        "touch /workspace/src/index.html",
-        "touch /workspace/src/app.js",
-      ],
+      negativeCmd: "ls /workspace",
+      steps: ["cd project"],
     },
     "morse-mail": {
-      negativeCmd: "cp /workspace/config/settings.json /workspace/config/temp.json",
-      steps: ["cp /workspace/config/settings.json /workspace/backups/settings.json.bak"],
+      negativeCmd: "cat /workspace/other.txt",
+      steps: ["touch /workspace/note.txt", "cat /workspace/read.txt"],
     },
     "binary-breadcrumbs": {
-      negativeCmd: "cp /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf",
-      steps: ["mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf"],
+      negativeCmd: "cat /workspace/message.txt",
+      steps: ["cd /workspace/secret"],
     },
     "hex-in-plain-sight": {
-      negativeCmd: "rm /workspace/cache/valid_cache.dat",
-      steps: [
-        "rm /workspace/cache/junk_01.tmp",
-        "rm /workspace/cache/junk_02.tmp",
-      ],
+      negativeCmd: "ls /workspace",
+      steps: ["mkdir /workspace/temp.txt"],
     },
     "directory-flip": {
-      negativeCmd: "rm /workspace/staging/active.txt",
-      steps: ["rm -r /workspace/obsolete"],
+      negativeCmd: "cat /workspace/decoy.txt",
+      steps: ["touch /workspace/flag.txt /workspace/found.txt"],
     },
     "the-missing-file": {
-      negativeCmd: "cat /var/log/nginx/access.log",
-      steps: [
-        "grep 500 /var/log/nginx/access.log",
-        "touch /workspace/reports/error_resolved.log",
-      ],
+      negativeCmd: "cat /workspace/data.txt",
+      steps: ["mv /workspace/data.txt /workspace/backup/data.txt"],
     },
     "first-flag": {
-      negativeCmd: "ls /etc/app",
+      negativeCmd: "cat /workspace/briefing.txt",
       steps: [
-        "find /etc -name database.conf",
-        "cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf",
+        "cd /workspace/mission",
+        "cp /workspace/briefing.txt /workspace/mission/briefing.txt",
       ],
     },
     "dead-letter": {
-      negativeCmd: "ls /var/log",
-      steps: [
-        "head -n 5 /var/log/syslog",
-        "touch /workspace/syslog_inspected.ack",
-      ],
+      negativeCmd: "ls /workspace",
+      steps: ["cd /workspace/alpha", "cd /workspace/beta"],
     },
     "log-diver": {
-      negativeCmd: "head /var/log/auth.log",
+      negativeCmd: "find /workspace -name other",
       steps: [
-        "tail -n 10 /var/log/auth.log",
-        "touch /workspace/incident_mitigated.ack",
+        "find /workspace -name secret.txt",
+        "cp /workspace/sub1/sub2/sub3/secret.txt /workspace/found.txt",
       ],
     },
     "the-relocation-protocol": {
-      negativeCmd: "ls -a",
-      steps: [
-        "ls -a /workspace",
-        "cp /workspace/.env.secret /workspace/backups/env_backup.txt",
-      ],
+      negativeCmd: "ls /workspace",
+      steps: ["mv /workspace/report.doc /workspace/archive/report.doc"],
     },
     "needle-in-the-archive": {
-      negativeCmd: "tree /opt",
+      negativeCmd: "ls /workspace",
       steps: [
-        "tree /opt/modules",
-        "cp /opt/modules/net/client.js /workspace/dist/client.js",
+        "grep ERROR /workspace/server.log",
+        "touch /workspace/alert.txt",
       ],
     },
     "ghost-signal": {
-      negativeCmd: "mkdir /workspace/release",
+      negativeCmd: "cat /workspace/junk.txt",
       steps: [
-        "mkdir -p /workspace/release/v1",
-        "cp /workspace/src/app.js /workspace/release/v1/app.js",
-        "cp /workspace/src/style.css /workspace/release/v1/style.css",
+        "rm /workspace/safe",
+        "mkdir /workspace/junk.txt",
       ],
     },
     "three-keys": {
-      negativeCmd: "ls /var/log",
+      negativeCmd: "cat /workspace/code.js",
       steps: [
-        "mv /var/log/access.log /var/log/archive/access.log.1",
-        "touch /var/log/access.log",
-        "rm /var/log/access.log.9.gz",
+        "cp /workspace/code.js /workspace/src/code.js",
+        "cp /workspace/style.css /workspace/styles/style.css",
       ],
     },
     "decoy-protocol": {
-      negativeCmd: "ls /etc/nginx",
+      negativeCmd: "cat /workspace/decoy.txt",
       steps: [
-        "cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak",
-        "mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default",
+        "cat /workspace/target_omega.txt",
+        "touch /workspace/confirmation.txt",
       ],
     },
     "broken-chain": {
-      negativeCmd: "cat /tmp/exploit.sh",
+      negativeCmd: "cat /workspace/instructions.txt",
       steps: [
-        "grep USER_ESCALATED /var/log/audit/session_02.log",
-        "cp /var/log/audit/session_02.log /workspace/forensics/incident.log",
-        "rm /tmp/exploit.sh",
+        "cd /workspace/vault",
+        "cp /workspace/data.bin /workspace/vault/data.bin",
       ],
     },
     "recursive-vault": {
-      negativeCmd: "ls /mnt/legacy",
+      negativeCmd: "cat /workspace/key.dat",
       steps: [
-        "mkdir -p /srv/storage/production/data",
-        "cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite",
-        "cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql",
-        "rm -r /mnt/legacy",
+        "grep /workspace/secure",
+        "cp /workspace/key.dat /workspace/secure/key.dat",
       ],
     },
     "final-convergence": {
-      negativeCmd: "ls /workspace/staging",
+      negativeCmd: "cat /workspace/notes.txt",
       steps: [
-        "mkdir -p /var/www/production/public",
-        "mkdir -p /var/www/production/config",
-        "cp /workspace/staging/index.html /var/www/production/public/index.html",
-        "cp /workspace/staging/app.js /var/www/production/public/app.js",
-        "touch /var/www/production/config/.env",
-        "rm -r /workspace/staging",
+        "cd /workspace/production",
+        "cp /workspace/artifact.dat /workspace/production/artifact.dat",
+        "mv /workspace/old_cache.tmp",
       ],
     },
   };

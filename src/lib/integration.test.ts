@@ -226,7 +226,7 @@ describe("Database & Competition Integrity Integration Tests", () => {
     expect(rateLimit(key, limit, 10000).success).toBe(false);
   });
 
-  it("completes full end-to-end challenge flow with standard commands", async () => {
+  it("completes full end-to-end challenge flow with remapped commands", async () => {
     // 1. Initialize run for Challenge 1 (Operation Inversion)
     const seedFiles = JSON.parse(testChallenge.initialFilesystem);
     const vfs = createInitialVfs(seedFiles);
@@ -245,11 +245,11 @@ describe("Database & Competition Integrity Integration Tests", () => {
       },
     });
 
-    // 2. Player runs command: cd /workspace/system
-    const step1 = executeCommand(vfs, "cd /workspace/system", mapping);
+    // 2. Player runs command: cd /workspace/breach (mapped to mkdir)
+    const step1 = executeCommand(vfs, "cd /workspace/breach", mapping);
     expect(step1.exitCode).toBe(0);
-    expect(step1.newCwd).toBe("/workspace/system");
-    expect(vfs.cwd).toBe("/workspace/system");
+    expect(step1.mappedOperation).toBe("mkdir");
+    expect(step1.stateChanged).toBe(true);
 
     // 3. Evaluate objective
     const evalResult = evaluateObjective(vfs, objectiveConfig, 1);

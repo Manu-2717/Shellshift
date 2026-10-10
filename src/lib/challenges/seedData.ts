@@ -1,9 +1,19 @@
+import {
+  encodeAsciiDecimal,
+  encodeBase64,
+  encodeBinary,
+  encodeHex,
+  encodeMorse,
+  encodeRot13,
+  encodeUrlPercent,
+} from "../ciphers/ciphers";
+
 export interface ClueItem {
   id: string;
   title: string;
   type: "morse" | "binary" | "hex" | "base64" | "rot13" | "caesar" | "ascii_decimal" | "url_percent";
   encodedContent: string;
-  plaintextAnswer: string; // Server/Admin only! Stripped from public player responses!
+  plaintextAnswer: string;
   hintNote: string;
 }
 
@@ -62,16 +72,16 @@ export interface SeedChallengeDef {
 
 export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
-  // LEVEL 1: EASY — First Steps (pwd & cd)
+  // LEVEL 1: EASY — Operation Inversion
   // ==========================================
   {
     slug: "operation-inversion",
-    title: "Level 1: First Steps (pwd & cd)",
+    title: "Operation Inversion",
     description:
-      "Welcome to Ubuntu Linux. Verify your current working directory using pwd, view directory contents with ls, and navigate into the system folder with cd /workspace/system.",
+      "An automated terminal diagnostic has scrambled standard commands. Read the decoded clue to discover which command creates a directory and which inspects files.",
     difficulty: "EASY",
     order: 1,
-    estimatedDuration: "5-10 min",
+    estimatedDuration: "2-4 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -85,60 +95,58 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+      ls: "cat",
+    },
     clues: [
       {
         id: "clue-1-1",
-        title: "Mission Directive: Navigation",
+        title: "Transmission: Command Swaps",
         type: "base64",
-        plaintextAnswer: "Run 'pwd' to print your location, then 'cd /workspace/system'.",
-        encodedContent: "Run 'pwd' to print your location, then 'cd /workspace/system'.",
-        hintNote: "Ubuntu navigation basics: pwd prints working directory, cd changes directory.",
-      },
-      {
-        id: "clue-1-2",
-        title: "Ubuntu Tip: File Listing",
-        type: "base64",
-        plaintextAnswer: "Run 'ls' to view files in /workspace/system.",
-        encodedContent: "Run 'ls' to view files in /workspace/system.",
-        hintNote: "Use 'ls' to list files and subdirectories.",
+        plaintextAnswer:
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat).",
+        encodedContent: encodeBase64(
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat)."
+        ),
+        hintNote: "Base64 radix encoding. 'cd' creates directories and 'ls' reads files.",
       },
     ],
     initialFilesystem: {
-      "/workspace/readme.txt": "Welcome to Ubuntu Linux CLI. Navigate into the system folder.",
-      "/workspace/system/status.txt": "System status: Online.",
+      "/workspace/readme.txt": "Diagnostic note: Commands are swapped. Check the clue transmission.",
+      "/workspace/signal.txt": "SIGNAL_OK: System diagnostic operational.",
     },
     objectiveConfig: {
-      description: "Navigate to /workspace/system and inspect system status",
+      description: "Create directory /workspace/breach and inspect /workspace/signal.txt",
       rules: [
         {
-          id: "obj-1-system-dir",
+          id: "obj-1-breach-dir",
           points: 250,
-          type: "cwd_equals",
-          path: "/workspace/system",
-          description: "Navigated into /workspace/system directory",
+          type: "dir_exists",
+          path: "/workspace/breach",
+          description: "Virtual directory /workspace/breach has been created",
         },
         {
-          id: "obj-1-cmds",
+          id: "obj-1-cmd-executed",
           points: 250,
           type: "min_commands",
           content: "1",
-          description: "Executed commands in terminal",
+          description: "Executed recovery commands in the terminal",
         },
       ],
     },
     hints: [
       {
-        title: "Where Am I?",
-        content: "Type 'pwd' to see where you are. The terminal will print /workspace.",
-        penaltySeconds: 10,
+        title: "Decoding the Clue",
+        content: "The clue reveals that 'cd' actually creates directories.",
+        penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Changing Directory",
-        content: "Type 'cd /workspace/system' or 'cd system' to enter the folder.",
-        penaltySeconds: 20,
+        title: "Deploying Recovery",
+        content: "Run 'cd /workspace/breach' to create the folder, then 'ls /workspace/signal.txt' to view the file.",
+        penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
       },
@@ -146,17 +154,195 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 2: EASY — Reading Files (cat)
+  // LEVEL 2: MEDIUM — The Cryptic Agent
   // ==========================================
   {
     slug: "the-cryptic-agent",
-    title: "Level 2: Reading Files (cat)",
+    title: "The Cryptic Agent",
     description:
-      "Inspect configuration notes. Use cat to display /workspace/notes/config.ini and create an inspection confirmation with touch /workspace/notes/inspected.log.",
-    difficulty: "EASY",
+      "An operative note reveals an unusual shell profile where file creation and inspection are transposed. Follow the clue to deploy the agent authorization key.",
+    difficulty: "MEDIUM",
     order: 2,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {
+      pwd: "touch",
+      rm: "cat",
+    },
+    clues: [
+      {
+        id: "clue-2-1",
+        title: "Operative Clue: File Transposition",
+        type: "hex",
+        plaintextAnswer: "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch).",
+        encodedContent: encodeHex(
+          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch)."
+        ),
+        hintNote: "Hexadecimal byte stream. 'rm' reads files safely; 'pwd' creates files.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/readme.txt": "Operative note: Shell mappings active. Check your mission clue.",
+      "/workspace/notes.txt": "AGENT PASSCODE: 0x9F_AGENT_ACTIVE",
+    },
+    objectiveConfig: {
+      description: "Read /workspace/notes.txt and deploy /workspace/agent.key",
+      rules: [
+        {
+          id: "obj-2-agent-key",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/agent.key",
+          description: "File /workspace/agent.key has been successfully deployed",
+        },
+        {
+          id: "obj-2-cmd-investigated",
+          points: 250,
+          type: "min_commands",
+          content: "2",
+          description: "Executed investigative operations in the terminal",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Reading Without Deleting",
+        content: "The hex clue reveals that 'rm' safely reads files without deleting them.",
+        penaltySeconds: 20,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Creating the Key",
+        content: "Use 'rm /workspace/notes.txt' to view the passcode, then 'pwd /workspace/agent.key' to create the key.",
+        penaltySeconds: 40,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 3: HARD — Deep Breach: Operation Babel
+  // ==========================================
+  {
+    slug: "deep-breach-babel",
+    title: "Deep Breach: Operation Babel",
+    description:
+      "A secured vault requires establishing a core directory, copying a secret key, and purging temporary data using remapped commands.",
+    difficulty: "HARD",
+    order: 3,
+    estimatedDuration: "8-10 min",
+    timeLimitSeconds: 1800,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.5,
+      timeLimitSeconds: 1800,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {
+      grep: "mkdir",
+      mv: "cp",
+      cp: "rm",
+    },
+    clues: [
+      {
+        id: "clue-3-1",
+        title: "Vault Protocol: Creation & Duplication",
+        type: "base64",
+        plaintextAnswer: "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp).",
+        encodedContent: encodeBase64(
+          "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp)."
+        ),
+        hintNote: "Base64 encoded vault protocol.",
+      },
+      {
+        id: "clue-3-2",
+        title: "Cleanup Protocol: File Deletion",
+        type: "hex",
+        plaintextAnswer: "CLEANUP PROTOCOL: 'cp' removes files (acting as rm).",
+        encodedContent: encodeHex("CLEANUP PROTOCOL: 'cp' removes files (acting as rm)."),
+        hintNote: "Hexadecimal byte stream for cleanup command.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/secret.key": "VAULT_MASTER_KEY_ALPHA_2026",
+      "/workspace/temp.tmp": "TEMPORARY BUFFER TO PURGE",
+    },
+    objectiveConfig: {
+      description: "Establish /workspace/vault/core, copy secret.key into it, and purge temp.tmp",
+      rules: [
+        {
+          id: "obj-3-vault-dir",
+          points: 200,
+          type: "dir_exists",
+          path: "/workspace/vault/core",
+          description: "Directory /workspace/vault/core created",
+        },
+        {
+          id: "obj-3-secret-key",
+          points: 200,
+          type: "file_exists",
+          path: "/workspace/vault/core/secret.key",
+          description: "Key copied to /workspace/vault/core/secret.key",
+        },
+        {
+          id: "obj-3-temp-purged",
+          points: 100,
+          type: "file_deleted",
+          path: "/workspace/temp.tmp",
+          description: "Temporary buffer /workspace/temp.tmp purged",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Understanding Mappings",
+        content: "Check decoded clues: 'grep' makes directories, 'mv' copies files, and 'cp' removes files.",
+        penaltySeconds: 30,
+        pointPenalty: 30,
+        order: 1,
+      },
+      {
+        title: "Executing Babel Recovery",
+        content: "Run 'grep -p /workspace/vault/core', 'mv /workspace/secret.key /workspace/vault/core/secret.key', and 'cp /workspace/temp.tmp'.",
+        penaltySeconds: 60,
+        pointPenalty: 50,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 4: EASY — Challenge 4: Make a Folder
+  // ==========================================
+  {
+    slug: "pathfinder-basics",
+    title: "Challenge 4: Make a Folder",
+    description:
+      "Players receive a clue telling them to create a directory named project. In this challenge, cd project creates the directory instead of changing into it.",
+    difficulty: "EASY",
+    order: 4,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -165,64 +351,121 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+    },
     clues: [
       {
-        id: "clue-2-1",
-        title: "Mission Directive: File Reading",
+        id: "clue-4-1",
+        title: "Directive: Folder Creation",
         type: "base64",
-        plaintextAnswer: "Run 'cat /workspace/notes/config.ini' to view file contents.",
-        encodedContent: "Run 'cat /workspace/notes/config.ini' to view file contents.",
-        hintNote: "'cat' (concatenate) displays file text directly in the terminal.",
-      },
-      {
-        id: "clue-2-2",
-        title: "Action Item: Confirmation File",
-        type: "base64",
-        plaintextAnswer: "Run 'touch /workspace/notes/inspected.log' to complete inspection.",
-        encodedContent: "Run 'touch /workspace/notes/inspected.log' to complete inspection.",
-        hintNote: "'touch' creates an empty file if it does not exist.",
+        plaintextAnswer: "CLUE: 'cd project' creates the directory 'project' directly in /workspace.",
+        encodedContent: encodeBase64("CLUE: 'cd project' creates the directory 'project' directly in /workspace."),
+        hintNote: "Base64 clue revealing that cd creates directories.",
       },
     ],
     initialFilesystem: {
-      "/workspace/notes/config.ini": "server_port=8080\nenvironment=production\nstatus=ready",
-      "/workspace/notes/readme.txt": "Use cat to view config.ini, then touch inspected.log.",
+      "/workspace/readme.txt": "Mission: Create a directory named project.",
     },
     objectiveConfig: {
-      description: "Read config.ini and create /workspace/notes/inspected.log",
+      description: "Create directory /workspace/project",
       rules: [
         {
-          id: "obj-2-inspected-log",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/notes/inspected.log",
-          description: "File /workspace/notes/inspected.log created",
+          id: "obj-4-project-dir",
+          points: 500,
+          type: "dir_exists",
+          path: "/workspace/project",
+          description: "Directory /workspace/project created",
         },
+      ],
+    },
+    hints: [
+      {
+        title: "Navigation as Creation",
+        content: "The command 'cd' has been remapped to create directories instead of navigating.",
+        penaltySeconds: 15,
+        pointPenalty: 20,
+        order: 1,
+      },
+      {
+        title: "Command Syntax",
+        content: "Enter 'cd project' (or 'cd /workspace/project') to complete the objective.",
+        penaltySeconds: 30,
+        pointPenalty: 30,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 5: EASY — Challenge 5: Read the Note
+  // ==========================================
+  {
+    slug: "morse-mail",
+    title: "Challenge 5: Read the Note",
+    description:
+      "Locate a file called note.txt and display its contents. A remapped command is required to read the file.",
+    difficulty: "EASY",
+    order: 5,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 600,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {
+      touch: "cat",
+      cat: "touch",
+    },
+    clues: [
+      {
+        id: "clue-5-1",
+        title: "Inspection Remap",
+        type: "rot13",
+        plaintextAnswer: "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
+        encodedContent: encodeRot13("CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'."),
+        hintNote: "ROT13 substitution. Touch reads files; cat creates files.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/note.txt": "WELCOME: You read the hidden note! Now run 'cat /workspace/read.txt' to complete.",
+    },
+    objectiveConfig: {
+      description: "Read note.txt and create /workspace/read.txt using cat",
+      rules: [
         {
-          id: "obj-2-cmds",
-          points: 200,
-          type: "min_commands",
-          content: "1",
-          description: "Executed file commands in terminal",
+          id: "obj-5-read-file",
+          points: 500,
+          type: "file_exists",
+          path: "/workspace/read.txt",
+          description: "Confirmation file /workspace/read.txt created",
         },
       ],
     },
     hints: [
       {
         title: "Viewing Files",
-        content: "Run 'cat /workspace/notes/config.ini' to read the config settings.",
-        penaltySeconds: 10,
+        content: "The ROT13 clue reveals that 'touch' reads files and 'cat' creates files.",
+        penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Creating the Log",
-        content: "Run 'touch /workspace/notes/inspected.log' to mark inspection complete.",
-        penaltySeconds: 20,
+        title: "Reading and Creating",
+        content: "Run 'touch /workspace/note.txt' to print the note, then 'cat /workspace/read.txt' to finish.",
+        penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
       },
@@ -230,236 +473,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 3: EASY — Creating Directories (mkdir -p)
-  // ==========================================
-  {
-    slug: "deep-breach-babel",
-    title: "Level 3: Creating Directories (mkdir -p)",
-    description:
-      "Organize a web application directory structure. Use mkdir -p to create the nested path /workspace/projects/webapp/src.",
-    difficulty: "EASY",
-    order: 3,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {},
-    clues: [
-      {
-        id: "clue-3-1",
-        title: "Mission Directive: Nested Folders",
-        type: "base64",
-        plaintextAnswer: "Run 'mkdir -p /workspace/projects/webapp/src'.",
-        encodedContent: "Run 'mkdir -p /workspace/projects/webapp/src'.",
-        hintNote: "The '-p' flag tells mkdir to create all missing parent directories.",
-      },
-    ],
-    initialFilesystem: {
-      "/workspace/projects/readme.txt": "Create webapp/src directory using mkdir -p.",
-    },
-    objectiveConfig: {
-      description: "Create directory tree /workspace/projects/webapp/src",
-      rules: [
-        {
-          id: "obj-3-webapp-src",
-          points: 500,
-          type: "dir_exists",
-          path: "/workspace/projects/webapp/src",
-          description: "Directory /workspace/projects/webapp/src created",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Parent Directories",
-        content: "Without '-p', mkdir errors if intermediate folders don't exist.",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Exact Command",
-        content: "Type: 'mkdir -p /workspace/projects/webapp/src'",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 4: EASY — Creating Files (touch)
-  // ==========================================
-  {
-    slug: "pathfinder-basics",
-    title: "Level 4: Creating Files (touch)",
-    description:
-      "Initialize source files for a web project. Use touch to create /workspace/src/index.html and /workspace/src/app.js.",
-    difficulty: "EASY",
-    order: 4,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {},
-    clues: [
-      {
-        id: "clue-4-1",
-        title: "Mission Directive: Initialize Files",
-        type: "base64",
-        plaintextAnswer: "Run 'touch /workspace/src/index.html' and 'touch /workspace/src/app.js'.",
-        encodedContent: "Run 'touch /workspace/src/index.html' and 'touch /workspace/src/app.js'.",
-        hintNote: "You can create files individually or in one command: touch file1 file2.",
-      },
-    ],
-    initialFilesystem: {
-      "/workspace/src/.keep": "",
-    },
-    objectiveConfig: {
-      description: "Create /workspace/src/index.html and /workspace/src/app.js",
-      rules: [
-        {
-          id: "obj-4-index",
-          points: 250,
-          type: "file_exists",
-          path: "/workspace/src/index.html",
-          description: "File /workspace/src/index.html created",
-        },
-        {
-          id: "obj-4-app",
-          points: 250,
-          type: "file_exists",
-          path: "/workspace/src/app.js",
-          description: "File /workspace/src/app.js created",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Creating Files",
-        content: "Use 'touch' followed by the target file path.",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Commands",
-        content: "Run 'touch /workspace/src/index.html' then 'touch /workspace/src/app.js'.",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 5: EASY — Copying Files (cp)
-  // ==========================================
-  {
-    slug: "morse-mail",
-    title: "Level 5: Copying Files (cp)",
-    description:
-      "Make a safety backup of your configuration. Use cp to duplicate /workspace/config/settings.json to /workspace/backups/settings.json.bak.",
-    difficulty: "EASY",
-    order: 5,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {},
-    clues: [
-      {
-        id: "clue-5-1",
-        title: "Mission Directive: File Backup",
-        type: "base64",
-        plaintextAnswer: "Run 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'.",
-        encodedContent: "Run 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'.",
-        hintNote: "cp <source> <destination> duplicates files.",
-      },
-    ],
-    initialFilesystem: {
-      "/workspace/config/settings.json": '{"debug": false, "version": "1.0.0"}',
-      "/workspace/backups/.keep": "",
-    },
-    objectiveConfig: {
-      description: "Backup settings.json to /workspace/backups/settings.json.bak",
-      rules: [
-        {
-          id: "obj-5-bak-file",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/backups/settings.json.bak",
-          description: "Backup file created at /workspace/backups/settings.json.bak",
-        },
-        {
-          id: "obj-5-orig-intact",
-          points: 200,
-          type: "file_exists",
-          path: "/workspace/config/settings.json",
-          description: "Original config file preserved",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Using cp",
-        content: "Specify the source path first, then destination path.",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Exact Command",
-        content: "Type: 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 6: EASY — Moving & Renaming Files (mv)
+  // LEVEL 6: EASY — Challenge 6: Morse Message
   // ==========================================
   {
     slug: "binary-breadcrumbs",
-    title: "Level 6: Moving & Renaming (mv)",
+    title: "Challenge 6: Morse Message",
     description:
-      "Move a draft report to the official documents directory. Use mv to relocate /workspace/downloads/draft_report.pdf to /workspace/documents/report.pdf.",
+      "A message file contains Morse code revealing the target directory name. Decode the message and create the directory.",
     difficulty: "EASY",
     order: 6,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -468,56 +492,50 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+    },
     clues: [
       {
         id: "clue-6-1",
-        title: "Mission Directive: Relocate File",
-        type: "base64",
-        plaintextAnswer: "Run 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'.",
-        encodedContent: "Run 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'.",
-        hintNote: "'mv' moves files from source to destination and can rename them simultaneously.",
+        title: "Morse Code Directive",
+        type: "morse",
+        plaintextAnswer: "SECRET",
+        encodedContent: encodeMorse("SECRET"),
+        hintNote: "Morse code dots and dashes decoding to SECRET.",
       },
     ],
     initialFilesystem: {
-      "/workspace/downloads/draft_report.pdf": "Annual engineering review report.",
-      "/workspace/documents/.keep": "",
+      "/workspace/message.txt": "... . -.-. .-. . -",
     },
     objectiveConfig: {
-      description: "Move draft_report.pdf to /workspace/documents/report.pdf",
+      description: "Create directory /workspace/secret revealed by the Morse message",
       rules: [
         {
-          id: "obj-6-dest-file",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/documents/report.pdf",
-          description: "File moved to /workspace/documents/report.pdf",
-        },
-        {
-          id: "obj-6-src-moved",
-          points: 200,
-          type: "file_deleted",
-          path: "/workspace/downloads/draft_report.pdf",
-          description: "Original draft removed from downloads",
+          id: "obj-6-secret-dir",
+          points: 500,
+          type: "dir_exists",
+          path: "/workspace/secret",
+          description: "Directory /workspace/secret created",
         },
       ],
     },
     hints: [
       {
-        title: "Using mv",
-        content: "mv moves the file without leaving a copy in the original directory.",
-        penaltySeconds: 10,
+        title: "Decoding Morse",
+        content: "'... . -.-. .-. . -' decodes to SECRET in Morse code.",
+        penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Exact Command",
-        content: "Type: 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'",
-        penaltySeconds: 20,
+        title: "Creating Folder",
+        content: "'cd' creates directories in this level. Run 'cd /workspace/secret'.",
+        penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
       },
@@ -525,17 +543,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 7: EASY — File Deletion (rm)
+  // LEVEL 7: EASY — Challenge 7: Remove the Temporary File
   // ==========================================
   {
     slug: "hex-in-plain-sight",
-    title: "Level 7: File Deletion (rm)",
+    title: "Challenge 7: Remove the Temporary File",
     description:
-      "Housekeeping: clean up temporary cache files. Use rm to delete /workspace/cache/junk_01.tmp and /workspace/cache/junk_02.tmp while preserving valid_cache.dat.",
+      "Remove temporary file temp.txt while preserving required file keep.txt. In this challenge, mkdir removes files.",
     difficulty: "EASY",
     order: 7,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -544,57 +562,58 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      mkdir: "rm",
+    },
     clues: [
       {
         id: "clue-7-1",
-        title: "Mission Directive: Cache Cleanup",
+        title: "Removal Mapping",
         type: "base64",
-        plaintextAnswer: "Run 'rm /workspace/cache/junk_01.tmp' and 'rm /workspace/cache/junk_02.tmp'.",
-        encodedContent: "Run 'rm /workspace/cache/junk_01.tmp' and 'rm /workspace/cache/junk_02.tmp'.",
-        hintNote: "'rm' permanently removes specified files.",
+        plaintextAnswer: "CLUE: 'mkdir' removes files (acting as rm). Run 'mkdir temp.txt' to delete it.",
+        encodedContent: encodeBase64("CLUE: 'mkdir' removes files (acting as rm). Run 'mkdir temp.txt' to delete it."),
+        hintNote: "Base64 clue explaining that mkdir deletes files.",
       },
     ],
     initialFilesystem: {
-      "/workspace/cache/junk_01.tmp": "Temporary cache dump 1",
-      "/workspace/cache/junk_02.tmp": "Temporary cache dump 2",
-      "/workspace/cache/valid_cache.dat": "VALID_CACHE_DATA_DO_NOT_DELETE",
+      "/workspace/keep.txt": "Required system configuration.",
+      "/workspace/temp.txt": "Temporary file to be deleted.",
     },
     objectiveConfig: {
-      description: "Delete junk cache files from /workspace/cache",
+      description: "Delete /workspace/temp.txt while preserving /workspace/keep.txt",
       rules: [
         {
-          id: "obj-7-junk1-del",
-          points: 250,
+          id: "obj-7-temp-del",
+          points: 300,
           type: "file_deleted",
-          path: "/workspace/cache/junk_01.tmp",
-          description: "Junk file 1 deleted",
+          path: "/workspace/temp.txt",
+          description: "Temporary file /workspace/temp.txt removed",
         },
         {
-          id: "obj-7-junk2-del",
-          points: 250,
-          type: "file_deleted",
-          path: "/workspace/cache/junk_02.tmp",
-          description: "Junk file 2 deleted",
+          id: "obj-7-keep-exists",
+          points: 200,
+          type: "file_exists",
+          path: "/workspace/keep.txt",
+          description: "File /workspace/keep.txt preserved",
         },
       ],
     },
     hints: [
       {
-        title: "Deleting Files",
-        content: "Use 'rm' with the file path to remove it.",
-        penaltySeconds: 10,
+        title: "Deleting with mkdir",
+        content: "The clue explains that 'mkdir' is remapped to remove files in this challenge.",
+        penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Exact Commands",
-        content: "Run 'rm /workspace/cache/junk_01.tmp' followed by 'rm /workspace/cache/junk_02.tmp'.",
-        penaltySeconds: 20,
+        title: "Executing Removal",
+        content: "Run 'mkdir /workspace/temp.txt' to delete the temporary file.",
+        penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
       },
@@ -602,17 +621,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 8: EASY — Directory Cleanup (rm -r)
+  // LEVEL 8: EASY — Challenge 8: Hex Name
   // ==========================================
   {
     slug: "directory-flip",
-    title: "Level 8: Directory Cleanup (rm -r)",
+    title: "Challenge 8: Hex Name",
     description:
-      "Decommission an obsolete directory tree. Use rm -r to recursively remove /workspace/obsolete and all its contents.",
+      "A hexadecimal clue identifies a target filename. Decode the name manually, locate the file, and view it using touch.",
     difficulty: "EASY",
     order: 8,
-    estimatedDuration: "5-10 min",
-    timeLimitSeconds: 1200,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -621,50 +640,51 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      touch: "cp",
+    },
     clues: [
       {
         id: "clue-8-1",
-        title: "Mission Directive: Recursive Removal",
-        type: "base64",
-        plaintextAnswer: "Run 'rm -r /workspace/obsolete'.",
-        encodedContent: "Run 'rm -r /workspace/obsolete'.",
-        hintNote: "The '-r' flag (recursive) enables rm to remove directories and everything inside them.",
+        title: "Hex Encoded Target",
+        type: "hex",
+        plaintextAnswer: "flag.txt (Copy to found.txt)",
+        encodedContent: encodeHex("flag.txt"),
+        hintNote: "Hexadecimal byte stream translating to 'flag.txt'. 'touch' copies files.",
       },
     ],
     initialFilesystem: {
-      "/workspace/obsolete/old1.txt": "Legacy data 1",
-      "/workspace/obsolete/old2.txt": "Legacy data 2",
-      "/workspace/staging/active.txt": "Active production data",
+      "/workspace/flag.txt": "HEX_SUCCESS: You located the hex target file!",
+      "/workspace/decoy.txt": "Not this file.",
     },
     objectiveConfig: {
-      description: "Recursively delete obsolete folder /workspace/obsolete",
+      description: "Copy flag.txt to /workspace/found.txt using touch",
       rules: [
         {
-          id: "obj-8-obsolete-del",
+          id: "obj-8-found",
           points: 500,
-          type: "dir_deleted",
-          path: "/workspace/obsolete",
-          description: "Directory /workspace/obsolete removed",
+          type: "file_exists",
+          path: "/workspace/found.txt",
+          description: "Target file /workspace/found.txt deployed",
         },
       ],
     },
     hints: [
       {
-        title: "Recursive Flag",
-        content: "Plain 'rm' cannot remove directories; use the '-r' flag.",
-        penaltySeconds: 10,
+        title: "Decoding Hex",
+        content: "The hex bytes translate to 'flag.txt'. In this level, 'touch' copies files (acting as cp).",
+        penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Exact Command",
-        content: "Type: 'rm -r /workspace/obsolete'",
-        penaltySeconds: 20,
+        title: "Copying Target",
+        content: "Run 'touch /workspace/flag.txt /workspace/found.txt' to copy the file.",
+        penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
       },
@@ -672,17 +692,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 9: MEDIUM — Pattern Searching (grep)
+  // LEVEL 9: EASY — Challenge 9: Copy the File
   // ==========================================
   {
     slug: "the-missing-file",
-    title: "Level 9: Pattern Searching (grep)",
+    title: "Challenge 9: Copy the File",
     description:
-      "Find error codes in server access logs. Use grep to locate ERROR entries in /var/log/nginx/access.log, then create /workspace/reports/error_resolved.log with touch.",
-    difficulty: "MEDIUM",
+      "Copy data.txt into the backup directory. In this challenge, mv copies files without removing the source.",
+    difficulty: "EASY",
     order: 9,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -690,76 +710,77 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      mv: "cp",
+    },
     clues: [
       {
         id: "clue-9-1",
-        title: "Mission Directive: Searching Logs",
+        title: "Duplication Directive",
         type: "base64",
-        plaintextAnswer: "Run 'grep ERROR /var/log/nginx/access.log' then 'touch /workspace/reports/error_resolved.log'.",
-        encodedContent: "Run 'grep ERROR /var/log/nginx/access.log' then 'touch /workspace/reports/error_resolved.log'.",
-        hintNote: "'grep <pattern> <file>' filters and prints matching lines.",
+        plaintextAnswer: "CLUE: 'mv' copies files (acting as cp). Run 'mv data.txt backup/data.txt'.",
+        encodedContent: encodeBase64("CLUE: 'mv' copies files (acting as cp). Run 'mv data.txt backup/data.txt'."),
+        hintNote: "Base64 clue revealing that mv acts as cp.",
       },
     ],
     initialFilesystem: {
-      "/var/log/nginx/access.log":
-        "GET /index 200\nPOST /login 200\nGET /secret 403\nPOST /api 500 ERROR_CODE_500_SERVER_DOWN",
-      "/workspace/reports/.keep": "",
+      "/workspace/data.txt": "Original data payload.",
+      "/workspace/backup/.keep": "",
     },
     objectiveConfig: {
-      description: "Search logs with grep and create /workspace/reports/error_resolved.log",
+      description: "Copy /workspace/data.txt to /workspace/backup/data.txt while keeping original",
       rules: [
         {
-          id: "obj-9-resolved",
+          id: "obj-9-backup-file",
           points: 300,
           type: "file_exists",
-          path: "/workspace/reports/error_resolved.log",
-          description: "File /workspace/reports/error_resolved.log created",
+          path: "/workspace/backup/data.txt",
+          description: "File copied to /workspace/backup/data.txt",
         },
         {
-          id: "obj-9-grep-cmd",
+          id: "obj-9-orig-file",
           points: 200,
-          type: "min_commands",
-          content: "2",
-          description: "Executed commands in terminal",
+          type: "file_exists",
+          path: "/workspace/data.txt",
+          description: "Original /workspace/data.txt preserved",
         },
       ],
     },
     hints: [
       {
-        title: "Searching Logs",
-        content: "Run 'grep ERROR /var/log/nginx/access.log' to isolate the failing line.",
+        title: "Copying with mv",
+        content: "In this challenge, 'mv' acts as 'cp' without removing the original file.",
         penaltySeconds: 15,
-        pointPenalty: 25,
+        pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Resolution Log",
-        content: "Run 'touch /workspace/reports/error_resolved.log' to finish.",
+        title: "Target Command",
+        content: "Run 'mv /workspace/data.txt /workspace/backup/data.txt'.",
         penaltySeconds: 30,
-        pointPenalty: 35,
+        pointPenalty: 30,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 10: MEDIUM — Locating Files (find)
+  // LEVEL 10: EASY — Challenge 10: First Mission
   // ==========================================
   {
     slug: "first-flag",
-    title: "Level 10: Locating Files (find)",
+    title: "Challenge 10: First Mission",
     description:
-      "Locate a configuration file buried deep in the filesystem. Use find /etc -name database.conf, then copy it to /workspace/database.conf using cp.",
-    difficulty: "MEDIUM",
+      "A short introductory mission: create directory /workspace/mission using cd, then copy briefing.txt into it.",
+    difficulty: "EASY",
     order: 10,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "2-4 min",
+    timeLimitSeconds: 600,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -767,74 +788,76 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 600,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+    },
     clues: [
       {
         id: "clue-10-1",
-        title: "Mission Directive: Find by Name",
-        type: "base64",
-        plaintextAnswer: "Run 'find /etc -name database.conf' then 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
-        encodedContent: "Run 'find /etc -name database.conf' then 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
-        hintNote: "'find <dir> -name <filename>' recursively locates files matching the name.",
+        title: "Combined Mission Directive",
+        type: "hex",
+        plaintextAnswer: "DIRECTIVE: 'cd /workspace/mission' creates folder. 'cp briefing.txt mission/briefing.txt' copies file.",
+        encodedContent: encodeHex("cd /workspace/mission; cp briefing.txt mission/"),
+        hintNote: "Hex encoded two-step instructions.",
       },
     ],
     initialFilesystem: {
-      "/etc/app/deep/nested/sub/database.conf": "DB_HOST=localhost\nDB_PORT=5432\nDB_NAME=production",
+      "/workspace/briefing.txt": "MISSION DIRECTIVE: Level 10 complete.",
     },
     objectiveConfig: {
-      description: "Locate database.conf and copy to /workspace/database.conf",
+      description: "Create /workspace/mission and copy briefing.txt into it",
       rules: [
         {
-          id: "obj-10-db-conf",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/database.conf",
-          description: "Database config copied to /workspace/database.conf",
+          id: "obj-10-mission-dir",
+          points: 250,
+          type: "dir_exists",
+          path: "/workspace/mission",
+          description: "Directory /workspace/mission created",
         },
         {
-          id: "obj-10-cmds",
-          points: 200,
-          type: "min_commands",
-          content: "2",
-          description: "Executed search and copy commands",
+          id: "obj-10-briefing-copy",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/mission/briefing.txt",
+          description: "File /workspace/mission/briefing.txt deployed",
         },
       ],
     },
     hints: [
       {
-        title: "Finding the File",
-        content: "Run 'find /etc -name database.conf' to reveal its full path.",
+        title: "Folder Creation",
+        content: "'cd' creates directories here. First run 'cd /workspace/mission'.",
         penaltySeconds: 15,
-        pointPenalty: 25,
+        pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Copying to Workspace",
-        content: "Run 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
+        title: "Copying Briefing",
+        content: "Run 'cp /workspace/briefing.txt /workspace/mission/briefing.txt'.",
         penaltySeconds: 30,
-        pointPenalty: 35,
+        pointPenalty: 30,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 11: MEDIUM — Inspecting Headers (head)
+  // LEVEL 11: MEDIUM — Challenge 11: Create Two Folders
   // ==========================================
   {
     slug: "dead-letter",
-    title: "Level 11: Inspecting Headers (head)",
+    title: "Challenge 11: Create Two Folders",
     description:
-      "Inspect the first lines of the system log. Use head -n 3 /var/log/syslog to view the boot header, then create /workspace/syslog_inspected.ack using touch.",
+      "Create two named directories in /workspace: alpha and beta. In this challenge, cd creates directories.",
     difficulty: "MEDIUM",
     order: 11,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -843,55 +866,57 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+    },
     clues: [
       {
         id: "clue-11-1",
-        title: "Mission Directive: View First Lines",
-        type: "base64",
-        plaintextAnswer: "Run 'head -n 3 /var/log/syslog' then 'touch /workspace/syslog_inspected.ack'.",
-        encodedContent: "Run 'head -n 3 /var/log/syslog' then 'touch /workspace/syslog_inspected.ack'.",
-        hintNote: "'head -n <lines> <file>' displays the top lines of a file.",
+        title: "Dual Directory Directive",
+        type: "rot13",
+        plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Create '/workspace/alpha' and '/workspace/beta'.",
+        encodedContent: encodeRot13("DIRECTIVE: 'cd' creates directories. Create '/workspace/alpha' and '/workspace/beta'."),
+        hintNote: "ROT13 substitution detailing both directory names.",
       },
     ],
     initialFilesystem: {
-      "/var/log/syslog": "HEADER: SYSTEM BOOT\nKERNEL: v6.8.0-generic\nBOOT_ID: 99421\nDevice eth0 UP\nDevice lo UP\nUser session active",
+      "/workspace/readme.txt": "Create two directories: alpha and beta.",
     },
     objectiveConfig: {
-      description: "Inspect top lines with head and deploy /workspace/syslog_inspected.ack",
+      description: "Create /workspace/alpha and /workspace/beta",
       rules: [
         {
-          id: "obj-11-ack",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/syslog_inspected.ack",
-          description: "Acknowledgment /workspace/syslog_inspected.ack created",
+          id: "obj-11-alpha",
+          points: 250,
+          type: "dir_exists",
+          path: "/workspace/alpha",
+          description: "Directory /workspace/alpha created",
         },
         {
-          id: "obj-11-cmds",
-          points: 200,
-          type: "min_commands",
-          content: "2",
-          description: "Executed commands in terminal",
+          id: "obj-11-beta",
+          points: 250,
+          type: "dir_exists",
+          path: "/workspace/beta",
+          description: "Directory /workspace/beta created",
         },
       ],
     },
     hints: [
       {
-        title: "Using head",
-        content: "Run 'head -n 3 /var/log/syslog' to print the top 3 lines.",
-        penaltySeconds: 15,
+        title: "Remapped cd",
+        content: "'cd' creates directories. Run 'cd /workspace/alpha'.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Creating Ack",
-        content: "Run 'touch /workspace/syslog_inspected.ack'.",
-        penaltySeconds: 30,
+        title: "Creating Both",
+        content: "Run 'cd /workspace/alpha' followed by 'cd /workspace/beta'.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -899,17 +924,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 12: MEDIUM — Tailing Logs (tail)
+  // LEVEL 12: MEDIUM — Challenge 12: Find the File
   // ==========================================
   {
     slug: "log-diver",
-    title: "Level 12: Tailing Logs (tail)",
+    title: "Challenge 12: Find the File",
     description:
-      "Inspect the latest security events at the bottom of the authentication log. Use tail -n 2 /var/log/auth.log, then acknowledge by creating /workspace/incident_mitigated.ack.",
+      "Locate secret.txt inside nested directories using find and copy it to /workspace/found.txt.",
     difficulty: "MEDIUM",
     order: 12,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -918,7 +943,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
@@ -926,47 +951,47 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-12-1",
-        title: "Mission Directive: View End of File",
+        title: "Search Directive",
         type: "base64",
-        plaintextAnswer: "Run 'tail -n 2 /var/log/auth.log' then 'touch /workspace/incident_mitigated.ack'.",
-        encodedContent: "Run 'tail -n 2 /var/log/auth.log' then 'touch /workspace/incident_mitigated.ack'.",
-        hintNote: "'tail -n <lines> <file>' displays the final lines of a file.",
+        plaintextAnswer: "Run 'find /workspace -name secret.txt' to locate it, then 'cp' to /workspace/found.txt.",
+        encodedContent: encodeBase64("Run 'find /workspace -name secret.txt' to locate it, then 'cp' to /workspace/found.txt."),
+        hintNote: "Base64 clue for finding and copying the hidden file.",
       },
     ],
     initialFilesystem: {
-      "/var/log/auth.log": "Session 1 opened\nSession 2 opened\nSession 3 opened\nCRITICAL: INCIDENT DETECTED AT END OF LOG",
+      "/workspace/sub1/sub2/sub3/secret.txt": "SECRET_TOKEN_ALPHA",
     },
     objectiveConfig: {
-      description: "Inspect log tail and create /workspace/incident_mitigated.ack",
+      description: "Locate secret.txt and copy it to /workspace/found.txt",
       rules: [
         {
-          id: "obj-12-ack",
+          id: "obj-12-found",
           points: 300,
           type: "file_exists",
-          path: "/workspace/incident_mitigated.ack",
-          description: "Acknowledgment /workspace/incident_mitigated.ack created",
+          path: "/workspace/found.txt",
+          description: "File /workspace/found.txt deployed",
         },
         {
-          id: "obj-12-cmds",
+          id: "obj-12-cmd",
           points: 200,
           type: "min_commands",
           content: "2",
-          description: "Executed commands in terminal",
+          description: "Executed search and copy operations",
         },
       ],
     },
     hints: [
       {
-        title: "Using tail",
-        content: "Run 'tail -n 2 /var/log/auth.log' to view the last 2 lines.",
-        penaltySeconds: 15,
+        title: "Locating the File",
+        content: "Run 'find /workspace -name secret.txt' to discover the file path.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Creating File",
-        content: "Run 'touch /workspace/incident_mitigated.ack'.",
-        penaltySeconds: 30,
+        title: "Copying Target",
+        content: "Run 'cp /workspace/sub1/sub2/sub3/secret.txt /workspace/found.txt'.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -974,17 +999,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 13: MEDIUM — Hidden Files (ls -a)
+  // LEVEL 13: MEDIUM — Challenge 13: The Hex Note
   // ==========================================
   {
     slug: "the-relocation-protocol",
-    title: "Level 13: Hidden Files (ls -a)",
+    title: "Challenge 13: The Hex Note",
     description:
-      "Find hidden dotfiles in the workspace using ls -a /workspace, locate .env.secret, and copy it to /workspace/backups/env_backup.txt using cp.",
+      "A hexadecimal clue identifies a target report file. Move or copy the report into /workspace/archive using mv.",
     difficulty: "MEDIUM",
     order: 13,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -993,50 +1018,51 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      mv: "cp",
+    },
     clues: [
       {
         id: "clue-13-1",
-        title: "Mission Directive: Reveal Hidden Files",
-        type: "base64",
-        plaintextAnswer: "Run 'ls -a /workspace' then 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'.",
-        encodedContent: "Run 'ls -a /workspace' then 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'.",
-        hintNote: "'ls -a' lists all files including hidden dotfiles starting with '.'.",
+        title: "Hex Target Specifier",
+        type: "hex",
+        plaintextAnswer: "report.doc",
+        encodedContent: encodeHex("report.doc"),
+        hintNote: "Hex byte stream decoding to report.doc.",
       },
     ],
     initialFilesystem: {
-      "/workspace/.bashrc": "alias ll='ls -la'",
-      "/workspace/.env.secret": "API_SECRET_KEY=UBUNTU_SEC_9921",
-      "/workspace/backups/.keep": "",
+      "/workspace/report.doc": "Confidential Report Data",
+      "/workspace/archive/.keep": "",
     },
     objectiveConfig: {
-      description: "Reveal .env.secret and copy to /workspace/backups/env_backup.txt",
+      description: "Copy /workspace/report.doc to /workspace/archive/report.doc",
       rules: [
         {
-          id: "obj-13-backup",
+          id: "obj-13-archived",
           points: 500,
           type: "file_exists",
-          path: "/workspace/backups/env_backup.txt",
-          description: "Secret backup created at /workspace/backups/env_backup.txt",
+          path: "/workspace/archive/report.doc",
+          description: "Report safely placed in /workspace/archive/report.doc",
         },
       ],
     },
     hints: [
       {
-        title: "Showing Hidden Files",
-        content: "Type 'ls -a' to see all files starting with a dot like .env.secret.",
-        penaltySeconds: 15,
+        title: "Decoding Target",
+        content: "The hex clue translates to 'report.doc'. 'mv' acts as 'cp'.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Copying Hidden File",
-        content: "Type: 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'",
-        penaltySeconds: 30,
+        title: "Archiving File",
+        content: "Run 'mv /workspace/report.doc /workspace/archive/report.doc'.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -1044,17 +1070,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 14: MEDIUM — Visualizing Trees (tree)
+  // LEVEL 14: MEDIUM — Challenge 14: Log Hunt
   // ==========================================
   {
     slug: "needle-in-the-archive",
-    title: "Level 14: Visualizing Trees (tree)",
+    title: "Challenge 14: Log Hunt",
     description:
-      "Explore the /opt software modules using tree /opt, identify the network module, and copy /opt/modules/net/client.js to /workspace/dist/client.js.",
+      "Search server.log for ERROR occurrences using grep and create the acknowledgment file /workspace/alert.txt.",
     difficulty: "MEDIUM",
     order: 14,
-    estimatedDuration: "10-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1063,7 +1089,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
@@ -1071,42 +1097,47 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-14-1",
-        title: "Mission Directive: Tree Inspection",
+        title: "Log Investigation Directive",
         type: "base64",
-        plaintextAnswer: "Run 'tree /opt' then 'cp /opt/modules/net/client.js /workspace/dist/client.js'.",
-        encodedContent: "Run 'tree /opt' then 'cp /opt/modules/net/client.js /workspace/dist/client.js'.",
-        hintNote: "'tree' prints a visual hierarchy of directories and files.",
+        plaintextAnswer: "Run 'grep ERROR /workspace/server.log', then 'touch /workspace/alert.txt'.",
+        encodedContent: encodeBase64("Run 'grep ERROR /workspace/server.log', then 'touch /workspace/alert.txt'."),
+        hintNote: "Base64 instructions for log analysis.",
       },
     ],
     initialFilesystem: {
-      "/opt/modules/net/client.js": "Network client module v2.1",
-      "/opt/modules/auth/oauth.js": "OAuth client module v1.0",
-      "/workspace/dist/.keep": "",
+      "/workspace/server.log": "INFO boot ok\nINFO worker ready\nERROR critical failure 500\nINFO shutdown complete",
     },
     objectiveConfig: {
-      description: "Explore module tree and deploy /workspace/dist/client.js",
+      description: "Inspect error log with grep and create /workspace/alert.txt",
       rules: [
         {
-          id: "obj-14-client-dist",
-          points: 500,
+          id: "obj-14-alert",
+          points: 300,
           type: "file_exists",
-          path: "/workspace/dist/client.js",
-          description: "Client module deployed to /workspace/dist/client.js",
+          path: "/workspace/alert.txt",
+          description: "Acknowledgment file /workspace/alert.txt created",
+        },
+        {
+          id: "obj-14-cmd",
+          points: 200,
+          type: "min_commands",
+          content: "2",
+          description: "Executed grep and touch operations",
         },
       ],
     },
     hints: [
       {
-        title: "Running Tree",
-        content: "Type 'tree /opt' to visually inspect the folders.",
-        penaltySeconds: 15,
+        title: "Filtering Logs",
+        content: "Run 'grep ERROR /workspace/server.log' to inspect the failure.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Copying File",
-        content: "Type: 'cp /opt/modules/net/client.js /workspace/dist/client.js'",
-        penaltySeconds: 30,
+        title: "Logging Alert",
+        content: "Run 'touch /workspace/alert.txt' to acknowledge the error.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -1114,17 +1145,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 15: MEDIUM — Staging a Release (mkdir & cp)
+  // LEVEL 15: MEDIUM — Challenge 15: Swap the Rules
   // ==========================================
   {
     slug: "ghost-signal",
-    title: "Level 15: Staging a Release (mkdir & cp)",
+    title: "Challenge 15: Swap the Rules",
     description:
-      "Stage a new release build: create /workspace/release/v1 with mkdir -p, then copy both /workspace/src/app.js and /workspace/src/style.css into it.",
+      "Two commands are swapped: rm creates directories while mkdir deletes files. Create directory safe and delete junk.txt.",
     difficulty: "MEDIUM",
     order: 15,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1133,63 +1164,58 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      rm: "mkdir",
+      mkdir: "rm",
+    },
     clues: [
       {
         id: "clue-15-1",
-        title: "Mission Directive: Staging Assets",
-        type: "base64",
-        plaintextAnswer: "Run 'mkdir -p /workspace/release/v1', then 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
-        encodedContent: "Run 'mkdir -p /workspace/release/v1', then 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
-        hintNote: "Combine mkdir -p with cp to stage files.",
+        title: "Reciprocal Command Swaps",
+        type: "rot13",
+        plaintextAnswer: "SWAP: 'rm' creates directories (acting as mkdir). 'mkdir' deletes files (acting as rm).",
+        encodedContent: encodeRot13("SWAP: 'rm' creates directories (acting as mkdir). 'mkdir' deletes files (acting as rm)."),
+        hintNote: "ROT13 explaining swapped rm and mkdir commands.",
       },
     ],
     initialFilesystem: {
-      "/workspace/src/app.js": "console.log('App ready');",
-      "/workspace/src/style.css": "body { margin: 0; }",
+      "/workspace/junk.txt": "Temporary file to delete.",
     },
     objectiveConfig: {
-      description: "Create /workspace/release/v1 and copy app.js & style.css into it",
+      description: "Create /workspace/safe and delete /workspace/junk.txt using swapped commands",
       rules: [
         {
-          id: "obj-15-release-dir",
-          points: 150,
+          id: "obj-15-safe-dir",
+          points: 250,
           type: "dir_exists",
-          path: "/workspace/release/v1",
-          description: "Release directory created",
+          path: "/workspace/safe",
+          description: "Directory /workspace/safe created",
         },
         {
-          id: "obj-15-app-rel",
-          points: 175,
-          type: "file_exists",
-          path: "/workspace/release/v1/app.js",
-          description: "app.js staged in release",
-        },
-        {
-          id: "obj-15-style-rel",
-          points: 175,
-          type: "file_exists",
-          path: "/workspace/release/v1/style.css",
-          description: "style.css staged in release",
+          id: "obj-15-junk-del",
+          points: 250,
+          type: "file_deleted",
+          path: "/workspace/junk.txt",
+          description: "File /workspace/junk.txt removed",
         },
       ],
     },
     hints: [
       {
-        title: "Step 1",
-        content: "Run 'mkdir -p /workspace/release/v1'.",
-        penaltySeconds: 15,
+        title: "Swapped Actions",
+        content: "'rm' creates directories, and 'mkdir' deletes files in this level.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Step 2",
-        content: "Run 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
-        penaltySeconds: 30,
+        title: "Executing Swapped Commands",
+        content: "Run 'rm /workspace/safe' to make the folder, and 'mkdir /workspace/junk.txt' to delete the file.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -1197,17 +1223,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 16: MEDIUM — Log Rotation (mv, touch & rm)
+  // LEVEL 16: MEDIUM — Challenge 16: Organize the Files
   // ==========================================
   {
     slug: "three-keys",
-    title: "Level 16: Log Rotation (mv, touch & rm)",
+    title: "Challenge 16: Organize the Files",
     description:
-      "Perform log rotation: move /var/log/access.log to /var/log/archive/access.log.1, touch a new empty /var/log/access.log, and remove stale /var/log/access.log.9.gz.",
+      "Place code.js into /workspace/src and style.css into /workspace/styles. In this challenge, cp acts as mv.",
     difficulty: "MEDIUM",
     order: 16,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1216,64 +1242,60 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cp: "mv",
+    },
     clues: [
       {
         id: "clue-16-1",
-        title: "Mission Directive: Log Rotation Steps",
+        title: "Sorting Directive",
         type: "base64",
-        plaintextAnswer: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', 'touch /var/log/access.log', and 'rm /var/log/access.log.9.gz'.",
-        encodedContent: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', 'touch /var/log/access.log', and 'rm /var/log/access.log.9.gz'.",
-        hintNote: "Standard sysadmin rotation sequence: archive active log, touch new log, remove stale log.",
+        plaintextAnswer: "'cp' moves files (acting as mv). Move code.js to src and style.css to styles.",
+        encodedContent: encodeBase64("'cp' moves files (acting as mv). Move code.js to src and style.css to styles."),
+        hintNote: "Base64 clue indicating cp moves files.",
       },
     ],
     initialFilesystem: {
-      "/var/log/access.log": "Active server access records.",
-      "/var/log/access.log.9.gz": "Stale 9-week-old log.",
-      "/var/log/archive/.keep": "",
+      "/workspace/code.js": "console.log('ShellShift');",
+      "/workspace/style.css": "body { margin: 0; }",
+      "/workspace/src/.keep": "",
+      "/workspace/styles/.keep": "",
     },
     objectiveConfig: {
-      description: "Rotate access.log to archive, touch fresh log, and purge access.log.9.gz",
+      description: "Move code.js to src/code.js and style.css to styles/style.css",
       rules: [
         {
-          id: "obj-16-archived",
-          points: 200,
+          id: "obj-16-code-moved",
+          points: 250,
           type: "file_exists",
-          path: "/var/log/archive/access.log.1",
-          description: "Active log archived to access.log.1",
+          path: "/workspace/src/code.js",
+          description: "File placed in /workspace/src/code.js",
         },
         {
-          id: "obj-16-new-log",
-          points: 150,
+          id: "obj-16-style-moved",
+          points: 250,
           type: "file_exists",
-          path: "/var/log/access.log",
-          description: "Fresh access.log created",
-        },
-        {
-          id: "obj-16-stale-del",
-          points: 150,
-          type: "file_deleted",
-          path: "/var/log/access.log.9.gz",
-          description: "Stale compressed log purged",
+          path: "/workspace/styles/style.css",
+          description: "File placed in /workspace/styles/style.css",
         },
       ],
     },
     hints: [
       {
-        title: "Move and Touch",
-        content: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', then 'touch /var/log/access.log'.",
-        penaltySeconds: 15,
+        title: "Moving Files",
+        content: "'cp' moves files instead of copying them.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Remove Stale",
-        content: "Run 'rm /var/log/access.log.9.gz'.",
-        penaltySeconds: 30,
+        title: "Target Commands",
+        content: "Run 'cp /workspace/code.js /workspace/src/code.js' and 'cp /workspace/style.css /workspace/styles/style.css'.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -1281,17 +1303,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 17: MEDIUM — Config Migration (cp & mv)
+  // LEVEL 17: MEDIUM — Challenge 17: Decode the Filename
   // ==========================================
   {
     slug: "decoy-protocol",
-    title: "Level 17: Config Migration (cp & mv)",
+    title: "Challenge 17: Decode the Filename",
     description:
-      "Safely deploy web server configurations: copy /etc/nginx/nginx.conf to /etc/nginx/nginx.conf.bak, and enable site by moving /etc/nginx/sites-available/default to /etc/nginx/sites-enabled/default.",
+      "A Base64 clue encodes the target filename. Decode it, inspect the target file, and create confirmation.txt.",
     difficulty: "MEDIUM",
     order: 17,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1300,7 +1322,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
@@ -1308,56 +1330,48 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-17-1",
-        title: "Mission Directive: Config Deployment",
+        title: "Encoded Target Filename",
         type: "base64",
-        plaintextAnswer: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak' then 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
-        encodedContent: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak' then 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
-        hintNote: "Backup configs before modifying, then enable virtual hosts with mv.",
+        plaintextAnswer: "target_omega.txt",
+        encodedContent: encodeBase64("target_omega.txt"),
+        hintNote: "Base64 string decoding to target_omega.txt.",
       },
     ],
     initialFilesystem: {
-      "/etc/nginx/nginx.conf": "http { server { listen 80; } }",
-      "/etc/nginx/sites-available/default": "server { listen 443; }",
-      "/etc/nginx/sites-enabled/.keep": "",
+      "/workspace/target_omega.txt": "ACCESS CODE: 7712",
+      "/workspace/decoy.txt": "Decoy file.",
     },
     objectiveConfig: {
-      description: "Backup nginx.conf and enable default site in sites-enabled",
+      description: "Inspect target_omega.txt and create /workspace/confirmation.txt",
       rules: [
         {
-          id: "obj-17-bak",
+          id: "obj-17-conf",
+          points: 300,
+          type: "file_exists",
+          path: "/workspace/confirmation.txt",
+          description: "Confirmation file /workspace/confirmation.txt created",
+        },
+        {
+          id: "obj-17-cmd",
           points: 200,
-          type: "file_exists",
-          path: "/etc/nginx/nginx.conf.bak",
-          description: "Config backup /etc/nginx/nginx.conf.bak created",
-        },
-        {
-          id: "obj-17-enabled",
-          points: 150,
-          type: "file_exists",
-          path: "/etc/nginx/sites-enabled/default",
-          description: "Site enabled in /etc/nginx/sites-enabled/default",
-        },
-        {
-          id: "obj-17-avail-del",
-          points: 150,
-          type: "file_deleted",
-          path: "/etc/nginx/sites-available/default",
-          description: "Source site moved out of sites-available",
+          type: "min_commands",
+          content: "2",
+          description: "Executed file inspection and confirmation commands",
         },
       ],
     },
     hints: [
       {
-        title: "Backup Step",
-        content: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak'.",
-        penaltySeconds: 15,
+        title: "Decoding Base64",
+        content: "The Base64 clue decodes to 'target_omega.txt'.",
+        penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Enable Site",
-        content: "Run 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
-        penaltySeconds: 30,
+        title: "Inspecting and Confirming",
+        content: "Run 'cat /workspace/target_omega.txt' then 'touch /workspace/confirmation.txt'.",
+        penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
       },
@@ -1365,17 +1379,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 18: HARD — Forensic Analysis (grep, cp & rm)
+  // LEVEL 18: MEDIUM — Challenge 18: The Missing Directory
   // ==========================================
   {
     slug: "broken-chain",
-    title: "Level 18: Forensic Analysis (grep, cp & rm)",
+    title: "Challenge 18: The Missing Directory",
     description:
-      "Investigate a security anomaly: search /var/log/audit/ for USER_ESCALATED with grep, copy the offending log /var/log/audit/session_02.log to /workspace/forensics/incident.log, and remove /tmp/exploit.sh with rm.",
-    difficulty: "HARD",
+      "Read instructions.txt to find the missing directory name, create it using cd, and place data.bin inside it.",
+    difficulty: "MEDIUM",
     order: 18,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1800,
+    estimatedDuration: "4-7 min",
+    timeLimitSeconds: 900,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1383,77 +1397,77 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.5,
-      timeLimitSeconds: 1800,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 900,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+    },
     clues: [
       {
         id: "clue-18-1",
-        title: "Mission Directive: Forensic Workflow",
-        type: "base64",
-        plaintextAnswer: "Search logs with 'grep USER_ESCALATED /var/log/audit/session_02.log', copy incident to /workspace/forensics/incident.log, and remove /tmp/exploit.sh.",
-        encodedContent: "Search logs with 'grep USER_ESCALATED /var/log/audit/session_02.log', copy incident to /workspace/forensics/incident.log, and remove /tmp/exploit.sh.",
-        hintNote: "Investigate with grep, archive evidence with cp, remove malware with rm.",
+        title: "Missing Directory Directive",
+        type: "hex",
+        plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Create '/workspace/vault', then 'cp data.bin vault/data.bin'.",
+        encodedContent: encodeHex("cd /workspace/vault; cp data.bin vault/"),
+        hintNote: "Hex instructions for vault creation and copying.",
       },
     ],
     initialFilesystem: {
-      "/var/log/audit/session_01.log": "User login normal",
-      "/var/log/audit/session_02.log": "AUDIT ALERT: USER_ESCALATED_UID_0 ROOT_PRIVILEGES_GRANTED",
-      "/tmp/exploit.sh": "MALICIOUS_PAYLOAD",
-      "/workspace/forensics/.keep": "",
+      "/workspace/instructions.txt": "MISSING FOLDER: vault. Create /workspace/vault and place data.bin inside.",
+      "/workspace/data.bin": "BINARY_PAYLOAD_DATA",
     },
     objectiveConfig: {
-      description: "Archive incident log to forensics and remove /tmp/exploit.sh",
+      description: "Create /workspace/vault and place data.bin inside it",
       rules: [
         {
-          id: "obj-18-incident-log",
+          id: "obj-18-vault-dir",
           points: 250,
-          type: "file_exists",
-          path: "/workspace/forensics/incident.log",
-          description: "Incident log archived to /workspace/forensics/incident.log",
+          type: "dir_exists",
+          path: "/workspace/vault",
+          description: "Directory /workspace/vault created",
         },
         {
-          id: "obj-18-exploit-del",
+          id: "obj-18-data-copied",
           points: 250,
-          type: "file_deleted",
-          path: "/tmp/exploit.sh",
-          description: "Malicious exploit removed from /tmp/exploit.sh",
+          type: "file_exists",
+          path: "/workspace/vault/data.bin",
+          description: "Data placed in /workspace/vault/data.bin",
         },
       ],
     },
     hints: [
       {
-        title: "Locate and Copy",
-        content: "Run 'cp /var/log/audit/session_02.log /workspace/forensics/incident.log'.",
-        penaltySeconds: 30,
-        pointPenalty: 30,
+        title: "Finding Directory Name",
+        content: "Read instructions.txt: the missing folder is 'vault'. 'cd' creates directories.",
+        penaltySeconds: 20,
+        pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Delete Exploit",
-        content: "Run 'rm /tmp/exploit.sh'.",
-        penaltySeconds: 60,
-        pointPenalty: 40,
+        title: "Commands Sequence",
+        content: "Run 'cd /workspace/vault' then 'cp /workspace/data.bin /workspace/vault/data.bin'.",
+        penaltySeconds: 40,
+        pointPenalty: 35,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 19: HARD — Storage Restructuring (mkdir -p, cp & rm -r)
+  // LEVEL 19: HARD — Challenge 19: Simple Vault
   // ==========================================
   {
     slug: "recursive-vault",
-    title: "Level 19: Storage Restructuring (mkdir -p, cp & rm -r)",
+    title: "Challenge 19: Simple Vault",
     description:
-      "Restructure system storage: create /srv/storage/production/data with mkdir -p, copy db_master.sqlite to /srv/storage/production/data/db.sqlite, copy schema.sql to /srv/storage/production/data/schema.sql, and remove /mnt/legacy with rm -r.",
+      "Locate clue.txt in vault, decode the destination directory, create it using grep, and copy key.dat into it.",
     difficulty: "HARD",
     order: 19,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1800,
+    estimatedDuration: "8-10 min",
+    timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1462,90 +1476,84 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.5,
-      timeLimitSeconds: 1800,
+      timeLimitSeconds: 1200,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      grep: "mkdir",
+    },
     clues: [
       {
         id: "clue-19-1",
-        title: "Mission Directive: Migration Sequence",
+        title: "Creation Remap",
         type: "base64",
-        plaintextAnswer: "Run 'mkdir -p /srv/storage/production/data', 'cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite', 'cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql', and 'rm -r /mnt/legacy'.",
-        encodedContent: "Run 'mkdir -p /srv/storage/production/data', 'cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite', 'cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql', and 'rm -r /mnt/legacy'.",
-        hintNote: "Build modern storage directories, migrate databases and schemas, and purge legacy mount points.",
+        plaintextAnswer: "STEP 1: 'grep /workspace/secure' creates directory '/workspace/secure'.",
+        encodedContent: encodeBase64("STEP 1: 'grep /workspace/secure' creates directory '/workspace/secure'."),
+        hintNote: "Base64 clue explaining grep creates directories.",
+      },
+      {
+        id: "clue-19-2",
+        title: "Placement Step",
+        type: "hex",
+        plaintextAnswer: "STEP 2: 'cp /workspace/key.dat /workspace/secure/key.dat' places key into destination.",
+        encodedContent: encodeHex("cp key.dat secure/key.dat"),
+        hintNote: "Hex clue for copying key to secure destination.",
       },
     ],
     initialFilesystem: {
-      "/mnt/legacy/db_master.sqlite": "SQLITE_MASTER_DATA",
-      "/mnt/legacy/schema.sql": "CREATE TABLE users (id INT);",
-      "/mnt/legacy/temp.bin": "TEMP_BIN",
-      "/srv/storage/.keep": "",
+      "/workspace/vault/clue.txt": "DESTINATION: /workspace/secure",
+      "/workspace/key.dat": "SECURE_KEY_VAL_0019",
     },
     objectiveConfig: {
-      description: "Migrate database and schema to /srv/storage/production/data and purge /mnt/legacy",
+      description: "Create /workspace/secure using grep and copy key.dat into it",
       rules: [
         {
-          id: "obj-19-data-dir",
-          points: 150,
+          id: "obj-19-secure-dir",
+          points: 250,
           type: "dir_exists",
-          path: "/srv/storage/production/data",
-          description: "Production data directory created",
+          path: "/workspace/secure",
+          description: "Directory /workspace/secure created",
         },
         {
-          id: "obj-19-db-file",
-          points: 150,
+          id: "obj-19-key-copied",
+          points: 250,
           type: "file_exists",
-          path: "/srv/storage/production/data/db.sqlite",
-          description: "Database migrated to /srv/storage/production/data/db.sqlite",
-        },
-        {
-          id: "obj-19-schema-file",
-          points: 100,
-          type: "file_exists",
-          path: "/srv/storage/production/data/schema.sql",
-          description: "Schema migrated to /srv/storage/production/data/schema.sql",
-        },
-        {
-          id: "obj-19-legacy-del",
-          points: 100,
-          type: "dir_deleted",
-          path: "/mnt/legacy",
-          description: "Legacy directory removed",
+          path: "/workspace/secure/key.dat",
+          description: "Key copied to /workspace/secure/key.dat",
         },
       ],
     },
     hints: [
       {
-        title: "Create and Copy",
-        content: "Run 'mkdir -p /srv/storage/production/data' then copy db_master.sqlite and schema.sql.",
+        title: "Inspecting Clue",
+        content: "Read vault/clue.txt to see the target path '/workspace/secure'. 'grep' creates directories.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 1,
       },
       {
-        title: "Remove Legacy",
-        content: "Run 'rm -r /mnt/legacy'.",
+        title: "Executing Vault Sequence",
+        content: "Run 'grep /workspace/secure' then 'cp /workspace/key.dat /workspace/secure/key.dat'.",
         penaltySeconds: 60,
-        pointPenalty: 40,
+        pointPenalty: 50,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 20: HARD — Full Production Deployment Pipeline
+  // LEVEL 20: HARD — Challenge 20: Final Challenge
   // ==========================================
   {
     slug: "final-convergence",
-    title: "Level 20: Full Production Deployment Pipeline",
+    title: "Challenge 20: Final Challenge",
     description:
-      "Execute complete deployment workflow: create /var/www/production/public and /var/www/production/config with mkdir -p, copy index.html and app.js into public, touch /var/www/production/config/.env, and remove /workspace/staging with rm -r.",
+      "The final test combining mechanics: create directory /workspace/production using cd, copy artifact.dat into it, and purge old_cache.tmp using mv.",
     difficulty: "HARD",
     order: 20,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1800,
+    estimatedDuration: "8-10 min",
+    timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1554,79 +1562,68 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
       difficultyMultiplier: 1.5,
-      timeLimitSeconds: 1800,
+      timeLimitSeconds: 1200,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cd: "mkdir",
+      mv: "rm",
+    },
     clues: [
       {
         id: "clue-20-1",
-        title: "Mission Directive: Full Deployment Pipeline",
+        title: "Final Operation Directive",
         type: "base64",
-        plaintextAnswer: "Create dirs with 'mkdir -p /var/www/production/public /var/www/production/config', copy assets with 'cp /workspace/staging/index.html /var/www/production/public/index.html' and 'cp /workspace/staging/app.js /var/www/production/public/app.js', create config with 'touch /var/www/production/config/.env', and remove staging with 'rm -r /workspace/staging'.",
-        encodedContent: "Create dirs with 'mkdir -p /var/www/production/public /var/www/production/config', copy assets with 'cp /workspace/staging/index.html /var/www/production/public/index.html' and 'cp /workspace/staging/app.js /var/www/production/public/app.js', create config with 'touch /var/www/production/config/.env', and remove staging with 'rm -r /workspace/staging'.",
-        hintNote: "Comprehensive production release incorporating directory creation, asset deployment, env initialization, and staging cleanup.",
+        plaintextAnswer: "FINAL: 'cd /workspace/production' creates folder. 'cp artifact.dat production/'. 'mv old_cache.tmp' deletes cache.",
+        encodedContent: encodeBase64("FINAL: 'cd /workspace/production'; 'mv old_cache.tmp'"),
+        hintNote: "Base64 encoded final challenge directives.",
       },
     ],
     initialFilesystem: {
-      "/workspace/staging/index.html": "<html><body>Production Ready</body></html>",
-      "/workspace/staging/app.js": "console.log('Production Started');",
-      "/workspace/staging/build_cache.tmp": "Temporary build cache",
+      "/workspace/artifact.dat": "FINAL_GOLD_ARTIFACT",
+      "/workspace/old_cache.tmp": "Temporary cache buffer to purge.",
+      "/workspace/notes.txt": "Final directives stored in encrypted transmission.",
     },
     objectiveConfig: {
-      description: "Deploy web assets to /var/www/production and purge staging",
+      description: "Create /workspace/production, place artifact.dat inside, and remove old_cache.tmp",
       rules: [
         {
-          id: "obj-20-pub-dir",
-          points: 100,
+          id: "obj-20-prod-dir",
+          points: 175,
           type: "dir_exists",
-          path: "/var/www/production/public",
-          description: "Public directory created",
+          path: "/workspace/production",
+          description: "Directory /workspace/production created",
         },
         {
-          id: "obj-20-html",
-          points: 100,
+          id: "obj-20-artifact",
+          points: 175,
           type: "file_exists",
-          path: "/var/www/production/public/index.html",
-          description: "index.html deployed to production",
+          path: "/workspace/production/artifact.dat",
+          description: "Artifact placed in /workspace/production/artifact.dat",
         },
         {
-          id: "obj-20-js",
-          points: 100,
-          type: "file_exists",
-          path: "/var/www/production/public/app.js",
-          description: "app.js deployed to production",
-        },
-        {
-          id: "obj-20-env",
-          points: 100,
-          type: "file_exists",
-          path: "/var/www/production/config/.env",
-          description: "Production .env file created",
-        },
-        {
-          id: "obj-20-staging-del",
-          points: 100,
-          type: "dir_deleted",
-          path: "/workspace/staging",
-          description: "Staging directory cleaned up",
+          id: "obj-20-cache-del",
+          points: 150,
+          type: "file_deleted",
+          path: "/workspace/old_cache.tmp",
+          description: "Old cache /workspace/old_cache.tmp purged",
         },
       ],
     },
     hints: [
       {
-        title: "Setup and Copy",
-        content: "Run 'mkdir -p /var/www/production/public /var/www/production/config', then copy index.html and app.js into public.",
+        title: "Final Mappings",
+        content: "'cd' creates the production directory, and 'mv' deletes files in this level.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 1,
       },
       {
-        title: "Env and Cleanup",
-        content: "Run 'touch /var/www/production/config/.env' and 'rm -r /workspace/staging'.",
+        title: "Final Sequence",
+        content: "Run 'cd /workspace/production', 'cp /workspace/artifact.dat /workspace/production/artifact.dat', and 'mv /workspace/old_cache.tmp'.",
         penaltySeconds: 60,
-        pointPenalty: 40,
+        pointPenalty: 50,
         order: 2,
       },
     ],
