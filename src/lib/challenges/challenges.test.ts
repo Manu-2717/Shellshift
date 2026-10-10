@@ -75,15 +75,15 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
   // Comprehensive positive & negative solution walkthroughs for all 20 simple challenges
   const solutions: Record<string, { negativeCmd: string; steps: string[] }> = {
     "operation-inversion": {
-      negativeCmd: "cat /workspace/signal.txt",
+      negativeCmd: "mkdir /workspace/breach",
       steps: ["cd /workspace/breach", "ls /workspace/signal.txt"],
     },
     "the-cryptic-agent": {
-      negativeCmd: "pwd",
+      negativeCmd: "touch /workspace/agent.key",
       steps: ["rm /workspace/notes.txt", "pwd /workspace/agent.key"],
     },
     "deep-breach-babel": {
-      negativeCmd: "cat /workspace/secret.key",
+      negativeCmd: "mkdir -p /workspace/vault/core",
       steps: [
         "grep -p /workspace/vault/core",
         "mv /workspace/secret.key /workspace/vault/core/secret.key",
@@ -91,7 +91,7 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       ],
     },
     "pathfinder-basics": {
-      negativeCmd: "ls /workspace",
+      negativeCmd: "mkdir project",
       steps: ["cd project"],
     },
     "morse-mail": {
@@ -99,87 +99,87 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       steps: ["touch /workspace/note.txt", "cat /workspace/read.txt"],
     },
     "binary-breadcrumbs": {
-      negativeCmd: "cat /workspace/message.txt",
+      negativeCmd: "mkdir /workspace/secret",
       steps: ["cd /workspace/secret"],
     },
     "hex-in-plain-sight": {
-      negativeCmd: "ls /workspace",
+      negativeCmd: "rm /workspace/temp.txt",
       steps: ["mkdir /workspace/temp.txt"],
     },
     "directory-flip": {
-      negativeCmd: "cat /workspace/decoy.txt",
+      negativeCmd: "cp /workspace/flag.txt /workspace/found.txt",
       steps: ["touch /workspace/flag.txt /workspace/found.txt"],
     },
     "the-missing-file": {
-      negativeCmd: "cat /workspace/data.txt",
+      negativeCmd: "cp /workspace/data.txt /workspace/backup/data.txt",
       steps: ["mv /workspace/data.txt /workspace/backup/data.txt"],
     },
     "first-flag": {
-      negativeCmd: "cat /workspace/briefing.txt",
+      negativeCmd: "mkdir /workspace/mission",
       steps: [
         "cd /workspace/mission",
         "cp /workspace/briefing.txt /workspace/mission/briefing.txt",
       ],
     },
     "dead-letter": {
-      negativeCmd: "ls /workspace",
+      negativeCmd: "mkdir /workspace/alpha",
       steps: ["cd /workspace/alpha", "cd /workspace/beta"],
     },
     "log-diver": {
-      negativeCmd: "find /workspace -name other",
+      negativeCmd: "find /workspace -name secret.txt",
       steps: [
-        "find /workspace -name secret.txt",
+        "grep /workspace -name secret.txt",
         "cp /workspace/sub1/sub2/sub3/secret.txt /workspace/found.txt",
       ],
     },
     "the-relocation-protocol": {
-      negativeCmd: "ls /workspace",
+      negativeCmd: "cp /workspace/report.doc /workspace/archive/report.doc",
       steps: ["mv /workspace/report.doc /workspace/archive/report.doc"],
     },
     "needle-in-the-archive": {
-      negativeCmd: "ls /workspace",
+      negativeCmd: "touch /workspace/alert.txt",
       steps: [
-        "grep ERROR /workspace/server.log",
-        "touch /workspace/alert.txt",
+        "cat ERROR /workspace/server.log",
+        "ls /workspace/alert.txt",
       ],
     },
     "ghost-signal": {
-      negativeCmd: "cat /workspace/junk.txt",
+      negativeCmd: "mkdir /workspace/safe",
       steps: [
         "rm /workspace/safe",
         "mkdir /workspace/junk.txt",
       ],
     },
     "three-keys": {
-      negativeCmd: "cat /workspace/code.js",
+      negativeCmd: "mv /workspace/code.js /workspace/src/code.js",
       steps: [
         "cp /workspace/code.js /workspace/src/code.js",
         "cp /workspace/style.css /workspace/styles/style.css",
       ],
     },
     "decoy-protocol": {
-      negativeCmd: "cat /workspace/decoy.txt",
+      negativeCmd: "touch /workspace/confirmation.txt",
       steps: [
-        "cat /workspace/target_omega.txt",
-        "touch /workspace/confirmation.txt",
+        "grep /workspace/target_omega.txt",
+        "ls /workspace/confirmation.txt",
       ],
     },
     "broken-chain": {
-      negativeCmd: "cat /workspace/instructions.txt",
+      negativeCmd: "mkdir /workspace/vault",
       steps: [
         "cd /workspace/vault",
         "cp /workspace/data.bin /workspace/vault/data.bin",
       ],
     },
     "recursive-vault": {
-      negativeCmd: "cat /workspace/key.dat",
+      negativeCmd: "mkdir /workspace/secure",
       steps: [
         "grep /workspace/secure",
         "cp /workspace/key.dat /workspace/secure/key.dat",
       ],
     },
     "final-convergence": {
-      negativeCmd: "cat /workspace/notes.txt",
+      negativeCmd: "mkdir /workspace/production",
       steps: [
         "cd /workspace/production",
         "cp /workspace/artifact.dat /workspace/production/artifact.dat",

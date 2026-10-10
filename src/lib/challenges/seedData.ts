@@ -97,7 +97,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
       ls: "cat",
+      cat: "ls",
     },
     clues: [
       {
@@ -105,9 +107,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Transmission: Command Swaps",
         type: "base64",
         plaintextAnswer:
-          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat).",
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat). Standard mkdir and cat are redirected.",
         encodedContent: encodeBase64(
-          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat)."
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat). Standard mkdir and cat are redirected."
         ),
         hintNote: "Base64 radix encoding. 'cd' creates directories and 'ls' reads files.",
       },
@@ -179,14 +181,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
     },
     clues: [
       {
         id: "clue-2-1",
         title: "Directive: Folder Creation",
         type: "base64",
-        plaintextAnswer: "CLUE: 'cd project' creates the directory 'project' directly in /workspace.",
-        encodedContent: encodeBase64("CLUE: 'cd project' creates the directory 'project' directly in /workspace."),
+        plaintextAnswer: "CLUE: 'cd project' creates the directory 'project' directly in /workspace. Standard 'mkdir' is redirected.",
+        encodedContent: encodeBase64("CLUE: 'cd project' creates the directory 'project' directly in /workspace. Standard 'mkdir' is redirected."),
         hintNote: "Base64 clue revealing that cd creates directories.",
       },
     ],
@@ -320,6 +323,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
     },
     clues: [
       {
@@ -390,14 +394,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       mkdir: "rm",
+      rm: "mkdir",
     },
     clues: [
       {
         id: "clue-5-1",
         title: "Removal Mapping",
         type: "base64",
-        plaintextAnswer: "CLUE: 'mkdir' removes files (acting as rm). Run 'mkdir temp.txt' to delete it.",
-        encodedContent: encodeBase64("CLUE: 'mkdir' removes files (acting as rm). Run 'mkdir temp.txt' to delete it."),
+        plaintextAnswer: "CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it.",
+        encodedContent: encodeBase64("CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it."),
         hintNote: "Base64 clue explaining that mkdir deletes files.",
       },
     ],
@@ -468,6 +473,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       touch: "cp",
+      cp: "ls",
     },
     clues: [
       {
@@ -476,7 +482,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         type: "hex",
         plaintextAnswer: "flag.txt (Copy to found.txt)",
         encodedContent: encodeHex("flag.txt"),
-        hintNote: "Hexadecimal byte stream translating to 'flag.txt'. 'touch' copies files.",
+        hintNote: "Hexadecimal byte stream translating to 'flag.txt'. 'touch' copies files. Standard 'cp' acts as ls.",
       },
     ],
     initialFilesystem: {
@@ -539,15 +545,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       mv: "cp",
+      cp: "mv",
     },
     clues: [
       {
         id: "clue-7-1",
         title: "Duplication Directive",
         type: "base64",
-        plaintextAnswer: "CLUE: 'mv' copies files (acting as cp). Run 'mv data.txt backup/data.txt'.",
-        encodedContent: encodeBase64("CLUE: 'mv' copies files (acting as cp). Run 'mv data.txt backup/data.txt'."),
-        hintNote: "Base64 clue revealing that mv acts as cp.",
+        plaintextAnswer: "CLUE: 'mv' copies files (acting as cp). 'cp' moves files (acting as mv). Run 'mv data.txt backup/data.txt'.",
+        encodedContent: encodeBase64("CLUE: 'mv' copies files (acting as cp). 'cp' moves files (acting as mv). Run 'mv data.txt backup/data.txt'."),
+        hintNote: "Base64 clue revealing that mv acts as cp and cp acts as mv.",
       },
     ],
     initialFilesystem: {
@@ -617,6 +624,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
     },
     clues: [
       {
@@ -694,16 +702,18 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       pwd: "touch",
+      touch: "pwd",
       rm: "cat",
+      cat: "rm",
     },
     clues: [
       {
         id: "clue-9-1",
         title: "Operative Clue: File Transposition",
         type: "hex",
-        plaintextAnswer: "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch).",
+        plaintextAnswer: "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch). Standard cat and touch are redirected.",
         encodedContent: encodeHex(
-          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch)."
+          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch). Standard cat and touch are redirected."
         ),
         hintNote: "Hexadecimal byte stream. 'rm' reads files safely; 'pwd' creates files.",
       },
@@ -775,14 +785,15 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
     },
     clues: [
       {
         id: "clue-10-1",
         title: "Dual Directory Directive",
         type: "rot13",
-        plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Create '/workspace/alpha' and '/workspace/beta'.",
-        encodedContent: encodeRot13("DIRECTIVE: 'cd' creates directories. Create '/workspace/alpha' and '/workspace/beta'."),
+        plaintextAnswer: "DIRECTIVE: 'cd' creates directories. Standard 'mkdir' is redirected. Create '/workspace/alpha' and '/workspace/beta'.",
+        encodedContent: encodeRot13("DIRECTIVE: 'cd' creates directories. Standard 'mkdir' is redirected. Create '/workspace/alpha' and '/workspace/beta'."),
         hintNote: "ROT13 substitution detailing both directory names.",
       },
     ],
@@ -833,7 +844,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "log-diver",
     title: "Challenge 11: Find the File",
     description:
-      "Locate secret.txt inside nested directories using find and copy it to /workspace/found.txt.",
+      "Locate secret.txt inside nested directories using grep (acting as find) and copy it to /workspace/found.txt.",
     difficulty: "MEDIUM",
     order: 11,
     estimatedDuration: "4-7 min",
@@ -850,15 +861,18 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      grep: "find",
+      find: "grep",
+    },
     clues: [
       {
         id: "clue-11-1",
         title: "Search Directive",
         type: "base64",
-        plaintextAnswer: "Run 'find /workspace -name secret.txt' to locate it, then 'cp' to /workspace/found.txt.",
-        encodedContent: encodeBase64("Run 'find /workspace -name secret.txt' to locate it, then 'cp' to /workspace/found.txt."),
-        hintNote: "Base64 clue for finding and copying the hidden file.",
+        plaintextAnswer: "CLUE: 'grep' searches directory trees (acting as find). 'find' acts as grep. Run 'grep /workspace -name secret.txt', then 'cp' to /workspace/found.txt.",
+        encodedContent: encodeBase64("CLUE: 'grep' searches directory trees (acting as find). 'find' acts as grep. Run 'grep /workspace -name secret.txt', then 'cp' to /workspace/found.txt."),
+        hintNote: "Base64 clue for finding and copying the hidden file with remapped search.",
       },
     ],
     initialFilesystem: {
@@ -886,7 +900,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     hints: [
       {
         title: "Locating the File",
-        content: "Run 'find /workspace -name secret.txt' to discover the file path.",
+        content: "Run 'grep /workspace -name secret.txt' (grep acts as find here) to discover the file path.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -927,6 +941,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       mv: "cp",
+      cp: "ls",
     },
     clues: [
       {
@@ -935,7 +950,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         type: "hex",
         plaintextAnswer: "report.doc",
         encodedContent: encodeHex("report.doc"),
-        hintNote: "Hex byte stream decoding to report.doc.",
+        hintNote: "Hex byte stream decoding to report.doc. 'mv' acts as cp; standard 'cp' acts as ls.",
       },
     ],
     initialFilesystem: {
@@ -957,7 +972,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     hints: [
       {
         title: "Decoding Target",
-        content: "The hex clue translates to 'report.doc'. 'mv' acts as 'cp'.",
+        content: "The hex clue translates to 'report.doc'. 'mv' acts as 'cp', standard 'cp' acts as 'ls'.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -979,7 +994,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "needle-in-the-archive",
     title: "Challenge 13: Log Hunt",
     description:
-      "Search server.log for ERROR occurrences using grep and create the acknowledgment file /workspace/alert.txt.",
+      "Search server.log for ERROR occurrences using cat (acting as grep) and create the acknowledgment file using ls (acting as touch).",
     difficulty: "MEDIUM",
     order: 13,
     estimatedDuration: "4-7 min",
@@ -996,14 +1011,19 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      cat: "grep",
+      grep: "cat",
+      ls: "touch",
+      touch: "ls",
+    },
     clues: [
       {
         id: "clue-13-1",
         title: "Log Investigation Directive",
         type: "base64",
-        plaintextAnswer: "Run 'grep ERROR /workspace/server.log', then 'touch /workspace/alert.txt'.",
-        encodedContent: encodeBase64("Run 'grep ERROR /workspace/server.log', then 'touch /workspace/alert.txt'."),
+        plaintextAnswer: "CLUE: 'cat' filters logs (acting as grep). 'ls' creates files (acting as touch). Standard grep and touch are redirected. Run 'cat ERROR /workspace/server.log', then 'ls /workspace/alert.txt'.",
+        encodedContent: encodeBase64("CLUE: 'cat' filters logs (acting as grep). 'ls' creates files (acting as touch). Standard grep and touch are redirected. Run 'cat ERROR /workspace/server.log', then 'ls /workspace/alert.txt'."),
         hintNote: "Base64 instructions for log analysis.",
       },
     ],
@@ -1032,14 +1052,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     hints: [
       {
         title: "Filtering Logs",
-        content: "Run 'grep ERROR /workspace/server.log' to inspect the failure.",
+        content: "Run 'cat ERROR /workspace/server.log' (cat acts as grep) to inspect the failure.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
         title: "Logging Alert",
-        content: "Run 'touch /workspace/alert.txt' to acknowledge the error.",
+        content: "Run 'ls /workspace/alert.txt' (ls acts as touch) to acknowledge the error.",
         penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
@@ -1151,15 +1171,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cp: "mv",
+      mv: "ls",
     },
     clues: [
       {
         id: "clue-15-1",
         title: "Sorting Directive",
         type: "base64",
-        plaintextAnswer: "'cp' moves files (acting as mv). Move code.js to src and style.css to styles.",
-        encodedContent: encodeBase64("'cp' moves files (acting as mv). Move code.js to src and style.css to styles."),
-        hintNote: "Base64 clue indicating cp moves files.",
+        plaintextAnswer: "'cp' moves files (acting as mv). Standard 'mv' acts as ls. Move code.js to src and style.css to styles.",
+        encodedContent: encodeBase64("'cp' moves files (acting as mv). Standard 'mv' acts as ls. Move code.js to src and style.css to styles."),
+        hintNote: "Base64 clue indicating cp moves files and mv acts as ls.",
       },
     ],
     initialFilesystem: {
@@ -1190,7 +1211,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     hints: [
       {
         title: "Moving Files",
-        content: "'cp' moves files instead of copying them.",
+        content: "'cp' moves files instead of copying them. Standard 'mv' acts as ls.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -1212,7 +1233,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "decoy-protocol",
     title: "Challenge 16: Decode the Filename",
     description:
-      "A Base64 clue encodes the target filename. Decode it, inspect the target file, and create confirmation.txt.",
+      "A Base64 clue encodes the target filename. Decode it, inspect the target file using grep, and create confirmation.txt using ls.",
     difficulty: "MEDIUM",
     order: 16,
     estimatedDuration: "4-7 min",
@@ -1229,7 +1250,12 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {},
+    commandMappings: {
+      grep: "cat",
+      cat: "grep",
+      ls: "touch",
+      touch: "ls",
+    },
     clues: [
       {
         id: "clue-16-1",
@@ -1238,6 +1264,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         plaintextAnswer: "target_omega.txt",
         encodedContent: encodeBase64("target_omega.txt"),
         hintNote: "Base64 string decoding to target_omega.txt.",
+      },
+      {
+        id: "clue-16-2",
+        title: "Inspection Directive",
+        type: "rot13",
+        plaintextAnswer: "CLUE: 'grep' inspects files (acting as cat). 'ls' creates files (acting as touch). Standard cat and touch are redirected.",
+        encodedContent: encodeRot13("CLUE: 'grep' inspects files (acting as cat). 'ls' creates files (acting as touch). Standard cat and touch are redirected."),
+        hintNote: "ROT13 clue for remapped cat and touch.",
       },
     ],
     initialFilesystem: {
@@ -1266,14 +1300,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     hints: [
       {
         title: "Decoding Base64",
-        content: "The Base64 clue decodes to 'target_omega.txt'.",
+        content: "The Base64 clue decodes to 'target_omega.txt'. 'grep' acts as 'cat', and 'ls' acts as 'touch'.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
       },
       {
         title: "Inspecting and Confirming",
-        content: "Run 'cat /workspace/target_omega.txt' then 'touch /workspace/confirmation.txt'.",
+        content: "Run 'grep /workspace/target_omega.txt' then 'ls /workspace/confirmation.txt'.",
         penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
@@ -1307,6 +1341,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
     },
     clues: [
       {
@@ -1385,8 +1420,10 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       grep: "mkdir",
+      mkdir: "grep",
       mv: "cp",
       cp: "rm",
+      rm: "mv",
     },
     clues: [
       {
@@ -1482,6 +1519,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       grep: "mkdir",
+      mkdir: "grep",
     },
     clues: [
       {
@@ -1568,7 +1606,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cd: "mkdir",
+      mkdir: "cd",
       mv: "rm",
+      rm: "mv",
     },
     clues: [
       {
