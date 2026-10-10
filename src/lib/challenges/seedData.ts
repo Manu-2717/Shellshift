@@ -1,13 +1,3 @@
-import {
-  encodeAsciiDecimal,
-  encodeBase64,
-  encodeBinary,
-  encodeHex,
-  encodeMorse,
-  encodeRot13,
-  encodeUrlPercent,
-} from "../ciphers/ciphers";
-
 export interface ClueItem {
   id: string;
   title: string;
@@ -53,7 +43,8 @@ export interface SeedChallengeDef {
         | "file_contains"
         | "file_exact"
         | "file_moved"
-        | "min_commands";
+        | "min_commands"
+        | "cwd_equals";
       path?: string;
       content?: string;
       caseSensitive?: boolean;
@@ -71,16 +62,16 @@ export interface SeedChallengeDef {
 
 export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
-  // LEVEL 1: EASY (Preserved)
+  // LEVEL 1: EASY — First Steps (pwd & cd)
   // ==========================================
   {
     slug: "operation-inversion",
-    title: "Operation Inversion: Sector Breach (Level 1)",
+    title: "Level 1: First Steps (pwd & cd)",
     description:
-      "An automated intrusion countermeasure has scrambled standard Linux shell behavior. Decode progressive clue transmissions, uncover the remapped commands, create the breach recovery directory /workspace/breach, and inspect the critical system signal.",
+      "Welcome to Ubuntu Linux. Verify your current working directory using pwd, view directory contents with ls, and navigate into the system folder with cd /workspace/system.",
     difficulty: "EASY",
     order: 1,
-    estimatedDuration: "10-15 min",
+    estimatedDuration: "5-10 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -94,86 +85,60 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cd: "mkdir",
-      mkdir: "rm",
-      cat: "ls",
-      ls: "cat",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-1-1",
-        title: "Transmission 1: Directory Manipulation Remap",
+        title: "Mission Directive: Navigation",
         type: "base64",
-        plaintextAnswer:
-          "SHELL ALERT: 'cd' creates directories (acting as mkdir). 'mkdir' deletes directories (acting as rm).",
-        encodedContent: encodeBase64(
-          "SHELL ALERT: 'cd' creates directories (acting as mkdir). 'mkdir' deletes directories (acting as rm)."
-        ),
-        hintNote: "Base64 radix encoding. Look up the Base64 index table in the Static Reference tab.",
+        plaintextAnswer: "Run 'pwd' to print your location, then 'cd /workspace/system'.",
+        encodedContent: "Run 'pwd' to print your location, then 'cd /workspace/system'.",
+        hintNote: "Ubuntu navigation basics: pwd prints working directory, cd changes directory.",
       },
       {
         id: "clue-1-2",
-        title: "Transmission 2: Inspection Tools Remap",
-        type: "hex",
-        plaintextAnswer:
-          "SHELL ALERT: 'cat' lists directory entries (acting as ls). 'ls' reads file contents (acting as cat).",
-        encodedContent: encodeHex(
-          "SHELL ALERT: 'cat' lists directory entries (acting as ls). 'ls' reads file contents (acting as cat)."
-        ),
-        hintNote: "Hexadecimal byte encoding (0x..). Look up ASCII Hex in the Static Reference tab.",
-      },
-      {
-        id: "clue-1-3",
-        title: "Transmission 3: Actionable Directive",
-        type: "morse",
-        plaintextAnswer:
-          "DIRECTIVE: RUN 'cd /workspace/breach' TO CREATE BREACH DIRECTORY, THEN RUN 'ls /system/signal.txt' TO READ SYSTEM SIGNAL",
-        encodedContent: encodeMorse(
-          "DIRECTIVE: RUN 'cd /workspace/breach' TO CREATE BREACH DIRECTORY, THEN RUN 'ls /system/signal.txt' TO READ SYSTEM SIGNAL"
-        ),
-        hintNote: "International Morse code (. and -). Look up Morse letters and digits in the Static Reference tab.",
+        title: "Ubuntu Tip: File Listing",
+        type: "base64",
+        plaintextAnswer: "Run 'ls' to view files in /workspace/system.",
+        encodedContent: "Run 'ls' to view files in /workspace/system.",
+        hintNote: "Use 'ls' to list files and subdirectories.",
       },
     ],
     initialFilesystem: {
-      "/system/signal.txt":
-        "SYSTEM STATUS: RECOVERY SIGNAL CONFIRMED [FLAG_SIG_ALPHA_99]. Sector breach mitigated.",
-      "/workspace/notes.txt":
-        "Terminal diagnostic: Standard shell commands are remapped. Refer to the 3 decoded cipher transmissions.",
+      "/workspace/readme.txt": "Welcome to Ubuntu Linux CLI. Navigate into the system folder.",
+      "/workspace/system/status.txt": "System status: Online.",
     },
     objectiveConfig: {
-      description: "Create directory /workspace/breach and inspect /system/signal.txt",
+      description: "Navigate to /workspace/system and inspect system status",
       rules: [
         {
-          id: "obj-1-breach-dir",
+          id: "obj-1-system-dir",
           points: 250,
-          type: "dir_exists",
-          path: "/workspace/breach",
-          description: "Virtual directory /workspace/breach has been created",
+          type: "cwd_equals",
+          path: "/workspace/system",
+          description: "Navigated into /workspace/system directory",
         },
         {
-          id: "obj-1-cmd-executed",
+          id: "obj-1-cmds",
           points: 250,
           type: "min_commands",
           content: "1",
-          description: "Executed recovery commands in the terminal",
+          description: "Executed commands in terminal",
         },
       ],
     },
     hints: [
       {
-        title: "Decoding the Transmissions",
-        content:
-          "Inspect Clues 1 and 2 to discover that 'cd' creates directories while 'ls' reads file contents. Use the Static Reference tab for lookup tables.",
-        penaltySeconds: 15,
+        title: "Where Am I?",
+        content: "Type 'pwd' to see where you are. The terminal will print /workspace.",
+        penaltySeconds: 10,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Deploying Recovery",
-        content:
-          "Type 'cd /workspace/breach' into the terminal to create the folder, then 'ls /system/signal.txt' to read the signal file.",
-        penaltySeconds: 30,
+        title: "Changing Directory",
+        content: "Type 'cd /workspace/system' or 'cd system' to enter the folder.",
+        penaltySeconds: 20,
         pointPenalty: 30,
         order: 2,
       },
@@ -181,17 +146,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 2: MEDIUM (Preserved)
+  // LEVEL 2: EASY — Reading Files (cat)
   // ==========================================
   {
     slug: "the-cryptic-agent",
-    title: "The Cryptic Agent: Shadow Backdoor (Level 2)",
+    title: "Level 2: Reading Files (cat)",
     description:
-      "An intercepted operative frequency reveals hidden command aliases. Follow 3 cryptographic clues, discover how touch, pwd, and rm are transposed, inspect the concealed shadow vault, and deploy the operative authorization key.",
-    difficulty: "MEDIUM",
+      "Inspect configuration notes. Use cat to display /workspace/notes/config.ini and create an inspection confirmation with touch /workspace/notes/inspected.log.",
+    difficulty: "EASY",
     order: 2,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1500,
+    estimatedDuration: "5-10 min",
+    timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -199,108 +164,83 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 1200,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      touch: "pwd",
-      pwd: "touch",
-      rm: "cat",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-2-1",
-        title: "Intercept 1: Navigation and Touch Transposition",
-        type: "hex",
-        plaintextAnswer:
-          "OPERATIVE ALIAS 1: 'touch' prints working directory (acting as pwd). 'pwd' creates empty files (acting as touch).",
-        encodedContent: encodeHex(
-          "OPERATIVE ALIAS 1: 'touch' prints working directory (acting as pwd). 'pwd' creates empty files (acting as touch)."
-        ),
-        hintNote: "Hexadecimal UTF-8 byte stream. Check the Hex & ASCII table in Static Reference.",
+        title: "Mission Directive: File Reading",
+        type: "base64",
+        plaintextAnswer: "Run 'cat /workspace/notes/config.ini' to view file contents.",
+        encodedContent: "Run 'cat /workspace/notes/config.ini' to view file contents.",
+        hintNote: "'cat' (concatenate) displays file text directly in the terminal.",
       },
       {
         id: "clue-2-2",
-        title: "Intercept 2: Safe Inspection Protocol",
-        type: "rot13",
-        plaintextAnswer:
-          "OPERATIVE ALIAS 2: 'rm' outputs file content (acting as cat). It displays files safely without deleting them.",
-        encodedContent: encodeRot13(
-          "OPERATIVE ALIAS 2: 'rm' outputs file content (acting as cat). It displays files safely without deleting them."
-        ),
-        hintNote: "ROT13 symmetric alphabet rotation. Check the ROT13 table in the Static Reference tab.",
-      },
-      {
-        id: "clue-2-3",
-        title: "Intercept 3: Key Deployment Mission",
-        type: "url_percent",
-        plaintextAnswer:
-          "TARGET: READ /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'",
-        encodedContent: encodeUrlPercent(
-          "TARGET: READ /etc/shadow_cipher.txt USING 'rm', THEN CREATE /workspace/agent.key USING 'pwd /workspace/agent.key'"
-        ),
-        hintNote: "URL percent-encoding (%XX). Check the URL Percent table in Static Reference.",
+        title: "Action Item: Confirmation File",
+        type: "base64",
+        plaintextAnswer: "Run 'touch /workspace/notes/inspected.log' to complete inspection.",
+        encodedContent: "Run 'touch /workspace/notes/inspected.log' to complete inspection.",
+        hintNote: "'touch' creates an empty file if it does not exist.",
       },
     ],
     initialFilesystem: {
-      "/etc/shadow_cipher.txt":
-        "AGENT VERIFICATION CODE: 0x9F_SHADOW_RUNNER\nClearance badge authorized.",
-      "/var/log/syslog": "Kernel operative daemon active. Shadow protocol engaged.",
-      "/workspace/readme.md": "Operative session engaged. Consult the 3 intercepted clue transmissions.",
+      "/workspace/notes/config.ini": "server_port=8080\nenvironment=production\nstatus=ready",
+      "/workspace/notes/readme.txt": "Use cat to view config.ini, then touch inspected.log.",
     },
     objectiveConfig: {
-      description: "Deploy operative key /workspace/agent.key and verify terminal identity",
+      description: "Read config.ini and create /workspace/notes/inspected.log",
       rules: [
         {
-          id: "obj-2-agent-key",
-          points: 250,
+          id: "obj-2-inspected-log",
+          points: 300,
           type: "file_exists",
-          path: "/workspace/agent.key",
-          description: "File /workspace/agent.key has been successfully deployed",
+          path: "/workspace/notes/inspected.log",
+          description: "File /workspace/notes/inspected.log created",
         },
         {
-          id: "obj-2-cmd-investigated",
-          points: 250,
+          id: "obj-2-cmds",
+          points: 200,
           type: "min_commands",
-          content: "2",
-          description: "Executed at least two investigative operations in the terminal",
+          content: "1",
+          description: "Executed file commands in terminal",
         },
       ],
     },
     hints: [
       {
-        title: "Reading Without Deleting",
-        content:
-          "Clue 2 reveals that 'rm' is remapped to 'cat'. Running 'rm /etc/shadow_cipher.txt' displays its content without deleting anything!",
-        penaltySeconds: 20,
-        pointPenalty: 25,
+        title: "Viewing Files",
+        content: "Run 'cat /workspace/notes/config.ini' to read the config settings.",
+        penaltySeconds: 10,
+        pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Creating the Target Key",
-        content:
-          "Clue 1 shows 'pwd' acts as 'touch'. Execute 'pwd /workspace/agent.key' to deploy the target key file.",
-        penaltySeconds: 40,
-        pointPenalty: 35,
+        title: "Creating the Log",
+        content: "Run 'touch /workspace/notes/inspected.log' to mark inspection complete.",
+        penaltySeconds: 20,
+        pointPenalty: 30,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 3: HARD (Preserved)
+  // LEVEL 3: EASY — Creating Directories (mkdir -p)
   // ==========================================
   {
     slug: "deep-breach-babel",
-    title: "Deep Breach: Operation Babel (Level 3)",
+    title: "Level 3: Creating Directories (mkdir -p)",
     description:
-      "A high-stakes multi-stage vault breach under critical lockdown. Decrypt 4 phased intercepts, establish the secured core directory /opt/vault/core, replicate the master security fragment, and purge the exposed temporary buffer.",
-    difficulty: "HARD",
+      "Organize a web application directory structure. Use mkdir -p to create the nested path /workspace/projects/webapp/src.",
+    difficulty: "EASY",
     order: 3,
-    estimatedDuration: "25-30 min",
-    timeLimitSeconds: 1800,
+    estimatedDuration: "5-10 min",
+    timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -308,125 +248,66 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.5,
-      timeLimitSeconds: 1800,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 1200,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      mv: "cp",
-      cp: "rm",
-      grep: "mkdir",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-3-1",
-        title: "Phase 1 Intercept: Directory Synthesis",
-        type: "binary",
-        plaintextAnswer:
-          "PHASE 1: Matrix transposition active: 'grep' creates directories with parents (acting as 'mkdir -p').",
-        encodedContent: encodeBinary(
-          "PHASE 1: Matrix transposition active: 'grep' creates directories with parents (acting as 'mkdir -p')."
-        ),
-        hintNote: "8-bit binary byte sequences. Compare against the Binary guide in Static Reference.",
-      },
-      {
-        id: "clue-3-2",
-        title: "Phase 2 Intercept: File Management Remap",
-        type: "ascii_decimal",
-        plaintextAnswer:
-          "PHASE 2: File utilities transposed: 'mv' copies files (acting as 'cp'). 'cp' deletes files (acting as 'rm').",
-        encodedContent: encodeAsciiDecimal(
-          "PHASE 2: File utilities transposed: 'mv' copies files (acting as 'cp'). 'cp' deletes files (acting as 'rm')."
-        ),
-        hintNote: "Base-10 integer ASCII character code sequence. Look up in the Hex & ASCII table.",
-      },
-      {
-        id: "clue-3-3",
-        title: "Phase 3 Intercept: Vault Core Initialization",
-        type: "morse",
-        plaintextAnswer:
-          "PHASE 3 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core'",
-        encodedContent: encodeMorse(
-          "PHASE 3 TARGET: CREATE DIRECTORY /opt/vault/core USING 'grep -p /opt/vault/core'"
-        ),
-        hintNote: "Standard Morse code transmission. Look up Morse code in Static Reference.",
-      },
-      {
-        id: "clue-3-4",
-        title: "Phase 4 Intercept: Cryptographic Migration & Cleanup",
+        title: "Mission Directive: Nested Folders",
         type: "base64",
-        plaintextAnswer:
-          "PHASE 4 TARGET: RUN 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' TO COPY KEY, THEN RUN 'cp /opt/vault/secrets/fragment_a.dat' TO PURGE TEMPORARY FRAGMENT",
-        encodedContent: encodeBase64(
-          "PHASE 4 TARGET: RUN 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' TO COPY KEY, THEN RUN 'cp /opt/vault/secrets/fragment_a.dat' TO PURGE TEMPORARY FRAGMENT"
-        ),
-        hintNote: "Radix-64 encoding. Use the Base64 section in the Static Reference tab.",
+        plaintextAnswer: "Run 'mkdir -p /workspace/projects/webapp/src'.",
+        encodedContent: "Run 'mkdir -p /workspace/projects/webapp/src'.",
+        hintNote: "The '-p' flag tells mkdir to create all missing parent directories.",
       },
     ],
     initialFilesystem: {
-      "/opt/vault/secrets/fragment_a.dat": "BABEL_MASTER_CORE_KEY_9921_ALPHA",
-      "/opt/vault/config.json": '{"security_level": "maximum", "lockdown": true, "core": "/opt/vault/core"}',
-      "/workspace/briefing.txt":
-        "Operation Babel active. Follow all 4 decoded phases in order to secure the vault.",
+      "/workspace/projects/readme.txt": "Create webapp/src directory using mkdir -p.",
     },
     objectiveConfig: {
-      description: "Establish /opt/vault/core/master.key and purge /opt/vault/secrets/fragment_a.dat",
+      description: "Create directory tree /workspace/projects/webapp/src",
       rules: [
         {
-          id: "obj-3-vault-core",
-          points: 150,
+          id: "obj-3-webapp-src",
+          points: 500,
           type: "dir_exists",
-          path: "/opt/vault/core",
-          description: "Core vault directory /opt/vault/core created",
-        },
-        {
-          id: "obj-3-master-key",
-          points: 200,
-          type: "file_exists",
-          path: "/opt/vault/core/master.key",
-          description: "Master key secured at /opt/vault/core/master.key",
-        },
-        {
-          id: "obj-3-purge-fragment",
-          points: 150,
-          type: "file_deleted",
-          path: "/opt/vault/secrets/fragment_a.dat",
-          description: "Temporary fragment purged from /opt/vault/secrets/fragment_a.dat",
+          path: "/workspace/projects/webapp/src",
+          description: "Directory /workspace/projects/webapp/src created",
         },
       ],
     },
     hints: [
       {
-        title: "Phase 1 & 3: Creating the Core Folder",
-        content:
-          "Since 'grep' performs 'mkdir', running 'grep -p /opt/vault/core' creates the core directory and all required parents.",
-        penaltySeconds: 30,
-        pointPenalty: 30,
+        title: "Parent Directories",
+        content: "Without '-p', mkdir errors if intermediate folders don't exist.",
+        penaltySeconds: 10,
+        pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Phase 2 & 4: Copy and Purge",
-        content:
-          "'mv' acts as 'cp', so 'mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key' duplicates the key. Then 'cp /opt/vault/secrets/fragment_a.dat' deletes the original file since 'cp' acts as 'rm'!",
-        penaltySeconds: 60,
-        pointPenalty: 40,
+        title: "Exact Command",
+        content: "Type: 'mkdir -p /workspace/projects/webapp/src'",
+        penaltySeconds: 20,
+        pointPenalty: 30,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 4: EASY — Pathfinder Basics
+  // LEVEL 4: EASY — Creating Files (touch)
   // ==========================================
   {
     slug: "pathfinder-basics",
-    title: "Pathfinder Basics: Route Recovery (Level 4)",
+    title: "Level 4: Creating Files (touch)",
     description:
-      "Explore the virtual filesystem hierarchy to recover an offline network lane. Inspect route statuses, decipher the remapped touch tool, and establish the recovery path /routes/recovery.",
+      "Initialize source files for a web project. Use touch to create /workspace/src/index.html and /workspace/src/app.js.",
     difficulty: "EASY",
     order: 4,
-    estimatedDuration: "10-12 min",
+    estimatedDuration: "5-10 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -440,57 +321,50 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      touch: "mkdir",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-4-1",
-        title: "Transmission: Route Configuration Remap",
-        type: "hex",
-        plaintextAnswer:
-          "ROUTE DISPATCH: 'touch' creates directories (acting as mkdir). Run 'touch /routes/recovery' to establish recovery lane.",
-        encodedContent: encodeHex(
-          "ROUTE DISPATCH: 'touch' creates directories (acting as mkdir). Run 'touch /routes/recovery' to establish recovery lane."
-        ),
-        hintNote: "Hexadecimal byte encoding. Check ASCII Hex in the Static Reference tab.",
+        title: "Mission Directive: Initialize Files",
+        type: "base64",
+        plaintextAnswer: "Run 'touch /workspace/src/index.html' and 'touch /workspace/src/app.js'.",
+        encodedContent: "Run 'touch /workspace/src/index.html' and 'touch /workspace/src/app.js'.",
+        hintNote: "You can create files individually or in one command: touch file1 file2.",
       },
     ],
     initialFilesystem: {
-      "/workspace/readme.txt": "Route mapping disrupted. Investigate /routes/primary and /routes/backup.",
-      "/routes/primary/config.log": "Primary route offline. Switch to recovery lane.",
-      "/routes/backup/token.txt": "ROUTE_TOKEN_7421",
+      "/workspace/src/.keep": "",
     },
     objectiveConfig: {
-      description: "Establish recovery lane directory /routes/recovery",
+      description: "Create /workspace/src/index.html and /workspace/src/app.js",
       rules: [
         {
-          id: "obj-4-recovery-dir",
-          points: 300,
-          type: "dir_exists",
-          path: "/routes/recovery",
-          description: "Directory /routes/recovery created",
+          id: "obj-4-index",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/src/index.html",
+          description: "File /workspace/src/index.html created",
         },
         {
-          id: "obj-4-explored",
-          points: 200,
-          type: "min_commands",
-          content: "2",
-          description: "Executed investigative commands in the terminal",
+          id: "obj-4-app",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/src/app.js",
+          description: "File /workspace/src/app.js created",
         },
       ],
     },
     hints: [
       {
-        title: "Investigating the Routes",
-        content: "Use 'ls /routes' and 'cat /routes/primary/config.log' to understand the situation.",
+        title: "Creating Files",
+        content: "Use 'touch' followed by the target file path.",
         penaltySeconds: 10,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Creating the Recovery Path",
-        content: "Since 'touch' acts as 'mkdir', run 'touch /routes/recovery' to create the folder.",
+        title: "Commands",
+        content: "Run 'touch /workspace/src/index.html' then 'touch /workspace/src/app.js'.",
         penaltySeconds: 20,
         pointPenalty: 30,
         order: 2,
@@ -499,16 +373,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 5: EASY — Morse Mail
+  // LEVEL 5: EASY — Copying Files (cp)
   // ==========================================
   {
     slug: "morse-mail",
-    title: "Morse Mail: Dispatch Dispatcher (Level 5)",
+    title: "Level 5: Copying Files (cp)",
     description:
-      "A raw teleprinter dispatch arrived in /mail/inbox/dispatch.txt. Inspect the Morse-encoded text manually, discover the swapped navigation tool, and create the dispatch queue /workspace/dispatch.",
+      "Make a safety backup of your configuration. Use cp to duplicate /workspace/config/settings.json to /workspace/backups/settings.json.bak.",
     difficulty: "EASY",
     order: 5,
-    estimatedDuration: "10-12 min",
+    estimatedDuration: "5-10 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -522,60 +396,51 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cd: "mkdir",
-      mkdir: "cd",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-5-1",
-        title: "Dispatch Memo: Telecom Remap",
-        type: "morse",
-        plaintextAnswer:
-          "DISPATCH MEMO: 'cd' CREATES DIRECTORIES (ACTING AS MKDIR). RUN 'cd /workspace/dispatch'",
-        encodedContent: encodeMorse(
-          "DISPATCH MEMO: 'cd' CREATES DIRECTORIES (ACTING AS MKDIR). RUN 'cd /workspace/dispatch'"
-        ),
-        hintNote: "Standard Morse transmission. Look up Morse characters in Static Reference.",
+        title: "Mission Directive: File Backup",
+        type: "base64",
+        plaintextAnswer: "Run 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'.",
+        encodedContent: "Run 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'.",
+        hintNote: "cp <source> <destination> duplicates files.",
       },
     ],
     initialFilesystem: {
-      "/mail/inbox/dispatch.txt":
-        "-.-. -.. / -.-. .-. . .- - . ... / -.. .. .-. . -.-. - --- .-. .. . ...",
-      "/mail/outbox/.keep": "",
-      "/workspace/notes.txt":
-        "Incoming telegram stored in /mail/inbox/dispatch.txt. Use 'cat' to read it.",
+      "/workspace/config/settings.json": '{"debug": false, "version": "1.0.0"}',
+      "/workspace/backups/.keep": "",
     },
     objectiveConfig: {
-      description: "Create /workspace/dispatch using remapped shell navigation",
+      description: "Backup settings.json to /workspace/backups/settings.json.bak",
       rules: [
         {
-          id: "obj-5-dispatch-dir",
+          id: "obj-5-bak-file",
           points: 300,
-          type: "dir_exists",
-          path: "/workspace/dispatch",
-          description: "Directory /workspace/dispatch established",
+          type: "file_exists",
+          path: "/workspace/backups/settings.json.bak",
+          description: "Backup file created at /workspace/backups/settings.json.bak",
         },
         {
-          id: "obj-5-cmds",
+          id: "obj-5-orig-intact",
           points: 200,
-          type: "min_commands",
-          content: "1",
-          description: "Executed required shell instructions",
+          type: "file_exists",
+          path: "/workspace/config/settings.json",
+          description: "Original config file preserved",
         },
       ],
     },
     hints: [
       {
-        title: "Reading the Telegram",
-        content: "Run 'cat /mail/inbox/dispatch.txt' to view the Morse code message.",
+        title: "Using cp",
+        content: "Specify the source path first, then destination path.",
         penaltySeconds: 10,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Directory Creation",
-        content: "The command 'cd' acts as 'mkdir'. Type 'cd /workspace/dispatch' to finish.",
+        title: "Exact Command",
+        content: "Type: 'cp /workspace/config/settings.json /workspace/backups/settings.json.bak'",
         penaltySeconds: 20,
         pointPenalty: 30,
         order: 2,
@@ -584,16 +449,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 6: EASY — Binary Breadcrumbs
+  // LEVEL 6: EASY — Moving & Renaming Files (mv)
   // ==========================================
   {
     slug: "binary-breadcrumbs",
-    title: "Binary Breadcrumbs: The Cache Trace (Level 6)",
+    title: "Level 6: Moving & Renaming (mv)",
     description:
-      "A cache trace file in binary UTF-8 points to one specific node among candidate directories. Decode the byte stream, uncover the remapped ls command, and mark the active node with /cache/node_beta/verified.",
+      "Move a draft report to the official documents directory. Use mv to relocate /workspace/downloads/draft_report.pdf to /workspace/documents/report.pdf.",
     difficulty: "EASY",
     order: 6,
-    estimatedDuration: "10-15 min",
+    estimatedDuration: "5-10 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -607,59 +472,51 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      ls: "touch",
-      touch: "ls",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-6-1",
-        title: "Trace Intercept: Node Selection",
-        type: "binary",
-        plaintextAnswer:
-          "NODE TRACE: 'ls' CREATES EMPTY FILES (ACTING AS TOUCH). TARGET: CREATE /cache/node_beta/verified",
-        encodedContent: encodeBinary(
-          "NODE TRACE: 'ls' CREATES EMPTY FILES (ACTING AS TOUCH). TARGET: CREATE /cache/node_beta/verified"
-        ),
-        hintNote: "8-bit binary representation. Compare against the Binary guide in Static Reference.",
+        title: "Mission Directive: Relocate File",
+        type: "base64",
+        plaintextAnswer: "Run 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'.",
+        encodedContent: "Run 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'.",
+        hintNote: "'mv' moves files from source to destination and can rename them simultaneously.",
       },
     ],
     initialFilesystem: {
-      "/cache/node_alpha/dummy.dat": "Alpha node idle.",
-      "/cache/node_beta/status.txt": "Node Beta selected for synchronization.",
-      "/cache/node_gamma/dummy.dat": "Gamma node offline.",
-      "/workspace/trace.bin": "Inspect clue transmission for the binary trace.",
+      "/workspace/downloads/draft_report.pdf": "Annual engineering review report.",
+      "/workspace/documents/.keep": "",
     },
     objectiveConfig: {
-      description: "Mark cache node Beta with /cache/node_beta/verified",
+      description: "Move draft_report.pdf to /workspace/documents/report.pdf",
       rules: [
         {
-          id: "obj-6-verified-file",
-          points: 350,
+          id: "obj-6-dest-file",
+          points: 300,
           type: "file_exists",
-          path: "/cache/node_beta/verified",
-          description: "File /cache/node_beta/verified created",
+          path: "/workspace/documents/report.pdf",
+          description: "File moved to /workspace/documents/report.pdf",
         },
         {
-          id: "obj-6-cmds",
-          points: 150,
-          type: "min_commands",
-          content: "1",
-          description: "Executed commands in terminal",
+          id: "obj-6-src-moved",
+          points: 200,
+          type: "file_deleted",
+          path: "/workspace/downloads/draft_report.pdf",
+          description: "Original draft removed from downloads",
         },
       ],
     },
     hints: [
       {
-        title: "Translating 8-bit Binary",
-        content: "Convert the 8-bit groups to ASCII characters using the Binary Reference table.",
+        title: "Using mv",
+        content: "mv moves the file without leaving a copy in the original directory.",
         penaltySeconds: 10,
         pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Placing the File",
-        content: "'ls' acts as 'touch'. Execute 'ls /cache/node_beta/verified' to complete the challenge.",
+        title: "Exact Command",
+        content: "Type: 'mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf'",
         penaltySeconds: 20,
         pointPenalty: 30,
         order: 2,
@@ -668,16 +525,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 7: EASY — Hex in Plain Sight
+  // LEVEL 7: EASY — File Deletion (rm)
   // ==========================================
   {
     slug: "hex-in-plain-sight",
-    title: "Hex in Plain Sight: Firmware Patch (Level 7)",
+    title: "Level 7: File Deletion (rm)",
     description:
-      "A hexadecimal firmware payload is stored in the subsystem. Translate the hex stream to reveal the command anomaly, and deploy the patch confirmation file /workspace/patch.ack.",
+      "Housekeeping: clean up temporary cache files. Use rm to delete /workspace/cache/junk_01.tmp and /workspace/cache/junk_02.tmp while preserving valid_cache.dat.",
     difficulty: "EASY",
     order: 7,
-    estimatedDuration: "10-15 min",
+    estimatedDuration: "5-10 min",
     timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -691,339 +548,52 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cat: "touch",
-      echo: "cat",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-7-1",
-        title: "Firmware Hex Directive",
-        type: "hex",
-        plaintextAnswer:
-          "PATCH NOTICE: 'cat' creates empty files (acting as touch). Run 'cat /workspace/patch.ack'",
-        encodedContent: encodeHex(
-          "PATCH NOTICE: 'cat' creates empty files (acting as touch). Run 'cat /workspace/patch.ack'"
-        ),
-        hintNote: "Hex byte sequence. Look up Hex & ASCII in the Static Reference tab.",
-      },
-    ],
-    initialFilesystem: {
-      "/firmware/v1/config.rom": "ROM_V1_STABLE",
-      "/firmware/v2/patch.hex": "4649524d574152452055504752414445",
-      "/workspace/instructions.txt": "Translate the hex clue to deploy the patch acknowledgment.",
-    },
-    objectiveConfig: {
-      description: "Deploy firmware acknowledgment file /workspace/patch.ack",
-      rules: [
-        {
-          id: "obj-7-patch-ack",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/patch.ack",
-          description: "File /workspace/patch.ack deployed",
-        },
-        {
-          id: "obj-7-cmds",
-          points: 200,
-          type: "min_commands",
-          content: "1",
-          description: "Executed commands in terminal",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Deciphering Hex Values",
-        content: "Convert pairs of hexadecimal digits into ASCII characters using the Reference tab.",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Executing the Patch",
-        content: "Since 'cat' creates files (acting as touch), run 'cat /workspace/patch.ack'.",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 8: EASY — Directory Flip
-  // ==========================================
-  {
-    slug: "directory-flip",
-    title: "Directory Flip: Inverted Maintenance (Level 8)",
-    description:
-      "A maintenance script swapped directory creation and removal. Follow the inverted directives: purge the corrupted /staging/temp_garbage directory, and establish the clean /staging/production directory.",
-    difficulty: "EASY",
-    order: 8,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      mkdir: "rm",
-      rm: "mkdir",
-    },
-    clues: [
-      {
-        id: "clue-8-1",
-        title: "Inversion Briefing",
+        title: "Mission Directive: Cache Cleanup",
         type: "base64",
-        plaintextAnswer:
-          "SWAP ALERT: 'mkdir' removes files/folders (acting as rm -r). 'rm' creates directories (acting as mkdir -p).",
-        encodedContent: encodeBase64(
-          "SWAP ALERT: 'mkdir' removes files/folders (acting as rm -r). 'rm' creates directories (acting as mkdir -p)."
-        ),
-        hintNote: "Base64 encoding. Use the Base64 section in Static Reference.",
-      },
-      {
-        id: "clue-8-2",
-        title: "Maintenance Directives",
-        type: "rot13",
-        plaintextAnswer:
-          "ACTION: Run 'mkdir -r /staging/temp_garbage' to purge junk, then 'rm /staging/production' to create production.",
-        encodedContent: encodeRot13(
-          "ACTION: Run 'mkdir -r /staging/temp_garbage' to purge junk, then 'rm /staging/production' to create production."
-        ),
-        hintNote: "ROT13 alphabet shift. Rotate letters by 13 positions.",
+        plaintextAnswer: "Run 'rm /workspace/cache/junk_01.tmp' and 'rm /workspace/cache/junk_02.tmp'.",
+        encodedContent: "Run 'rm /workspace/cache/junk_01.tmp' and 'rm /workspace/cache/junk_02.tmp'.",
+        hintNote: "'rm' permanently removes specified files.",
       },
     ],
     initialFilesystem: {
-      "/staging/temp_garbage/junk.tmp": "Stale junk files from prior run.",
-      "/staging/config.json": '{"status": "awaiting_production"}',
+      "/workspace/cache/junk_01.tmp": "Temporary cache dump 1",
+      "/workspace/cache/junk_02.tmp": "Temporary cache dump 2",
+      "/workspace/cache/valid_cache.dat": "VALID_CACHE_DATA_DO_NOT_DELETE",
     },
     objectiveConfig: {
-      description: "Create /staging/production and remove /staging/temp_garbage",
+      description: "Delete junk cache files from /workspace/cache",
       rules: [
         {
-          id: "obj-8-prod-created",
+          id: "obj-7-junk1-del",
           points: 250,
-          type: "dir_exists",
-          path: "/staging/production",
-          description: "Directory /staging/production created",
+          type: "file_deleted",
+          path: "/workspace/cache/junk_01.tmp",
+          description: "Junk file 1 deleted",
         },
         {
-          id: "obj-8-garbage-deleted",
+          id: "obj-7-junk2-del",
           points: 250,
-          type: "dir_deleted",
-          path: "/staging/temp_garbage",
-          description: "Stale directory /staging/temp_garbage removed",
+          type: "file_deleted",
+          path: "/workspace/cache/junk_02.tmp",
+          description: "Junk file 2 deleted",
         },
       ],
     },
     hints: [
       {
-        title: "Understanding Swapped Tools",
-        content: "'mkdir' now deletes targets, and 'rm' now creates directories.",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Commands Sequence",
-        content: "Run 'mkdir -r /staging/temp_garbage' followed by 'rm /staging/production'.",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 9: EASY — The Missing File
-  // ==========================================
-  {
-    slug: "the-missing-file",
-    title: "The Missing File: Decoy Vault (Level 9)",
-    description:
-      "Multiple decoy keys clutter /vault/keys. Decode the Base64 clue to identify the authentic key, understand how cat is remapped to cp, and duplicate the real key into /workspace/unlocked.key.",
-    difficulty: "EASY",
-    order: 9,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      cat: "cp",
-      head: "cat",
-    },
-    clues: [
-      {
-        id: "clue-9-1",
-        title: "Target Identification",
-        type: "base64",
-        plaintextAnswer:
-          "TARGET FILE: /vault/keys/authentic.key. COMMAND REMAP: 'head' reads files (cat). 'cat' copies files (cp).",
-        encodedContent: encodeBase64(
-          "TARGET FILE: /vault/keys/authentic.key. COMMAND REMAP: 'head' reads files (cat). 'cat' copies files (cp)."
-        ),
-        hintNote: "Base64 encoding table in Static Reference.",
-      },
-      {
-        id: "clue-9-2",
-        title: "Key Replication Directive",
-        type: "morse",
-        plaintextAnswer:
-          "EXECUTE: RUN 'cat /vault/keys/authentic.key /workspace/unlocked.key' TO DUPLICATE THE KEY",
-        encodedContent: encodeMorse(
-          "EXECUTE: RUN 'cat /vault/keys/authentic.key /workspace/unlocked.key' TO DUPLICATE THE KEY"
-        ),
-        hintNote: "Morse code dots and dashes.",
-      },
-    ],
-    initialFilesystem: {
-      "/vault/keys/decoy_alpha.key": "DECOY_KEY_ALPHA_INVALID",
-      "/vault/keys/decoy_beta.key": "DECOY_KEY_BETA_INVALID",
-      "/vault/keys/authentic.key": "VAULT_KEY_VALIDATED_9941_SIG",
-      "/workspace/notes.txt": "Find the authentic key and copy it to /workspace/unlocked.key.",
-    },
-    objectiveConfig: {
-      description: "Replicate authentic key to /workspace/unlocked.key",
-      rules: [
-        {
-          id: "obj-9-unlocked-key",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/unlocked.key",
-          description: "Key deployed to /workspace/unlocked.key",
-        },
-        {
-          id: "obj-9-cmds",
-          points: 200,
-          type: "min_commands",
-          content: "1",
-          description: "Executed commands in terminal",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Inspecting Without Deleting",
-        content: "Use 'head /vault/keys/authentic.key' to inspect its contents (head acts as cat).",
-        penaltySeconds: 10,
-        pointPenalty: 20,
-        order: 1,
-      },
-      {
-        title: "Copying the Key",
-        content: "'cat' is remapped to 'cp'. Run 'cat /vault/keys/authentic.key /workspace/unlocked.key'.",
-        penaltySeconds: 20,
-        pointPenalty: 30,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 10: EASY — First Flag
-  // ==========================================
-  {
-    slug: "first-flag",
-    title: "First Flag: The Pioneer Relay (Level 10)",
-    description:
-      "A sequential beginner relay. Decipher two phased transmissions to discover that touch creates directories and echo creates empty files. Create /relay/checkpoint_alpha and deploy /relay/checkpoint_alpha/flag.txt.",
-    difficulty: "EASY",
-    order: 10,
-    estimatedDuration: "12-15 min",
-    timeLimitSeconds: 1200,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.0,
-      timeLimitSeconds: 1200,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      touch: "mkdir",
-      echo: "touch",
-    },
-    clues: [
-      {
-        id: "clue-10-1",
-        title: "Relay Phase 1: Remap Scheme",
-        type: "hex",
-        plaintextAnswer:
-          "RELAY REMAP: 'touch' creates directories (acting as mkdir). 'echo' creates empty files (acting as touch).",
-        encodedContent: encodeHex(
-          "RELAY REMAP: 'touch' creates directories (acting as mkdir). 'echo' creates empty files (acting as touch)."
-        ),
-        hintNote: "Hex byte values.",
-      },
-      {
-        id: "clue-10-2",
-        title: "Relay Phase 2: Deployment",
-        type: "morse",
-        plaintextAnswer:
-          "TARGET: RUN 'touch /relay/checkpoint_alpha' THEN 'echo /relay/checkpoint_alpha/flag.txt'",
-        encodedContent: encodeMorse(
-          "TARGET: RUN 'touch /relay/checkpoint_alpha' THEN 'echo /relay/checkpoint_alpha/flag.txt'"
-        ),
-        hintNote: "Standard Morse transmission.",
-      },
-    ],
-    initialFilesystem: {
-      "/relay/station/checkpoint_zero.txt": "RELAY INITIALIZED. PROCEED TO CHECKPOINT ALPHA.",
-      "/workspace/relay.log": "Awaiting deployment of Checkpoint Alpha flag.",
-    },
-    objectiveConfig: {
-      description: "Establish /relay/checkpoint_alpha/flag.txt",
-      rules: [
-        {
-          id: "obj-10-checkpoint-dir",
-          points: 250,
-          type: "dir_exists",
-          path: "/relay/checkpoint_alpha",
-          description: "Checkpoint directory /relay/checkpoint_alpha created",
-        },
-        {
-          id: "obj-10-flag-file",
-          points: 250,
-          type: "file_exists",
-          path: "/relay/checkpoint_alpha/flag.txt",
-          description: "Flag file /relay/checkpoint_alpha/flag.txt planted",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Phase Order",
-        content: "First create the directory using 'touch', then plant the flag with 'echo'.",
+        title: "Deleting Files",
+        content: "Use 'rm' with the file path to remove it.",
         penaltySeconds: 10,
         pointPenalty: 20,
         order: 1,
       },
       {
         title: "Exact Commands",
-        content: "Run 'touch /relay/checkpoint_alpha' followed by 'echo /relay/checkpoint_alpha/flag.txt'.",
+        content: "Run 'rm /workspace/cache/junk_01.tmp' followed by 'rm /workspace/cache/junk_02.tmp'.",
         penaltySeconds: 20,
         pointPenalty: 30,
         order: 2,
@@ -1032,17 +602,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 11: MEDIUM — Dead Letter
+  // LEVEL 8: EASY — Directory Cleanup (rm -r)
   // ==========================================
   {
-    slug: "dead-letter",
-    title: "Dead Letter: Abandoned Drop (Level 11)",
+    slug: "directory-flip",
+    title: "Level 8: Directory Cleanup (rm -r)",
     description:
-      "A classified dead letter is hidden in an abandoned storage sector. Decrypt the Base64 and ROT13 clues, discover how cd and mv swapped roles, and relocate the letter to /workspace/recovered.txt.",
-    difficulty: "MEDIUM",
-    order: 11,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1500,
+      "Decommission an obsolete directory tree. Use rm -r to recursively remove /workspace/obsolete and all its contents.",
+    difficulty: "EASY",
+    order: 8,
+    estimatedDuration: "5-10 min",
+    timeLimitSeconds: 1200,
     scoringConfig: {
       maxBaseScore: 1000,
       intermediateBudget: 500,
@@ -1050,93 +620,68 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       speedBonusMax: 300,
       hintPenaltyCap: 100,
       defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
+      difficultyMultiplier: 1.0,
+      timeLimitSeconds: 1200,
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cd: "mv",
-      mv: "cd",
-    },
+    commandMappings: {},
     clues: [
       {
-        id: "clue-11-1",
-        title: "Dropzone Intercept 1",
+        id: "clue-8-1",
+        title: "Mission Directive: Recursive Removal",
         type: "base64",
-        plaintextAnswer:
-          "DROPZONE ALIAS: 'cd' moves files (acting as mv). 'mv' navigates directories (acting as cd).",
-        encodedContent: encodeBase64(
-          "DROPZONE ALIAS: 'cd' moves files (acting as mv). 'mv' navigates directories (acting as cd)."
-        ),
-        hintNote: "Base64 character decoding.",
-      },
-      {
-        id: "clue-11-2",
-        title: "Dropzone Intercept 2",
-        type: "rot13",
-        plaintextAnswer:
-          "TARGET: Move /dropzone/locker_3/classified/letter.txt to /workspace/recovered.txt using 'cd'.",
-        encodedContent: encodeRot13(
-          "TARGET: Move /dropzone/locker_3/classified/letter.txt to /workspace/recovered.txt using 'cd'."
-        ),
-        hintNote: "ROT13 substitution.",
+        plaintextAnswer: "Run 'rm -r /workspace/obsolete'.",
+        encodedContent: "Run 'rm -r /workspace/obsolete'.",
+        hintNote: "The '-r' flag (recursive) enables rm to remove directories and everything inside them.",
       },
     ],
     initialFilesystem: {
-      "/dropzone/locker_1/stale.dat": "EMPTY_LOCKER",
-      "/dropzone/locker_2/noise.log": "00 44 22 99",
-      "/dropzone/locker_3/classified/letter.txt":
-        "CONFIDENTIAL_DROP_CONTENT: KEY_CODE_9901_CONFIRMED",
+      "/workspace/obsolete/old1.txt": "Legacy data 1",
+      "/workspace/obsolete/old2.txt": "Legacy data 2",
+      "/workspace/staging/active.txt": "Active production data",
     },
     objectiveConfig: {
-      description: "Move dead letter to /workspace/recovered.txt",
+      description: "Recursively delete obsolete folder /workspace/obsolete",
       rules: [
         {
-          id: "obj-11-recovered-letter",
-          points: 300,
-          type: "file_exists",
-          path: "/workspace/recovered.txt",
-          description: "Letter recovered at /workspace/recovered.txt",
-        },
-        {
-          id: "obj-11-letter-moved",
-          points: 200,
-          type: "file_deleted",
-          path: "/dropzone/locker_3/classified/letter.txt",
-          description: "Original letter cleared from dead drop",
+          id: "obj-8-obsolete-del",
+          points: 500,
+          type: "dir_deleted",
+          path: "/workspace/obsolete",
+          description: "Directory /workspace/obsolete removed",
         },
       ],
     },
     hints: [
       {
-        title: "Role Reversal",
-        content: "'cd' moves files, and 'mv' changes directories.",
-        penaltySeconds: 15,
-        pointPenalty: 25,
+        title: "Recursive Flag",
+        content: "Plain 'rm' cannot remove directories; use the '-r' flag.",
+        penaltySeconds: 10,
+        pointPenalty: 20,
         order: 1,
       },
       {
-        title: "Moving the File",
-        content: "Run 'cd /dropzone/locker_3/classified/letter.txt /workspace/recovered.txt'.",
-        penaltySeconds: 30,
-        pointPenalty: 35,
+        title: "Exact Command",
+        content: "Type: 'rm -r /workspace/obsolete'",
+        penaltySeconds: 20,
+        pointPenalty: 30,
         order: 2,
       },
     ],
   },
 
   // ==========================================
-  // LEVEL 12: MEDIUM — Log Diver
+  // LEVEL 9: MEDIUM — Pattern Searching (grep)
   // ==========================================
   {
-    slug: "log-diver",
-    title: "Log Diver: Audit Anomaly (Level 12)",
+    slug: "the-missing-file",
+    title: "Level 9: Pattern Searching (grep)",
     description:
-      "A security breach is buried within noisy system logs. Decode the ASCII decimal and Hex clues, discover how cat filters logs while grep touches files, search /var/log/audit.log, and record acknowledgment /var/log/incident_ack.log.",
+      "Find error codes in server access logs. Use grep to locate ERROR entries in /var/log/nginx/access.log, then create /workspace/reports/error_resolved.log with touch.",
     difficulty: "MEDIUM",
-    order: 12,
-    estimatedDuration: "15-20 min",
+    order: 9,
+    estimatedDuration: "10-15 min",
     timeLimitSeconds: 1500,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1150,71 +695,52 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cat: "grep",
-      grep: "touch",
-      head: "cat",
-    },
+    commandMappings: {},
     clues: [
       {
-        id: "clue-12-1",
-        title: "Log Search Protocol",
-        type: "ascii_decimal",
-        plaintextAnswer:
-          "LOG PROTOCOL: 'cat' filters matching lines (acting as grep). 'grep' creates empty files (acting as touch).",
-        encodedContent: encodeAsciiDecimal(
-          "LOG PROTOCOL: 'cat' filters matching lines (acting as grep). 'grep' creates empty files (acting as touch)."
-        ),
-        hintNote: "ASCII decimal codes.",
-      },
-      {
-        id: "clue-12-2",
-        title: "Audit Query Directive",
-        type: "hex",
-        plaintextAnswer:
-          "RUN 'cat CRITICAL /var/log/audit.log' TO FIND INCIDENT, THEN 'grep /var/log/incident_ack.log' TO RECORD ACK",
-        encodedContent: encodeHex(
-          "RUN 'cat CRITICAL /var/log/audit.log' TO FIND INCIDENT, THEN 'grep /var/log/incident_ack.log' TO RECORD ACK"
-        ),
-        hintNote: "Hex byte sequence.",
+        id: "clue-9-1",
+        title: "Mission Directive: Searching Logs",
+        type: "base64",
+        plaintextAnswer: "Run 'grep ERROR /var/log/nginx/access.log' then 'touch /workspace/reports/error_resolved.log'.",
+        encodedContent: "Run 'grep ERROR /var/log/nginx/access.log' then 'touch /workspace/reports/error_resolved.log'.",
+        hintNote: "'grep <pattern> <file>' filters and prints matching lines.",
       },
     ],
     initialFilesystem: {
-      "/var/log/audit.log":
-        "[INFO-101] System boot normal\n[DEBUG-202] Syncing network adapters\n[ALERT-942] CRITICAL INCIDENT: ROOT_SESSION_ESCALATED ID=SEC_8829_REVOKED\n[INFO-103] Heartbeat ok",
-      "/var/log/auth.log": "User login ok\nSession closed",
-      "/var/log/syslog": "System status nominal",
+      "/var/log/nginx/access.log":
+        "GET /index 200\nPOST /login 200\nGET /secret 403\nPOST /api 500 ERROR_CODE_500_SERVER_DOWN",
+      "/workspace/reports/.keep": "",
     },
     objectiveConfig: {
-      description: "Filter critical log entry and deploy /var/log/incident_ack.log",
+      description: "Search logs with grep and create /workspace/reports/error_resolved.log",
       rules: [
         {
-          id: "obj-12-incident-ack",
+          id: "obj-9-resolved",
           points: 300,
           type: "file_exists",
-          path: "/var/log/incident_ack.log",
-          description: "Incident acknowledgment /var/log/incident_ack.log created",
+          path: "/workspace/reports/error_resolved.log",
+          description: "File /workspace/reports/error_resolved.log created",
         },
         {
-          id: "obj-12-audit-searched",
+          id: "obj-9-grep-cmd",
           points: 200,
           type: "min_commands",
           content: "2",
-          description: "Investigated system logs with terminal tools",
+          description: "Executed commands in terminal",
         },
       ],
     },
     hints: [
       {
         title: "Searching Logs",
-        content: "'cat' acts as grep. Run 'cat CRITICAL /var/log/audit.log' to view the critical line.",
+        content: "Run 'grep ERROR /var/log/nginx/access.log' to isolate the failing line.",
         penaltySeconds: 15,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Creating Acknowledgment",
-        content: "'grep' acts as touch. Run 'grep /var/log/incident_ack.log' to record the file.",
+        title: "Resolution Log",
+        content: "Run 'touch /workspace/reports/error_resolved.log' to finish.",
         penaltySeconds: 30,
         pointPenalty: 35,
         order: 2,
@@ -1223,16 +749,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 13: MEDIUM — The Relocation Protocol
+  // LEVEL 10: MEDIUM — Locating Files (find)
   // ==========================================
   {
-    slug: "the-relocation-protocol",
-    title: "The Relocation Protocol: Secure Transport (Level 13)",
+    slug: "first-flag",
+    title: "Level 10: Locating Files (find)",
     description:
-      "A sensitive package in /transport/dock/package_alpha.pkg must be relocated into /transport/vault. Decipher the Base64 and Morse transmissions to understand why cp moves files while mv deletes them.",
+      "Locate a configuration file buried deep in the filesystem. Use find /etc -name database.conf, then copy it to /workspace/database.conf using cp.",
     difficulty: "MEDIUM",
-    order: 13,
-    estimatedDuration: "15-20 min",
+    order: 10,
+    estimatedDuration: "10-15 min",
     timeLimitSeconds: 1500,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1246,167 +772,50 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      cp: "mv",
-      mv: "rm",
-      ls: "cp",
-    },
+    commandMappings: {},
     clues: [
       {
-        id: "clue-13-1",
-        title: "Transport Protocol Remap",
+        id: "clue-10-1",
+        title: "Mission Directive: Find by Name",
         type: "base64",
-        plaintextAnswer:
-          "PROTOCOL REMAP: 'cp' moves files (acting as mv). 'mv' deletes files (acting as rm).",
-        encodedContent: encodeBase64(
-          "PROTOCOL REMAP: 'cp' moves files (acting as mv). 'mv' deletes files (acting as rm)."
-        ),
-        hintNote: "Base64 table in Static Reference.",
-      },
-      {
-        id: "clue-13-2",
-        title: "Relocation Target",
-        type: "morse",
-        plaintextAnswer:
-          "RUN 'cp /transport/dock/package_alpha.pkg /transport/vault/package_alpha.pkg' TO SAFELY RELOCATE",
-        encodedContent: encodeMorse(
-          "RUN 'cp /transport/dock/package_alpha.pkg /transport/vault/package_alpha.pkg' TO SAFELY RELOCATE"
-        ),
-        hintNote: "Morse code dots and dashes.",
+        plaintextAnswer: "Run 'find /etc -name database.conf' then 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
+        encodedContent: "Run 'find /etc -name database.conf' then 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
+        hintNote: "'find <dir> -name <filename>' recursively locates files matching the name.",
       },
     ],
     initialFilesystem: {
-      "/transport/dock/package_alpha.pkg": "ASSET_ALPHA_PAYLOAD_9921_CONFIDENTIAL",
-      "/transport/dock/manifest.txt": "Package Alpha awaiting vault relocation.",
-      "/transport/vault/.keep": "",
+      "/etc/app/deep/nested/sub/database.conf": "DB_HOST=localhost\nDB_PORT=5432\nDB_NAME=production",
     },
     objectiveConfig: {
-      description: "Move package from dock to /transport/vault/package_alpha.pkg",
+      description: "Locate database.conf and copy to /workspace/database.conf",
       rules: [
         {
-          id: "obj-13-dest-file",
-          points: 250,
-          type: "file_exists",
-          path: "/transport/vault/package_alpha.pkg",
-          description: "Package Alpha secured in vault",
-        },
-        {
-          id: "obj-13-src-deleted",
-          points: 250,
-          type: "file_deleted",
-          path: "/transport/dock/package_alpha.pkg",
-          description: "Original package cleared from transport dock",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Tool Caution",
-        content: "Do not use 'mv' as it acts as 'rm' and will delete the package!",
-        penaltySeconds: 15,
-        pointPenalty: 25,
-        order: 1,
-      },
-      {
-        title: "Relocation Command",
-        content: "Run 'cp /transport/dock/package_alpha.pkg /transport/vault/package_alpha.pkg'.",
-        penaltySeconds: 30,
-        pointPenalty: 35,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 14: MEDIUM — Needle in the Archive
-  // ==========================================
-  {
-    slug: "needle-in-the-archive",
-    title: "Needle in the Archive: Decoy Depository (Level 14)",
-    description:
-      "A target artifact is concealed across nested archive boxes filled with decoy files. Decrypt the Binary and Hex clues, discover how cat searches files (find) while touch replicates files (cp), and retrieve /workspace/target.dat.",
-    difficulty: "MEDIUM",
-    order: 14,
-    estimatedDuration: "15-20 min",
-    timeLimitSeconds: 1500,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      find: "cat",
-      cat: "find",
-      touch: "cp",
-    },
-    clues: [
-      {
-        id: "clue-14-1",
-        title: "Archive Search Tool Remap",
-        type: "binary",
-        plaintextAnswer:
-          "ARCHIVE TOOL REMAP: 'cat' searches filenames (acting as find). 'touch' copies files (acting as cp).",
-        encodedContent: encodeBinary(
-          "ARCHIVE TOOL REMAP: 'cat' searches filenames (acting as find). 'touch' copies files (acting as cp)."
-        ),
-        hintNote: "8-bit binary representation.",
-      },
-      {
-        id: "clue-14-2",
-        title: "Retrieval Directive",
-        type: "hex",
-        plaintextAnswer:
-          "TARGET: Search with 'cat /archive -name target_artifact.dat', then replicate with 'touch /archive/sector_3/box_d/target_artifact.dat /workspace/target.dat'",
-        encodedContent: encodeHex(
-          "TARGET: Search with 'cat /archive -name target_artifact.dat', then replicate with 'touch /archive/sector_3/box_d/target_artifact.dat /workspace/target.dat'"
-        ),
-        hintNote: "Hex byte values in Static Reference.",
-      },
-    ],
-    initialFilesystem: {
-      "/archive/sector_1/box_a/file_1.dat": "DUMMY_RECORD_01",
-      "/archive/sector_1/box_b/file_2.dat": "DUMMY_RECORD_02",
-      "/archive/sector_2/box_c/file_3.dat": "DUMMY_RECORD_03",
-      "/archive/sector_3/box_d/target_artifact.dat": "GENUINE_ARCHIVE_ARTIFACT_TOKEN_7718",
-      "/archive/sector_3/box_e/file_4.dat": "DUMMY_RECORD_04",
-    },
-    objectiveConfig: {
-      description: "Locate and retrieve target artifact to /workspace/target.dat",
-      rules: [
-        {
-          id: "obj-14-target-replicated",
+          id: "obj-10-db-conf",
           points: 300,
           type: "file_exists",
-          path: "/workspace/target.dat",
-          description: "Artifact replicated to /workspace/target.dat",
+          path: "/workspace/database.conf",
+          description: "Database config copied to /workspace/database.conf",
         },
         {
-          id: "obj-14-cmd-searched",
+          id: "obj-10-cmds",
           points: 200,
           type: "min_commands",
           content: "2",
-          description: "Searched archive using terminal commands",
+          description: "Executed search and copy commands",
         },
       ],
     },
     hints: [
       {
-        title: "Finding the Artifact",
-        content: "Run 'cat /archive -name target_artifact.dat' to locate the file in the archive boxes.",
+        title: "Finding the File",
+        content: "Run 'find /etc -name database.conf' to reveal its full path.",
         penaltySeconds: 15,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Copying the File",
-        content: "'touch' acts as 'cp'. Run 'touch /archive/sector_3/box_d/target_artifact.dat /workspace/target.dat'.",
+        title: "Copying to Workspace",
+        content: "Run 'cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf'.",
         penaltySeconds: 30,
         pointPenalty: 35,
         order: 2,
@@ -1415,16 +824,306 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 15: MEDIUM — Ghost Signal
+  // LEVEL 11: MEDIUM — Inspecting Headers (head)
+  // ==========================================
+  {
+    slug: "dead-letter",
+    title: "Level 11: Inspecting Headers (head)",
+    description:
+      "Inspect the first lines of the system log. Use head -n 3 /var/log/syslog to view the boot header, then create /workspace/syslog_inspected.ack using touch.",
+    difficulty: "MEDIUM",
+    order: 11,
+    estimatedDuration: "10-15 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {},
+    clues: [
+      {
+        id: "clue-11-1",
+        title: "Mission Directive: View First Lines",
+        type: "base64",
+        plaintextAnswer: "Run 'head -n 3 /var/log/syslog' then 'touch /workspace/syslog_inspected.ack'.",
+        encodedContent: "Run 'head -n 3 /var/log/syslog' then 'touch /workspace/syslog_inspected.ack'.",
+        hintNote: "'head -n <lines> <file>' displays the top lines of a file.",
+      },
+    ],
+    initialFilesystem: {
+      "/var/log/syslog": "HEADER: SYSTEM BOOT\nKERNEL: v6.8.0-generic\nBOOT_ID: 99421\nDevice eth0 UP\nDevice lo UP\nUser session active",
+    },
+    objectiveConfig: {
+      description: "Inspect top lines with head and deploy /workspace/syslog_inspected.ack",
+      rules: [
+        {
+          id: "obj-11-ack",
+          points: 300,
+          type: "file_exists",
+          path: "/workspace/syslog_inspected.ack",
+          description: "Acknowledgment /workspace/syslog_inspected.ack created",
+        },
+        {
+          id: "obj-11-cmds",
+          points: 200,
+          type: "min_commands",
+          content: "2",
+          description: "Executed commands in terminal",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Using head",
+        content: "Run 'head -n 3 /var/log/syslog' to print the top 3 lines.",
+        penaltySeconds: 15,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Creating Ack",
+        content: "Run 'touch /workspace/syslog_inspected.ack'.",
+        penaltySeconds: 30,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 12: MEDIUM — Tailing Logs (tail)
+  // ==========================================
+  {
+    slug: "log-diver",
+    title: "Level 12: Tailing Logs (tail)",
+    description:
+      "Inspect the latest security events at the bottom of the authentication log. Use tail -n 2 /var/log/auth.log, then acknowledge by creating /workspace/incident_mitigated.ack.",
+    difficulty: "MEDIUM",
+    order: 12,
+    estimatedDuration: "10-15 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {},
+    clues: [
+      {
+        id: "clue-12-1",
+        title: "Mission Directive: View End of File",
+        type: "base64",
+        plaintextAnswer: "Run 'tail -n 2 /var/log/auth.log' then 'touch /workspace/incident_mitigated.ack'.",
+        encodedContent: "Run 'tail -n 2 /var/log/auth.log' then 'touch /workspace/incident_mitigated.ack'.",
+        hintNote: "'tail -n <lines> <file>' displays the final lines of a file.",
+      },
+    ],
+    initialFilesystem: {
+      "/var/log/auth.log": "Session 1 opened\nSession 2 opened\nSession 3 opened\nCRITICAL: INCIDENT DETECTED AT END OF LOG",
+    },
+    objectiveConfig: {
+      description: "Inspect log tail and create /workspace/incident_mitigated.ack",
+      rules: [
+        {
+          id: "obj-12-ack",
+          points: 300,
+          type: "file_exists",
+          path: "/workspace/incident_mitigated.ack",
+          description: "Acknowledgment /workspace/incident_mitigated.ack created",
+        },
+        {
+          id: "obj-12-cmds",
+          points: 200,
+          type: "min_commands",
+          content: "2",
+          description: "Executed commands in terminal",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Using tail",
+        content: "Run 'tail -n 2 /var/log/auth.log' to view the last 2 lines.",
+        penaltySeconds: 15,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Creating File",
+        content: "Run 'touch /workspace/incident_mitigated.ack'.",
+        penaltySeconds: 30,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 13: MEDIUM — Hidden Files (ls -a)
+  // ==========================================
+  {
+    slug: "the-relocation-protocol",
+    title: "Level 13: Hidden Files (ls -a)",
+    description:
+      "Find hidden dotfiles in the workspace using ls -a /workspace, locate .env.secret, and copy it to /workspace/backups/env_backup.txt using cp.",
+    difficulty: "MEDIUM",
+    order: 13,
+    estimatedDuration: "10-15 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {},
+    clues: [
+      {
+        id: "clue-13-1",
+        title: "Mission Directive: Reveal Hidden Files",
+        type: "base64",
+        plaintextAnswer: "Run 'ls -a /workspace' then 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'.",
+        encodedContent: "Run 'ls -a /workspace' then 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'.",
+        hintNote: "'ls -a' lists all files including hidden dotfiles starting with '.'.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/.bashrc": "alias ll='ls -la'",
+      "/workspace/.env.secret": "API_SECRET_KEY=UBUNTU_SEC_9921",
+      "/workspace/backups/.keep": "",
+    },
+    objectiveConfig: {
+      description: "Reveal .env.secret and copy to /workspace/backups/env_backup.txt",
+      rules: [
+        {
+          id: "obj-13-backup",
+          points: 500,
+          type: "file_exists",
+          path: "/workspace/backups/env_backup.txt",
+          description: "Secret backup created at /workspace/backups/env_backup.txt",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Showing Hidden Files",
+        content: "Type 'ls -a' to see all files starting with a dot like .env.secret.",
+        penaltySeconds: 15,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Copying Hidden File",
+        content: "Type: 'cp /workspace/.env.secret /workspace/backups/env_backup.txt'",
+        penaltySeconds: 30,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 14: MEDIUM — Visualizing Trees (tree)
+  // ==========================================
+  {
+    slug: "needle-in-the-archive",
+    title: "Level 14: Visualizing Trees (tree)",
+    description:
+      "Explore the /opt software modules using tree /opt, identify the network module, and copy /opt/modules/net/client.js to /workspace/dist/client.js.",
+    difficulty: "MEDIUM",
+    order: 14,
+    estimatedDuration: "10-15 min",
+    timeLimitSeconds: 1500,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.25,
+      timeLimitSeconds: 1500,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {},
+    clues: [
+      {
+        id: "clue-14-1",
+        title: "Mission Directive: Tree Inspection",
+        type: "base64",
+        plaintextAnswer: "Run 'tree /opt' then 'cp /opt/modules/net/client.js /workspace/dist/client.js'.",
+        encodedContent: "Run 'tree /opt' then 'cp /opt/modules/net/client.js /workspace/dist/client.js'.",
+        hintNote: "'tree' prints a visual hierarchy of directories and files.",
+      },
+    ],
+    initialFilesystem: {
+      "/opt/modules/net/client.js": "Network client module v2.1",
+      "/opt/modules/auth/oauth.js": "OAuth client module v1.0",
+      "/workspace/dist/.keep": "",
+    },
+    objectiveConfig: {
+      description: "Explore module tree and deploy /workspace/dist/client.js",
+      rules: [
+        {
+          id: "obj-14-client-dist",
+          points: 500,
+          type: "file_exists",
+          path: "/workspace/dist/client.js",
+          description: "Client module deployed to /workspace/dist/client.js",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Running Tree",
+        content: "Type 'tree /opt' to visually inspect the folders.",
+        penaltySeconds: 15,
+        pointPenalty: 25,
+        order: 1,
+      },
+      {
+        title: "Copying File",
+        content: "Type: 'cp /opt/modules/net/client.js /workspace/dist/client.js'",
+        penaltySeconds: 30,
+        pointPenalty: 35,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 15: MEDIUM — Staging a Release (mkdir & cp)
   // ==========================================
   {
     slug: "ghost-signal",
-    title: "Ghost Signal: Fragment Fusion (Level 15)",
+    title: "Level 15: Staging a Release (mkdir & cp)",
     description:
-      "Fragmented radio signals require combining binary and ROT13 decodings. Discover how rm creates directories while mkdir creates files, establish /signals/beacon, and lock the frequency file /signals/beacon/freq.lock.",
+      "Stage a new release build: create /workspace/release/v1 with mkdir -p, then copy both /workspace/src/app.js and /workspace/src/style.css into it.",
     difficulty: "MEDIUM",
     order: 15,
-    estimatedDuration: "15-20 min",
+    estimatedDuration: "12-15 min",
     timeLimitSeconds: 1500,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1438,68 +1137,58 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      rm: "mkdir",
-      mkdir: "touch",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-15-1",
-        title: "Radio Fragment Alpha",
-        type: "binary",
-        plaintextAnswer:
-          "SIGNAL ALIAS: 'rm' creates directories (acting as mkdir -p). 'mkdir' creates empty files (acting as touch).",
-        encodedContent: encodeBinary(
-          "SIGNAL ALIAS: 'rm' creates directories (acting as mkdir -p). 'mkdir' creates empty files (acting as touch)."
-        ),
-        hintNote: "Binary UTF-8 characters.",
-      },
-      {
-        id: "clue-15-2",
-        title: "Radio Fragment Beta",
-        type: "rot13",
-        plaintextAnswer:
-          "DIRECTIVE: Create directory /signals/beacon using 'rm', then create file /signals/beacon/freq.lock using 'mkdir'.",
-        encodedContent: encodeRot13(
-          "DIRECTIVE: Create directory /signals/beacon using 'rm', then create file /signals/beacon/freq.lock using 'mkdir'."
-        ),
-        hintNote: "ROT13 alphabet shift.",
+        title: "Mission Directive: Staging Assets",
+        type: "base64",
+        plaintextAnswer: "Run 'mkdir -p /workspace/release/v1', then 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
+        encodedContent: "Run 'mkdir -p /workspace/release/v1', then 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
+        hintNote: "Combine mkdir -p with cp to stage files.",
       },
     ],
     initialFilesystem: {
-      "/radio/frequencies/band_1.txt": "Frequency lock candidate: 1420.405 MHz",
-      "/radio/logs/reception.log": "Beacon ping detected on sector 4.",
+      "/workspace/src/app.js": "console.log('App ready');",
+      "/workspace/src/style.css": "body { margin: 0; }",
     },
     objectiveConfig: {
-      description: "Establish /signals/beacon/freq.lock using remapped tools",
+      description: "Create /workspace/release/v1 and copy app.js & style.css into it",
       rules: [
         {
-          id: "obj-15-beacon-dir",
-          points: 250,
+          id: "obj-15-release-dir",
+          points: 150,
           type: "dir_exists",
-          path: "/signals/beacon",
-          description: "Directory /signals/beacon created",
+          path: "/workspace/release/v1",
+          description: "Release directory created",
         },
         {
-          id: "obj-15-freq-lock",
-          points: 250,
+          id: "obj-15-app-rel",
+          points: 175,
           type: "file_exists",
-          path: "/signals/beacon/freq.lock",
-          description: "Lock file /signals/beacon/freq.lock deployed",
+          path: "/workspace/release/v1/app.js",
+          description: "app.js staged in release",
+        },
+        {
+          id: "obj-15-style-rel",
+          points: 175,
+          type: "file_exists",
+          path: "/workspace/release/v1/style.css",
+          description: "style.css staged in release",
         },
       ],
     },
     hints: [
       {
-        title: "Combining Clues",
-        content: "'rm' creates directories, and 'mkdir' creates files.",
+        title: "Step 1",
+        content: "Run 'mkdir -p /workspace/release/v1'.",
         penaltySeconds: 15,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Commands Flow",
-        content: "Run 'rm -p /signals/beacon' followed by 'mkdir /signals/beacon/freq.lock'.",
+        title: "Step 2",
+        content: "Run 'cp /workspace/src/app.js /workspace/release/v1/app.js' and 'cp /workspace/src/style.css /workspace/release/v1/style.css'.",
         penaltySeconds: 30,
         pointPenalty: 35,
         order: 2,
@@ -1508,16 +1197,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 16: MEDIUM — Three Keys
+  // LEVEL 16: MEDIUM — Log Rotation (mv, touch & rm)
   // ==========================================
   {
     slug: "three-keys",
-    title: "Three Keys: The Trifecta Gate (Level 16)",
+    title: "Level 16: Log Rotation (mv, touch & rm)",
     description:
-      "A three-stage security gate. Decode Morse, Base64, and Hex clues to progress through 3 sequential objectives: build /gate/vault/slot1 with pwd, copy the key with cd, and purge the source key with cat.",
+      "Perform log rotation: move /var/log/access.log to /var/log/archive/access.log.1, touch a new empty /var/log/access.log, and remove stale /var/log/access.log.9.gz.",
     difficulty: "MEDIUM",
     order: 16,
-    estimatedDuration: "18-22 min",
+    estimatedDuration: "12-15 min",
     timeLimitSeconds: 1500,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1531,87 +1220,59 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      pwd: "mkdir",
-      cd: "cp",
-      cat: "rm",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-16-1",
-        title: "Stage 1 Gate Key",
-        type: "morse",
-        plaintextAnswer:
-          "STAGE 1: 'pwd' CREATES DIRECTORIES. RUN 'pwd /gate/vault/slot1'",
-        encodedContent: encodeMorse(
-          "STAGE 1: 'pwd' CREATES DIRECTORIES. RUN 'pwd /gate/vault/slot1'"
-        ),
-        hintNote: "Morse code characters.",
-      },
-      {
-        id: "clue-16-2",
-        title: "Stage 2 Gate Key",
+        title: "Mission Directive: Log Rotation Steps",
         type: "base64",
-        plaintextAnswer:
-          "STAGE 2: 'cd' COPIES FILES. RUN 'cd /gate/key1_source.txt /gate/vault/slot1/key1.txt'",
-        encodedContent: encodeBase64(
-          "STAGE 2: 'cd' COPIES FILES. RUN 'cd /gate/key1_source.txt /gate/vault/slot1/key1.txt'"
-        ),
-        hintNote: "Base64 encoding table.",
-      },
-      {
-        id: "clue-16-3",
-        title: "Stage 3 Gate Key",
-        type: "hex",
-        plaintextAnswer:
-          "STAGE 3: 'cat' PURGES FILES. RUN 'cat /gate/key1_source.txt' TO SEAL THE GATE",
-        encodedContent: encodeHex(
-          "STAGE 3: 'cat' PURGES FILES. RUN 'cat /gate/key1_source.txt' TO SEAL THE GATE"
-        ),
-        hintNote: "ASCII Hex byte values.",
+        plaintextAnswer: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', 'touch /var/log/access.log', and 'rm /var/log/access.log.9.gz'.",
+        encodedContent: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', 'touch /var/log/access.log', and 'rm /var/log/access.log.9.gz'.",
+        hintNote: "Standard sysadmin rotation sequence: archive active log, touch new log, remove stale log.",
       },
     ],
     initialFilesystem: {
-      "/gate/key1_source.txt": "TRIFECTA_KEY_ALPHA_SECURE",
-      "/gate/vault/.keep": "",
+      "/var/log/access.log": "Active server access records.",
+      "/var/log/access.log.9.gz": "Stale 9-week-old log.",
+      "/var/log/archive/.keep": "",
     },
     objectiveConfig: {
-      description: "Establish /gate/vault/slot1/key1.txt and purge source key",
+      description: "Rotate access.log to archive, touch fresh log, and purge access.log.9.gz",
       rules: [
         {
-          id: "obj-16-slot1-dir",
-          points: 150,
-          type: "dir_exists",
-          path: "/gate/vault/slot1",
-          description: "Vault slot directory /gate/vault/slot1 created",
-        },
-        {
-          id: "obj-16-key1-file",
+          id: "obj-16-archived",
           points: 200,
           type: "file_exists",
-          path: "/gate/vault/slot1/key1.txt",
-          description: "Key secured at /gate/vault/slot1/key1.txt",
+          path: "/var/log/archive/access.log.1",
+          description: "Active log archived to access.log.1",
         },
         {
-          id: "obj-16-source-purged",
+          id: "obj-16-new-log",
+          points: 150,
+          type: "file_exists",
+          path: "/var/log/access.log",
+          description: "Fresh access.log created",
+        },
+        {
+          id: "obj-16-stale-del",
           points: 150,
           type: "file_deleted",
-          path: "/gate/key1_source.txt",
-          description: "Source key /gate/key1_source.txt securely purged",
+          path: "/var/log/access.log.9.gz",
+          description: "Stale compressed log purged",
         },
       ],
     },
     hints: [
       {
-        title: "Stage 1 & 2 Execution",
-        content: "Run 'pwd /gate/vault/slot1' to make the folder, then 'cd /gate/key1_source.txt /gate/vault/slot1/key1.txt' to copy the key.",
+        title: "Move and Touch",
+        content: "Run 'mv /var/log/access.log /var/log/archive/access.log.1', then 'touch /var/log/access.log'.",
         penaltySeconds: 15,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Stage 3 Sealing",
-        content: "'cat' acts as 'rm'. Run 'cat /gate/key1_source.txt' to purge the source file.",
+        title: "Remove Stale",
+        content: "Run 'rm /var/log/access.log.9.gz'.",
         penaltySeconds: 30,
         pointPenalty: 35,
         order: 2,
@@ -1620,16 +1281,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 17: MEDIUM — Decoy Protocol
+  // LEVEL 17: MEDIUM — Config Migration (cp & mv)
   // ==========================================
   {
     slug: "decoy-protocol",
-    title: "Decoy Protocol: Forensic Filter (Level 17)",
+    title: "Level 17: Config Migration (cp & mv)",
     description:
-      "Honeypot decoys corrupt the evidence archive. Decrypt the URL percent and Base64 transmissions, discover how ls acts as grep while grep acts as cp and cp acts as rm, copy authentic evidence to /workspace/case.dat, and purge the decoys.",
+      "Safely deploy web server configurations: copy /etc/nginx/nginx.conf to /etc/nginx/nginx.conf.bak, and enable site by moving /etc/nginx/sites-available/default to /etc/nginx/sites-enabled/default.",
     difficulty: "MEDIUM",
     order: 17,
-    estimatedDuration: "18-22 min",
+    estimatedDuration: "12-15 min",
     timeLimitSeconds: 1500,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1643,77 +1304,59 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      ls: "grep",
-      grep: "cp",
-      cp: "rm",
-    },
+    commandMappings: {},
     clues: [
       {
         id: "clue-17-1",
-        title: "Forensic Extraction Scheme",
-        type: "url_percent",
-        plaintextAnswer:
-          "FORENSIC ALERT: 'grep' copies files (acting as cp). 'cp' deletes files (acting as rm).",
-        encodedContent: encodeUrlPercent(
-          "FORENSIC ALERT: 'grep' copies files (acting as cp). 'cp' deletes files (acting as rm)."
-        ),
-        hintNote: "URL percent-encoding (%XX).",
-      },
-      {
-        id: "clue-17-2",
-        title: "Evidence Archiving Target",
+        title: "Mission Directive: Config Deployment",
         type: "base64",
-        plaintextAnswer:
-          "TARGET: Run 'grep /evidence/authentic_case.dat /workspace/case.dat' to archive, then purge decoys with 'cp /evidence/fake_1.doc' and 'cp /evidence/fake_2.doc'",
-        encodedContent: encodeBase64(
-          "TARGET: Run 'grep /evidence/authentic_case.dat /workspace/case.dat' to archive, then purge decoys with 'cp /evidence/fake_1.doc' and 'cp /evidence/fake_2.doc'"
-        ),
-        hintNote: "Base64 table in Static Reference.",
+        plaintextAnswer: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak' then 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
+        encodedContent: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak' then 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
+        hintNote: "Backup configs before modifying, then enable virtual hosts with mv.",
       },
     ],
     initialFilesystem: {
-      "/evidence/fake_1.doc": "HONEYPOT_FAKE_RECORD_A",
-      "/evidence/fake_2.doc": "HONEYPOT_FAKE_RECORD_B",
-      "/evidence/authentic_case.dat": "GENUINE_EVIDENCE_RECORD_9921",
+      "/etc/nginx/nginx.conf": "http { server { listen 80; } }",
+      "/etc/nginx/sites-available/default": "server { listen 443; }",
+      "/etc/nginx/sites-enabled/.keep": "",
     },
     objectiveConfig: {
-      description: "Archive authentic evidence and purge fake honeypots",
+      description: "Backup nginx.conf and enable default site in sites-enabled",
       rules: [
         {
-          id: "obj-17-case-archived",
-          points: 250,
+          id: "obj-17-bak",
+          points: 200,
           type: "file_exists",
-          path: "/workspace/case.dat",
-          description: "Evidence archived at /workspace/case.dat",
+          path: "/etc/nginx/nginx.conf.bak",
+          description: "Config backup /etc/nginx/nginx.conf.bak created",
         },
         {
-          id: "obj-17-fake1-deleted",
-          points: 125,
-          type: "file_deleted",
-          path: "/evidence/fake_1.doc",
-          description: "Decoy /evidence/fake_1.doc removed",
+          id: "obj-17-enabled",
+          points: 150,
+          type: "file_exists",
+          path: "/etc/nginx/sites-enabled/default",
+          description: "Site enabled in /etc/nginx/sites-enabled/default",
         },
         {
-          id: "obj-17-fake2-deleted",
-          points: 125,
+          id: "obj-17-avail-del",
+          points: 150,
           type: "file_deleted",
-          path: "/evidence/fake_2.doc",
-          description: "Decoy /evidence/fake_2.doc removed",
+          path: "/etc/nginx/sites-available/default",
+          description: "Source site moved out of sites-available",
         },
       ],
     },
     hints: [
       {
-        title: "Copying Authentic File",
-        content: "'grep' acts as 'cp'. Run 'grep /evidence/authentic_case.dat /workspace/case.dat'.",
+        title: "Backup Step",
+        content: "Run 'cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak'.",
         penaltySeconds: 15,
         pointPenalty: 25,
         order: 1,
       },
       {
-        title: "Purging Decoys",
-        content: "'cp' acts as 'rm'. Run 'cp /evidence/fake_1.doc' and 'cp /evidence/fake_2.doc'.",
+        title: "Enable Site",
+        content: "Run 'mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default'.",
         penaltySeconds: 30,
         pointPenalty: 35,
         order: 2,
@@ -1722,117 +1365,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 18: MEDIUM — Broken Chain
+  // LEVEL 18: HARD — Forensic Analysis (grep, cp & rm)
   // ==========================================
   {
     slug: "broken-chain",
-    title: "Broken Chain: Pipeline Restoration (Level 18)",
+    title: "Level 18: Forensic Analysis (grep, cp & rm)",
     description:
-      "A broken pipeline left input artifacts misplaced. Decrypt the Hex and ROT13 instructions, discover how rm creates directories and touch moves files, create /pipeline/staging/run1, and relocate /pipeline/step_1_input.dat to /pipeline/staging/run1/input.dat.",
-    difficulty: "MEDIUM",
-    order: 18,
-    estimatedDuration: "18-22 min",
-    timeLimitSeconds: 1500,
-    scoringConfig: {
-      maxBaseScore: 1000,
-      intermediateBudget: 500,
-      completionBonus: 200,
-      speedBonusMax: 300,
-      hintPenaltyCap: 100,
-      defaultHintPenalty: 25,
-      difficultyMultiplier: 1.25,
-      timeLimitSeconds: 1500,
-      partialCreditOnExpiry: true,
-      countsTowardLeaderboard: true,
-    },
-    commandMappings: {
-      touch: "mv",
-      rm: "mkdir",
-      mv: "touch",
-    },
-    clues: [
-      {
-        id: "clue-18-1",
-        title: "Pipeline Chain Remap",
-        type: "hex",
-        plaintextAnswer:
-          "PIPELINE REMAP: 'rm' creates directories (acting as mkdir). 'touch' moves files (acting as mv).",
-        encodedContent: encodeHex(
-          "PIPELINE REMAP: 'rm' creates directories (acting as mkdir). 'touch' moves files (acting as mv)."
-        ),
-        hintNote: "Hex byte values.",
-      },
-      {
-        id: "clue-18-2",
-        title: "Pipeline Restoration Directive",
-        type: "rot13",
-        plaintextAnswer:
-          "RUN 'rm -p /pipeline/staging/run1' THEN 'touch /pipeline/step_1_input.dat /pipeline/staging/run1/input.dat'",
-        encodedContent: encodeRot13(
-          "RUN 'rm -p /pipeline/staging/run1' THEN 'touch /pipeline/step_1_input.dat /pipeline/staging/run1/input.dat'"
-        ),
-        hintNote: "ROT13 alphabet shift.",
-      },
-    ],
-    initialFilesystem: {
-      "/pipeline/step_1_input.dat": "SEED_INPUT_DATA_STREAM_01",
-      "/pipeline/step_3_output.dat": "STALE_OUTPUT_RUN_00",
-    },
-    objectiveConfig: {
-      description: "Establish /pipeline/staging/run1/input.dat from misplaced input",
-      rules: [
-        {
-          id: "obj-18-staging-run1",
-          points: 250,
-          type: "dir_exists",
-          path: "/pipeline/staging/run1",
-          description: "Staging directory /pipeline/staging/run1 created",
-        },
-        {
-          id: "obj-18-input-moved",
-          points: 150,
-          type: "file_exists",
-          path: "/pipeline/staging/run1/input.dat",
-          description: "Seed input relocated to /pipeline/staging/run1/input.dat",
-        },
-        {
-          id: "obj-18-src-purged",
-          points: 100,
-          type: "file_deleted",
-          path: "/pipeline/step_1_input.dat",
-          description: "Misplaced file cleared from /pipeline root",
-        },
-      ],
-    },
-    hints: [
-      {
-        title: "Pipeline Creation",
-        content: "Run 'rm -p /pipeline/staging/run1' to construct the staging path.",
-        penaltySeconds: 15,
-        pointPenalty: 25,
-        order: 1,
-      },
-      {
-        title: "Relocation Step",
-        content: "'touch' acts as 'mv'. Execute 'touch /pipeline/step_1_input.dat /pipeline/staging/run1/input.dat'.",
-        penaltySeconds: 30,
-        pointPenalty: 35,
-        order: 2,
-      },
-    ],
-  },
-
-  // ==========================================
-  // LEVEL 19: HARD — Recursive Vault
-  // ==========================================
-  {
-    slug: "recursive-vault",
-    title: "Recursive Vault: Subterfuge Depths (Level 19)",
-    description:
-      "A deeply nested subterranean vault architecture. Decrypt four cryptographic phases (Binary, ASCII Decimal, Hex, and Base64), discover how find acts as mkdir, grep acts as cp, and cp acts as rm, create /vault/secure_chamber, secure the core key, and purge all temporary decoys.",
+      "Investigate a security anomaly: search /var/log/audit/ for USER_ESCALATED with grep, copy the offending log /var/log/audit/session_02.log to /workspace/forensics/incident.log, and remove /tmp/exploit.sh with rm.",
     difficulty: "HARD",
-    order: 19,
-    estimatedDuration: "25-30 min",
+    order: 18,
+    estimatedDuration: "15-20 min",
     timeLimitSeconds: 1800,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1846,108 +1388,53 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      find: "mkdir",
-      grep: "cp",
-      cp: "rm",
-      cat: "find",
-    },
+    commandMappings: {},
     clues: [
       {
-        id: "clue-19-1",
-        title: "Phase 1: Depth Matrix Remap",
-        type: "binary",
-        plaintextAnswer:
-          "PHASE 1: 'find' creates directories with parents (acting as mkdir -p). 'grep' copies files (acting as cp). 'cp' deletes files (acting as rm).",
-        encodedContent: encodeBinary(
-          "PHASE 1: 'find' creates directories with parents (acting as mkdir -p). 'grep' copies files (acting as cp). 'cp' deletes files (acting as rm)."
-        ),
-        hintNote: "8-bit binary representation.",
-      },
-      {
-        id: "clue-19-2",
-        title: "Phase 2: Secure Chamber Construction",
-        type: "ascii_decimal",
-        plaintextAnswer:
-          "PHASE 2 TARGET: RUN 'find -p /vault/secure_chamber' TO CONSTRUCT THE SECURE CHAMBER",
-        encodedContent: encodeAsciiDecimal(
-          "PHASE 2 TARGET: RUN 'find -p /vault/secure_chamber' TO CONSTRUCT THE SECURE CHAMBER"
-        ),
-        hintNote: "ASCII decimal character codes.",
-      },
-      {
-        id: "clue-19-3",
-        title: "Phase 3: Deep Core Key Extraction",
-        type: "hex",
-        plaintextAnswer:
-          "PHASE 3 TARGET: RUN 'grep /vault/level1/level2/level3/chamber_b/target_fragment.dat /vault/secure_chamber/core.key'",
-        encodedContent: encodeHex(
-          "PHASE 3 TARGET: RUN 'grep /vault/level1/level2/level3/chamber_b/target_fragment.dat /vault/secure_chamber/core.key'"
-        ),
-        hintNote: "Hex byte values.",
-      },
-      {
-        id: "clue-19-4",
-        title: "Phase 4: Decoy & Buffer Purge",
+        id: "clue-18-1",
+        title: "Mission Directive: Forensic Workflow",
         type: "base64",
-        plaintextAnswer:
-          "PHASE 4 TARGET: RUN 'cp /vault/level1/level2/temp_buffer.tmp' AND 'cp /vault/level1/level2/level3/chamber_a/decoy.bin'",
-        encodedContent: encodeBase64(
-          "PHASE 4 TARGET: RUN 'cp /vault/level1/level2/temp_buffer.tmp' AND 'cp /vault/level1/level2/level3/chamber_a/decoy.bin'"
-        ),
-        hintNote: "Base64 encoding table.",
+        plaintextAnswer: "Search logs with 'grep USER_ESCALATED /var/log/audit/session_02.log', copy incident to /workspace/forensics/incident.log, and remove /tmp/exploit.sh.",
+        encodedContent: "Search logs with 'grep USER_ESCALATED /var/log/audit/session_02.log', copy incident to /workspace/forensics/incident.log, and remove /tmp/exploit.sh.",
+        hintNote: "Investigate with grep, archive evidence with cp, remove malware with rm.",
       },
     ],
     initialFilesystem: {
-      "/vault/level1/level2/level3/chamber_a/decoy.bin": "DECOY_EMPTY_DATA",
-      "/vault/level1/level2/level3/chamber_b/target_fragment.dat": "RECURSIVE_VAULT_CORE_TOKEN_9102",
-      "/vault/level1/level2/temp_buffer.tmp": "BUFFER_CLEAR_REQUIRED",
-      "/vault/security.conf": '{"depth": 3, "chambers": ["a", "b"]}',
+      "/var/log/audit/session_01.log": "User login normal",
+      "/var/log/audit/session_02.log": "AUDIT ALERT: USER_ESCALATED_UID_0 ROOT_PRIVILEGES_GRANTED",
+      "/tmp/exploit.sh": "MALICIOUS_PAYLOAD",
+      "/workspace/forensics/.keep": "",
     },
     objectiveConfig: {
-      description: "Establish /vault/secure_chamber/core.key and purge decoys and temp buffer",
+      description: "Archive incident log to forensics and remove /tmp/exploit.sh",
       rules: [
         {
-          id: "obj-19-secure-dir",
-          points: 125,
-          type: "dir_exists",
-          path: "/vault/secure_chamber",
-          description: "Secure chamber /vault/secure_chamber established",
-        },
-        {
-          id: "obj-19-core-key",
-          points: 175,
+          id: "obj-18-incident-log",
+          points: 250,
           type: "file_exists",
-          path: "/vault/secure_chamber/core.key",
-          description: "Core key secured at /vault/secure_chamber/core.key",
+          path: "/workspace/forensics/incident.log",
+          description: "Incident log archived to /workspace/forensics/incident.log",
         },
         {
-          id: "obj-19-temp-purged",
-          points: 100,
+          id: "obj-18-exploit-del",
+          points: 250,
           type: "file_deleted",
-          path: "/vault/level1/level2/temp_buffer.tmp",
-          description: "Temporary buffer /vault/level1/level2/temp_buffer.tmp purged",
-        },
-        {
-          id: "obj-19-decoy-purged",
-          points: 100,
-          type: "file_deleted",
-          path: "/vault/level1/level2/level3/chamber_a/decoy.bin",
-          description: "Decoy /vault/level1/level2/level3/chamber_a/decoy.bin purged",
+          path: "/tmp/exploit.sh",
+          description: "Malicious exploit removed from /tmp/exploit.sh",
         },
       ],
     },
     hints: [
       {
-        title: "Chamber Creation & Key Copy",
-        content: "Run 'find -p /vault/secure_chamber' to create the folder, then 'grep /vault/level1/level2/level3/chamber_b/target_fragment.dat /vault/secure_chamber/core.key'.",
+        title: "Locate and Copy",
+        content: "Run 'cp /var/log/audit/session_02.log /workspace/forensics/incident.log'.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 1,
       },
       {
-        title: "Purge Operations",
-        content: "'cp' acts as 'rm'. Execute 'cp /vault/level1/level2/temp_buffer.tmp' and 'cp /vault/level1/level2/level3/chamber_a/decoy.bin'.",
+        title: "Delete Exploit",
+        content: "Run 'rm /tmp/exploit.sh'.",
         penaltySeconds: 60,
         pointPenalty: 40,
         order: 2,
@@ -1956,16 +1443,16 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 20: HARD — Final Convergence
+  // LEVEL 19: HARD — Storage Restructuring (mkdir -p, cp & rm -r)
   // ==========================================
   {
-    slug: "final-convergence",
-    title: "Final Convergence: Master Protocol (Level 20)",
+    slug: "recursive-vault",
+    title: "Level 19: Storage Restructuring (mkdir -p, cp & rm -r)",
     description:
-      "The ultimate test of command mastery and cryptographic decoding. Solve 5 phased transmissions across Morse, Base64, Hex, Binary, and ROT13. Disclose the directory and file remappings, establish /core/vault/fusion, deploy both fragments, and purge residual data buffers.",
+      "Restructure system storage: create /srv/storage/production/data with mkdir -p, copy db_master.sqlite to /srv/storage/production/data/db.sqlite, copy schema.sql to /srv/storage/production/data/schema.sql, and remove /mnt/legacy with rm -r.",
     difficulty: "HARD",
-    order: 20,
-    estimatedDuration: "25-30 min",
+    order: 19,
+    estimatedDuration: "15-20 min",
     timeLimitSeconds: 1800,
     scoringConfig: {
       maxBaseScore: 1000,
@@ -1979,127 +1466,165 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       partialCreditOnExpiry: true,
       countsTowardLeaderboard: true,
     },
-    commandMappings: {
-      mkdir: "cd",
-      cd: "mkdir",
-      head: "cp",
-      tail: "rm",
-      mv: "cat",
-    },
+    commandMappings: {},
     clues: [
       {
-        id: "clue-20-1",
-        title: "Phase 1: Shell Navigation Inversion",
-        type: "morse",
-        plaintextAnswer:
-          "PHASE 1: 'cd' CREATES DIRECTORIES (ACTING AS MKDIR -P). 'mkdir' NAVIGATES (ACTING AS CD).",
-        encodedContent: encodeMorse(
-          "PHASE 1: 'cd' CREATES DIRECTORIES (ACTING AS MKDIR -P). 'mkdir' NAVIGATES (ACTING AS CD)."
-        ),
-        hintNote: "Morse code dots and dashes.",
-      },
-      {
-        id: "clue-20-2",
-        title: "Phase 2: Stream Manipulation Tools",
+        id: "clue-19-1",
+        title: "Mission Directive: Migration Sequence",
         type: "base64",
-        plaintextAnswer:
-          "PHASE 2: 'head' COPIES FILES (ACTING AS CP). 'tail' DELETES FILES (ACTING AS RM).",
-        encodedContent: encodeBase64(
-          "PHASE 2: 'head' COPIES FILES (ACTING AS CP). 'tail' DELETES FILES (ACTING AS RM)."
-        ),
-        hintNote: "Base64 character decoding.",
-      },
-      {
-        id: "clue-20-3",
-        title: "Phase 3: Fusion Chamber Initialization",
-        type: "hex",
-        plaintextAnswer:
-          "PHASE 3 TARGET: RUN 'cd -p /core/vault/fusion' TO CREATE THE FUSION VAULT",
-        encodedContent: encodeHex(
-          "PHASE 3 TARGET: RUN 'cd -p /core/vault/fusion' TO CREATE THE FUSION VAULT"
-        ),
-        hintNote: "ASCII Hex byte values.",
-      },
-      {
-        id: "clue-20-4",
-        title: "Phase 4: Fragment Fusion Deployment",
-        type: "binary",
-        plaintextAnswer:
-          "PHASE 4 TARGET: RUN 'head /core/matrix/stage1/fragment_alpha.bin /core/vault/fusion/part1.dat' AND 'head /core/matrix/stage2/fragment_beta.bin /core/vault/fusion/part2.dat'",
-        encodedContent: encodeBinary(
-          "PHASE 4 TARGET: RUN 'head /core/matrix/stage1/fragment_alpha.bin /core/vault/fusion/part1.dat' AND 'head /core/matrix/stage2/fragment_beta.bin /core/vault/fusion/part2.dat'"
-        ),
-        hintNote: "Binary UTF-8 bytes.",
-      },
-      {
-        id: "clue-20-5",
-        title: "Phase 5: Matrix Buffer Decontamination",
-        type: "rot13",
-        plaintextAnswer:
-          "PHASE 5 TARGET: RUN 'tail /core/matrix/garbage_buffer.log' AND 'tail /core/matrix/stage1/fragment_alpha.bin'",
-        encodedContent: encodeRot13(
-          "PHASE 5 TARGET: RUN 'tail /core/matrix/garbage_buffer.log' AND 'tail /core/matrix/stage1/fragment_alpha.bin'"
-        ),
-        hintNote: "ROT13 alphabet shift.",
+        plaintextAnswer: "Run 'mkdir -p /srv/storage/production/data', 'cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite', 'cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql', and 'rm -r /mnt/legacy'.",
+        encodedContent: "Run 'mkdir -p /srv/storage/production/data', 'cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite', 'cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql', and 'rm -r /mnt/legacy'.",
+        hintNote: "Build modern storage directories, migrate databases and schemas, and purge legacy mount points.",
       },
     ],
     initialFilesystem: {
-      "/core/matrix/stage1/fragment_alpha.bin": "CONVERGENCE_ALPHA_SIG_7718",
-      "/core/matrix/stage2/fragment_beta.bin": "CONVERGENCE_BETA_SIG_8829",
-      "/core/matrix/garbage_buffer.log": "CORRUPTED_STREAM_GARBAGE_BUFFER",
-      "/core/system_manifest.json": '{"status": "convergence_ready", "fragments": 2}',
+      "/mnt/legacy/db_master.sqlite": "SQLITE_MASTER_DATA",
+      "/mnt/legacy/schema.sql": "CREATE TABLE users (id INT);",
+      "/mnt/legacy/temp.bin": "TEMP_BIN",
+      "/srv/storage/.keep": "",
     },
     objectiveConfig: {
-      description: "Establish /core/vault/fusion with part1 & part2, and purge buffer & alpha source",
+      description: "Migrate database and schema to /srv/storage/production/data and purge /mnt/legacy",
       rules: [
         {
-          id: "obj-20-fusion-dir",
-          points: 100,
+          id: "obj-19-data-dir",
+          points: 150,
           type: "dir_exists",
-          path: "/core/vault/fusion",
-          description: "Fusion vault /core/vault/fusion created",
+          path: "/srv/storage/production/data",
+          description: "Production data directory created",
         },
         {
-          id: "obj-20-part1-file",
+          id: "obj-19-db-file",
+          points: 150,
+          type: "file_exists",
+          path: "/srv/storage/production/data/db.sqlite",
+          description: "Database migrated to /srv/storage/production/data/db.sqlite",
+        },
+        {
+          id: "obj-19-schema-file",
           points: 100,
           type: "file_exists",
-          path: "/core/vault/fusion/part1.dat",
-          description: "Fragment 1 secured at /core/vault/fusion/part1.dat",
+          path: "/srv/storage/production/data/schema.sql",
+          description: "Schema migrated to /srv/storage/production/data/schema.sql",
         },
         {
-          id: "obj-20-part2-file",
+          id: "obj-19-legacy-del",
           points: 100,
-          type: "file_exists",
-          path: "/core/vault/fusion/part2.dat",
-          description: "Fragment 2 secured at /core/vault/fusion/part2.dat",
-        },
-        {
-          id: "obj-20-garbage-purged",
-          points: 100,
-          type: "file_deleted",
-          path: "/core/matrix/garbage_buffer.log",
-          description: "Garbage buffer /core/matrix/garbage_buffer.log purged",
-        },
-        {
-          id: "obj-20-alpha-purged",
-          points: 100,
-          type: "file_deleted",
-          path: "/core/matrix/stage1/fragment_alpha.bin",
-          description: "Source fragment /core/matrix/stage1/fragment_alpha.bin cleared",
+          type: "dir_deleted",
+          path: "/mnt/legacy",
+          description: "Legacy directory removed",
         },
       ],
     },
     hints: [
       {
-        title: "Fusion Directory & Copy",
-        content: "Run 'cd -p /core/vault/fusion' to create the vault. Then use 'head' to duplicate fragment_alpha into part1.dat and fragment_beta into part2.dat.",
+        title: "Create and Copy",
+        content: "Run 'mkdir -p /srv/storage/production/data' then copy db_master.sqlite and schema.sql.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 1,
       },
       {
-        title: "Buffer Decontamination",
-        content: "'tail' acts as 'rm'. Run 'tail /core/matrix/garbage_buffer.log' and 'tail /core/matrix/stage1/fragment_alpha.bin' to finish.",
+        title: "Remove Legacy",
+        content: "Run 'rm -r /mnt/legacy'.",
+        penaltySeconds: 60,
+        pointPenalty: 40,
+        order: 2,
+      },
+    ],
+  },
+
+  // ==========================================
+  // LEVEL 20: HARD — Full Production Deployment Pipeline
+  // ==========================================
+  {
+    slug: "final-convergence",
+    title: "Level 20: Full Production Deployment Pipeline",
+    description:
+      "Execute complete deployment workflow: create /var/www/production/public and /var/www/production/config with mkdir -p, copy index.html and app.js into public, touch /var/www/production/config/.env, and remove /workspace/staging with rm -r.",
+    difficulty: "HARD",
+    order: 20,
+    estimatedDuration: "15-20 min",
+    timeLimitSeconds: 1800,
+    scoringConfig: {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier: 1.5,
+      timeLimitSeconds: 1800,
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    },
+    commandMappings: {},
+    clues: [
+      {
+        id: "clue-20-1",
+        title: "Mission Directive: Full Deployment Pipeline",
+        type: "base64",
+        plaintextAnswer: "Create dirs with 'mkdir -p /var/www/production/public /var/www/production/config', copy assets with 'cp /workspace/staging/index.html /var/www/production/public/index.html' and 'cp /workspace/staging/app.js /var/www/production/public/app.js', create config with 'touch /var/www/production/config/.env', and remove staging with 'rm -r /workspace/staging'.",
+        encodedContent: "Create dirs with 'mkdir -p /var/www/production/public /var/www/production/config', copy assets with 'cp /workspace/staging/index.html /var/www/production/public/index.html' and 'cp /workspace/staging/app.js /var/www/production/public/app.js', create config with 'touch /var/www/production/config/.env', and remove staging with 'rm -r /workspace/staging'.",
+        hintNote: "Comprehensive production release incorporating directory creation, asset deployment, env initialization, and staging cleanup.",
+      },
+    ],
+    initialFilesystem: {
+      "/workspace/staging/index.html": "<html><body>Production Ready</body></html>",
+      "/workspace/staging/app.js": "console.log('Production Started');",
+      "/workspace/staging/build_cache.tmp": "Temporary build cache",
+    },
+    objectiveConfig: {
+      description: "Deploy web assets to /var/www/production and purge staging",
+      rules: [
+        {
+          id: "obj-20-pub-dir",
+          points: 100,
+          type: "dir_exists",
+          path: "/var/www/production/public",
+          description: "Public directory created",
+        },
+        {
+          id: "obj-20-html",
+          points: 100,
+          type: "file_exists",
+          path: "/var/www/production/public/index.html",
+          description: "index.html deployed to production",
+        },
+        {
+          id: "obj-20-js",
+          points: 100,
+          type: "file_exists",
+          path: "/var/www/production/public/app.js",
+          description: "app.js deployed to production",
+        },
+        {
+          id: "obj-20-env",
+          points: 100,
+          type: "file_exists",
+          path: "/var/www/production/config/.env",
+          description: "Production .env file created",
+        },
+        {
+          id: "obj-20-staging-del",
+          points: 100,
+          type: "dir_deleted",
+          path: "/workspace/staging",
+          description: "Staging directory cleaned up",
+        },
+      ],
+    },
+    hints: [
+      {
+        title: "Setup and Copy",
+        content: "Run 'mkdir -p /var/www/production/public /var/www/production/config', then copy index.html and app.js into public.",
+        penaltySeconds: 30,
+        pointPenalty: 30,
+        order: 1,
+      },
+      {
+        title: "Env and Cleanup",
+        content: "Run 'touch /var/www/production/config/.env' and 'rm -r /workspace/staging'.",
         penaltySeconds: 60,
         pointPenalty: 40,
         order: 2,

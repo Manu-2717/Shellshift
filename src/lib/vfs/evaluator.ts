@@ -100,6 +100,14 @@ export function evaluateObjective(
         break;
       }
 
+      case "cwd_equals": {
+        if (rule.path) {
+          const normPath = resolvePath("/", rule.path);
+          passed = state.cwd === normPath;
+        }
+        break;
+      }
+
       default:
         passed = false;
         break;

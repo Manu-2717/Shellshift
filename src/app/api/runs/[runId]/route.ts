@@ -57,6 +57,21 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden: Run belongs to another team." }, { status: 403 });
   }
 
+  const nextChallenge = await prisma.challenge.findFirst({
+    where: {
+      order: { gt: run.challenge.order },
+      isPublished: true,
+    },
+    orderBy: { order: "asc" },
+    select: {
+      id: true,
+      order: true,
+      title: true,
+      slug: true,
+      difficulty: true,
+    },
+  });
+
   const now = new Date();
   const timeLimitSeconds = run.challenge.timeLimitSeconds || 1200;
   const deadline = run.deadlineAt
@@ -121,6 +136,7 @@ export async function GET(
       scoringBreakdown: parsedBreakdown,
       team: run.team,
       challenge: sanitizeChallengeForPlayer(run.challenge),
+      nextChallenge: nextChallenge || null,
       objectiveEvaluation: evaluation,
       treeList,
       unlockedHints: run.hintUsages.map((hu) => ({

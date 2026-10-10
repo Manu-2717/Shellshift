@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Terminal } from "@/components/Terminal";
 import { CipherWorkspace } from "@/components/CipherWorkspace";
@@ -10,6 +10,7 @@ import { LiveTimer } from "@/components/LiveTimer";
 import {
   Trophy,
   ArrowLeft,
+  ArrowRight,
   HelpCircle,
   AlertTriangle,
   Users,
@@ -21,13 +22,42 @@ export default function PlayChallengePage() {
   const params = useParams();
   const runId = params?.runId as string;
 
+  const router = useRouter();
   const [runData, setRunData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [finalDuration, setFinalDuration] = useState<number | null>(null);
   const [hintUnlocking, setHintUnlocking] = useState(false);
+  const [startingNext, setStartingNext] = useState(false);
   const [mobileTab, setMobileTab] = useState<"terminal" | "ciphers">("terminal");
+
+  const handleGoToNextProblem = async () => {
+    if (!runData?.nextChallenge) {
+      router.push("/leaderboard");
+      return;
+    }
+
+    setStartingNext(true);
+    try {
+      const res = await fetch("/api/runs/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ challengeId: runData.nextChallenge.id }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.run?.id) {
+        router.push(`/play/${data.run.id}`);
+      } else {
+        router.push("/lobby");
+      }
+    } catch {
+      router.push("/lobby");
+    } finally {
+      setStartingNext(false);
+    }
+  };
 
   // Fetch run data from server
   const fetchRunState = async () => {
@@ -332,19 +362,48 @@ export default function PlayChallengePage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Link
-                href={`/results/${runId}`}
-                className="flex-1 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-neutral-950 font-bold text-xs transition-colors"
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={handleGoToNextProblem}
+                disabled={startingNext}
+                className="w-full py-3 px-4 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-neutral-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 shadow-lg"
               >
-                View Full Results & Rank
-              </Link>
-              <Link
-                href="/leaderboard"
-                className="py-2.5 px-4 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs transition-colors"
-              >
-                Leaderboard
-              </Link>
+                {startingNext ? (
+                  "Starting Next Problem..."
+                ) : runData.nextChallenge ? (
+                  <>
+                    <span>Next Problem (Level {runData.nextChallenge.order}: {runData.nextChallenge.title})</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>All 20 Problems Completed! View Leaderboard</span>
+                    <Trophy className="w-4 h-4 text-amber-500" />
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/results/${runId}`}
+                  className="flex-1 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition-colors"
+                >
+                  Score Breakdown
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className="flex-1 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition-colors"
+                >
+                  Leaderboard
+                </Link>
+                <Link
+                  href="/lobby"
+                  className="flex-1 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-bold text-xs transition-colors"
+                >
+                  Problems
+                </Link>
+              </div>
             </div>
           </div>
         </div>

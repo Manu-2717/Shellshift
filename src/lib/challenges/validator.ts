@@ -18,6 +18,7 @@ const SUPPORTED_OBJECTIVE_TYPES = new Set([
   "file_exact",
   "file_moved",
   "min_commands",
+  "cwd_equals",
 ]);
 
 /**

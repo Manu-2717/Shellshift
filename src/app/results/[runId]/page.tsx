@@ -14,7 +14,9 @@ import {
   RotateCcw,
   CheckCircle2,
   XCircle,
+  ArrowRight,
 } from "lucide-react";
+import { StartRunButton } from "../../lobby/StartButton";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +63,14 @@ export default async function ResultsPage({
     });
     rank = fasterRunsCount + 1;
   }
+
+  const nextChallenge = await prisma.challenge.findFirst({
+    where: {
+      order: { gt: run.challenge.order },
+      isPublished: true,
+    },
+    orderBy: { order: "asc" },
+  });
 
   return (
     <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
@@ -309,6 +319,14 @@ export default async function ResultsPage({
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          {nextChallenge && (
+            <StartRunButton
+              challengeId={nextChallenge.id}
+              label={`Next Problem: Level ${nextChallenge.order} — ${nextChallenge.title} →`}
+              className="px-6 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2 shadow-lg"
+            />
+          )}
+
           {isInProgress ? (
             <Link
               href={`/play/${run.id}`}
@@ -320,16 +338,16 @@ export default async function ResultsPage({
           ) : (
             <Link
               href="/lobby"
-              className="px-5 py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 font-bold text-xs transition-colors flex items-center gap-2"
+              className="px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 font-bold text-xs transition-colors flex items-center gap-2 border border-neutral-700"
             >
               <Compass className="w-4 h-4" />
-              Return to Competition Lobby
+              All Problems (Lobby)
             </Link>
           )}
 
           <Link
             href="/leaderboard"
-            className="px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-colors flex items-center gap-2"
+            className="px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs transition-colors flex items-center gap-2 border border-neutral-700"
           >
             <Trophy className="w-4 h-4 text-amber-400" />
             View Leaderboard

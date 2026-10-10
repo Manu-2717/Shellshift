@@ -37,11 +37,11 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
 
     expect(c2).toBeDefined();
     expect(c2?.order).toBe(2);
-    expect(c2?.difficulty).toBe("MEDIUM");
+    expect(c2?.difficulty).toBe("EASY");
 
     expect(c3).toBeDefined();
     expect(c3?.order).toBe(3);
-    expect(c3?.difficulty).toBe("HARD");
+    expect(c3?.difficulty).toBe("EASY");
   });
 
   it("passes server-side configuration validation for every single challenge", () => {
@@ -72,127 +72,140 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     }
   });
 
-  // Comprehensive positive & negative solution walkthroughs for all 20 challenges
+  // Comprehensive positive & negative solution walkthroughs for all 20 basic Ubuntu challenges
   const solutions: Record<string, { negativeCmd: string; steps: string[] }> = {
     "operation-inversion": {
-      negativeCmd: "cat /system/signal.txt",
-      steps: ["cd /workspace/breach", "ls /system/signal.txt"],
+      negativeCmd: "ls",
+      steps: ["cd /workspace/system"],
     },
     "the-cryptic-agent": {
-      negativeCmd: "touch /workspace/agent.key",
-      steps: ["rm /etc/shadow_cipher.txt", "pwd /workspace/agent.key"],
-    },
-    "deep-breach-babel": {
-      negativeCmd: "cp /opt/vault/secrets/fragment_a.dat",
+      negativeCmd: "cat /workspace/notes/config.ini",
       steps: [
-        "grep -p /opt/vault/core",
-        "mv /opt/vault/secrets/fragment_a.dat /opt/vault/core/master.key",
-        "cp /opt/vault/secrets/fragment_a.dat",
+        "cat /workspace/notes/config.ini",
+        "touch /workspace/notes/inspected.log",
       ],
     },
+    "deep-breach-babel": {
+      negativeCmd: "mkdir /workspace/projects/dummy",
+      steps: ["mkdir -p /workspace/projects/webapp/src"],
+    },
     "pathfinder-basics": {
-      negativeCmd: "pwd",
-      steps: ["ls /routes", "touch /routes/recovery"],
+      negativeCmd: "touch /workspace/src/dummy.txt",
+      steps: [
+        "touch /workspace/src/index.html",
+        "touch /workspace/src/app.js",
+      ],
     },
     "morse-mail": {
-      negativeCmd: "cat /mail/inbox/dispatch.txt",
-      steps: ["cd /workspace/dispatch"],
+      negativeCmd: "cp /workspace/config/settings.json /workspace/config/temp.json",
+      steps: ["cp /workspace/config/settings.json /workspace/backups/settings.json.bak"],
     },
     "binary-breadcrumbs": {
-      negativeCmd: "ls /cache/node_alpha",
-      steps: ["ls /cache/node_beta/verified"],
+      negativeCmd: "cp /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf",
+      steps: ["mv /workspace/downloads/draft_report.pdf /workspace/documents/report.pdf"],
     },
     "hex-in-plain-sight": {
-      negativeCmd: "echo /workspace/patch.ack",
-      steps: ["cat /workspace/patch.ack"],
+      negativeCmd: "rm /workspace/cache/valid_cache.dat",
+      steps: [
+        "rm /workspace/cache/junk_01.tmp",
+        "rm /workspace/cache/junk_02.tmp",
+      ],
     },
     "directory-flip": {
-      negativeCmd: "mkdir /staging/production",
-      steps: ["mkdir -r /staging/temp_garbage", "rm /staging/production"],
+      negativeCmd: "rm /workspace/staging/active.txt",
+      steps: ["rm -r /workspace/obsolete"],
     },
     "the-missing-file": {
-      negativeCmd: "head /vault/keys/decoy_alpha.key",
+      negativeCmd: "cat /var/log/nginx/access.log",
       steps: [
-        "head /vault/keys/authentic.key",
-        "cat /vault/keys/authentic.key /workspace/unlocked.key",
+        "grep 500 /var/log/nginx/access.log",
+        "touch /workspace/reports/error_resolved.log",
       ],
     },
     "first-flag": {
-      negativeCmd: "echo /relay/checkpoint_alpha/flag.txt",
+      negativeCmd: "ls /etc/app",
       steps: [
-        "touch /relay/checkpoint_alpha",
-        "echo /relay/checkpoint_alpha/flag.txt",
+        "find /etc -name database.conf",
+        "cp /etc/app/deep/nested/sub/database.conf /workspace/database.conf",
       ],
     },
     "dead-letter": {
-      negativeCmd: "mv /dropzone/locker_1",
-      steps: ["cd /dropzone/locker_3/classified/letter.txt /workspace/recovered.txt"],
+      negativeCmd: "ls /var/log",
+      steps: [
+        "head -n 5 /var/log/syslog",
+        "touch /workspace/syslog_inspected.ack",
+      ],
     },
     "log-diver": {
-      negativeCmd: "cat /var/log/syslog",
+      negativeCmd: "head /var/log/auth.log",
       steps: [
-        "cat CRITICAL /var/log/audit.log",
-        "grep /var/log/incident_ack.log",
+        "tail -n 10 /var/log/auth.log",
+        "touch /workspace/incident_mitigated.ack",
       ],
     },
     "the-relocation-protocol": {
-      negativeCmd: "mv /transport/dock/package_alpha.pkg",
-      steps: ["cp /transport/dock/package_alpha.pkg /transport/vault/package_alpha.pkg"],
+      negativeCmd: "ls -a",
+      steps: [
+        "ls -a /workspace",
+        "cp /workspace/.env.secret /workspace/backups/env_backup.txt",
+      ],
     },
     "needle-in-the-archive": {
-      negativeCmd: "cat /archive",
+      negativeCmd: "tree /opt",
       steps: [
-        "cat /archive -name target_artifact.dat",
-        "touch /archive/sector_3/box_d/target_artifact.dat /workspace/target.dat",
+        "tree /opt/modules",
+        "cp /opt/modules/net/client.js /workspace/dist/client.js",
       ],
     },
     "ghost-signal": {
-      negativeCmd: "mkdir /signals/beacon/freq.lock",
+      negativeCmd: "mkdir /workspace/release",
       steps: [
-        "rm -p /signals/beacon",
-        "mkdir /signals/beacon/freq.lock",
+        "mkdir -p /workspace/release/v1",
+        "cp /workspace/src/app.js /workspace/release/v1/app.js",
+        "cp /workspace/src/style.css /workspace/release/v1/style.css",
       ],
     },
     "three-keys": {
-      negativeCmd: "cat /gate/key1_source.txt",
+      negativeCmd: "ls /var/log",
       steps: [
-        "pwd /gate/vault/slot1",
-        "cd /gate/key1_source.txt /gate/vault/slot1/key1.txt",
-        "cat /gate/key1_source.txt",
+        "mv /var/log/access.log /var/log/archive/access.log.1",
+        "touch /var/log/access.log",
+        "rm /var/log/access.log.9.gz",
       ],
     },
     "decoy-protocol": {
-      negativeCmd: "cp /evidence/authentic_case.dat",
+      negativeCmd: "ls /etc/nginx",
       steps: [
-        "grep /evidence/authentic_case.dat /workspace/case.dat",
-        "cp /evidence/fake_1.doc",
-        "cp /evidence/fake_2.doc",
+        "cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak",
+        "mv /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default",
       ],
     },
     "broken-chain": {
-      negativeCmd: "touch /pipeline/step_1_input.dat /pipeline/staging/run1/input.dat",
+      negativeCmd: "cat /tmp/exploit.sh",
       steps: [
-        "rm -p /pipeline/staging/run1",
-        "touch /pipeline/step_1_input.dat /pipeline/staging/run1/input.dat",
+        "grep USER_ESCALATED /var/log/audit/session_02.log",
+        "cp /var/log/audit/session_02.log /workspace/forensics/incident.log",
+        "rm /tmp/exploit.sh",
       ],
     },
     "recursive-vault": {
-      negativeCmd: "cp /vault/level1/level2/level3/chamber_b/target_fragment.dat",
+      negativeCmd: "ls /mnt/legacy",
       steps: [
-        "find -p /vault/secure_chamber",
-        "grep /vault/level1/level2/level3/chamber_b/target_fragment.dat /vault/secure_chamber/core.key",
-        "cp /vault/level1/level2/temp_buffer.tmp",
-        "cp /vault/level1/level2/level3/chamber_a/decoy.bin",
+        "mkdir -p /srv/storage/production/data",
+        "cp /mnt/legacy/db_master.sqlite /srv/storage/production/data/db.sqlite",
+        "cp /mnt/legacy/schema.sql /srv/storage/production/data/schema.sql",
+        "rm -r /mnt/legacy",
       ],
     },
     "final-convergence": {
-      negativeCmd: "tail /core/matrix/stage2/fragment_beta.bin",
+      negativeCmd: "ls /workspace/staging",
       steps: [
-        "cd -p /core/vault/fusion",
-        "head /core/matrix/stage1/fragment_alpha.bin /core/vault/fusion/part1.dat",
-        "head /core/matrix/stage2/fragment_beta.bin /core/vault/fusion/part2.dat",
-        "tail /core/matrix/garbage_buffer.log",
-        "tail /core/matrix/stage1/fragment_alpha.bin",
+        "mkdir -p /var/www/production/public",
+        "mkdir -p /var/www/production/config",
+        "cp /workspace/staging/index.html /var/www/production/public/index.html",
+        "cp /workspace/staging/app.js /var/www/production/public/app.js",
+        "touch /var/www/production/config/.env",
+        "rm -r /workspace/staging",
       ],
     },
   };

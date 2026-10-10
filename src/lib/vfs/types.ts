@@ -53,6 +53,7 @@ export interface ObjectiveRule {
     | "file_exact"
     | "file_moved"
     | "min_commands"
+    | "cwd_equals"
     | "custom";
   path?: string;
   content?: string;

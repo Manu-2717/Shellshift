@@ -4,7 +4,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
 
-export function StartRunButton({ challengeId }: { challengeId: string }) {
+export function StartRunButton({
+  challengeId,
+  label = "Start Challenge Race",
+  className,
+}: {
+  challengeId: string;
+  label?: string;
+  className?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -37,10 +45,13 @@ export function StartRunButton({ challengeId }: { challengeId: string }) {
       onClick={handleStart}
       disabled={loading}
       type="button"
-      className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-neutral-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+      className={
+        className ||
+        "w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-neutral-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+      }
     >
       <Play className="w-3.5 h-3.5 fill-current" />
-      {loading ? "Initializing Sandbox..." : "Start Challenge Race"}
+      {loading ? "Starting Problem..." : label}
     </button>
   );
 }
