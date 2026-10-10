@@ -39,6 +39,60 @@ export function AdminDashboardClient({
   const [newSeedJson, setNewSeedJson] = useState('{\n  "/workspace/target.txt": "FLAG{SAMPLE_KEY}"\n}');
   const [newObjJson, setNewObjJson] = useState('{\n  "description": "Create /workspace/done",\n  "rules": [\n    {\n      "type": "dir_exists",\n      "path": "/workspace/done",\n      "description": "Folder /workspace/done created"\n    }\n  ]\n}');
   const [savingChallenge, setSavingChallenge] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    valid: boolean;
+    errors: string[];
+    warnings: string[];
+  } | null>(null);
+
+  const handleValidateForm = async () => {
+    setValidating(true);
+    setValidationResult(null);
+    try {
+      const payload = {
+        slug: newSlug,
+        title: newTitle,
+        description: newDesc,
+        difficulty: newDiff,
+        order: challenges.length + 1,
+        timeLimitSeconds: newDiff === "HARD" ? 1800 : newDiff === "MEDIUM" ? 1500 : 1200,
+        scoringConfig: {
+          maxBaseScore: 1000,
+          intermediateBudget: 500,
+          completionBonus: 200,
+          speedBonusMax: 300,
+          hintPenaltyCap: 100,
+          defaultHintPenalty: 25,
+          difficultyMultiplier: newDiff === "HARD" ? 1.5 : newDiff === "MEDIUM" ? 1.25 : 1.0,
+          timeLimitSeconds: newDiff === "HARD" ? 1800 : newDiff === "MEDIUM" ? 1500 : 1200,
+          partialCreditOnExpiry: true,
+          countsTowardLeaderboard: true,
+        },
+        commandMappings: JSON.parse(newMappingJson),
+        clues: JSON.parse(newCluesJson),
+        initialFilesystem: JSON.parse(newSeedJson),
+        objectiveConfig: JSON.parse(newObjJson),
+      };
+
+      const res = await fetch("/api/admin/challenges/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      setValidationResult(data);
+    } catch (err) {
+      setValidationResult({
+        valid: false,
+        errors: ["JSON Syntax Error: " + (err as Error).message],
+        warnings: [],
+      });
+    } finally {
+      setValidating(false);
+    }
+  };
 
   const handleUpdateEventStatus = async (status: string) => {
     setUpdatingEvent(true);
@@ -475,13 +529,49 @@ export function AdminDashboardClient({
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={savingChallenge}
-            className="px-6 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 font-bold transition-colors disabled:opacity-50"
-          >
-            {savingChallenge ? "Saving Challenge..." : "Publish New Challenge"}
-          </button>
+          {/* Validation Feedback Banner */}
+          {validationResult && (
+            <div
+              className={`p-4 rounded-xl border text-xs space-y-1.5 ${
+                validationResult.valid
+                  ? "bg-emerald-950/40 border-emerald-800 text-emerald-300"
+                  : "bg-rose-950/40 border-rose-800 text-rose-300"
+              }`}
+            >
+              <div className="font-bold flex items-center gap-1.5">
+                {validationResult.valid ? "✓ Configuration Valid:" : "✗ Validation Errors Found:"}
+              </div>
+              {validationResult.valid ? (
+                <p className="text-[11px] text-emerald-400">
+                  All commands, filesystem entries, objective budget, and difficulty rules are verified.
+                </p>
+              ) : (
+                <ul className="list-disc list-inside space-y-1 text-[11px] text-rose-300">
+                  {validationResult.errors.map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleValidateForm}
+              disabled={validating || savingChallenge}
+              className="px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold border border-neutral-700 transition-colors disabled:opacity-50"
+            >
+              {validating ? "Validating..." : "Validate Rules (Server Check)"}
+            </button>
+            <button
+              type="submit"
+              disabled={savingChallenge || validating}
+              className="px-6 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 text-xs font-bold transition-colors disabled:opacity-50"
+            >
+              {savingChallenge ? "Saving Challenge..." : "Publish New Challenge"}
+            </button>
+          </div>
         </form>
       )}
     </main>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { validateChallengeDefinition } from "@/lib/challenges/validator";
 
 export async function GET() {
   const session = await getSession();
@@ -53,6 +54,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
+    const validation = validateChallengeDefinition({
+      slug: slug.trim().toLowerCase(),
+      title,
+      description,
+      difficulty: difficulty || "MEDIUM",
+      order: order || 1,
+      timeLimitSeconds: timeLimitSeconds || 1200,
+      scoringConfig:
+        typeof scoringConfig === "string" ? JSON.parse(scoringConfig) : scoringConfig,
+      commandMappings:
+        typeof commandMappings === "string" ? JSON.parse(commandMappings) : commandMappings,
+      clues: typeof clues === "string" ? JSON.parse(clues) : clues,
+      initialFilesystem:
+        typeof initialFilesystem === "string"
+          ? JSON.parse(initialFilesystem)
+          : initialFilesystem,
+      objectiveConfig:
+        typeof objectiveConfig === "string"
+          ? JSON.parse(objectiveConfig)
+          : objectiveConfig,
+    });
+
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: "Challenge definition validation failed.", details: validation.errors },
+        { status: 422 }
+      );
+    }
+
     const newChallenge = await prisma.challenge.create({
       data: {
         slug: slug.trim().toLowerCase(),
@@ -100,6 +130,9 @@ export async function PATCH(request: Request) {
       timeLimitSeconds,
       scoringConfig,
       objectiveConfig,
+      commandMappings,
+      clues,
+      initialFilesystem,
       isPublished,
     } = body;
 
@@ -129,6 +162,30 @@ export async function PATCH(request: Request) {
                 typeof objectiveConfig === "object"
                   ? JSON.stringify(objectiveConfig)
                   : objectiveConfig,
+            }
+          : {}),
+        ...(commandMappings !== undefined
+          ? {
+              commandMappings:
+                typeof commandMappings === "object"
+                  ? JSON.stringify(commandMappings)
+                  : commandMappings,
+            }
+          : {}),
+        ...(clues !== undefined
+          ? {
+              clues:
+                typeof clues === "object"
+                  ? JSON.stringify(clues)
+                  : clues,
+            }
+          : {}),
+        ...(initialFilesystem !== undefined
+          ? {
+              initialFilesystem:
+                typeof initialFilesystem === "object"
+                  ? JSON.stringify(initialFilesystem)
+                  : initialFilesystem,
             }
           : {}),
         ...(isPublished !== undefined ? { isPublished } : {}),

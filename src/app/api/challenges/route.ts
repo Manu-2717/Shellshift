@@ -38,6 +38,7 @@ export function sanitizeChallengeForPlayer(challenge: any) {
     description: challenge.description,
     difficulty: challenge.difficulty,
     order: challenge.order,
+    timeLimitSeconds: challenge.timeLimitSeconds,
     clues: safeClues,
     objective: safeObjective,
     hintsCount: challenge.hints?.length || 0,
@@ -60,5 +61,5 @@ export async function GET() {
     hints: c.hints,
   }));
 
-  return NextResponse.json({ challenges: sanitized });
+  return NextResponse.json({ total: sanitized.length, challenges: sanitized });
 }

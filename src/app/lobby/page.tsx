@@ -1,21 +1,11 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { formatDuration } from "../api/leaderboard/route";
-import {
-  Play,
-  CheckCircle2,
-  Users,
-  KeyRound,
-  ShieldAlert,
-  ArrowRight,
-  Target,
-} from "lucide-react";
-import { StartRunButton } from "./StartButton";
-
+import { Users, ShieldAlert } from "lucide-react";
+import { LobbyCatalog, LobbyChallengeItem } from "./LobbyCatalog";
 import { isMockAuthAllowed } from "@/lib/auth/oidc";
+import { SEED_CHALLENGES } from "@/lib/challenges/seedData";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +39,55 @@ export default async function LobbyPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const durationLookup = new Map(SEED_CHALLENGES.map((sc) => [sc.slug, sc.estimatedDuration]));
+
+  const catalogItems: LobbyChallengeItem[] = challenges.map((challenge) => {
+    const run = team?.runs.find((r) => r.challengeId === challenge.id);
+
+    let clueCount = 0;
+    try {
+      clueCount = JSON.parse(challenge.clues || "[]").length;
+    } catch {}
+
+    let objDesc = "";
+    try {
+      objDesc = JSON.parse(challenge.objectiveConfig || "{}").description || "";
+    } catch {}
+
+    let scoringConfig = {
+      maxBaseScore: 1000,
+      difficultyMultiplier:
+        challenge.difficulty === "HARD" ? 1.5 : challenge.difficulty === "MEDIUM" ? 1.25 : 1.0,
+    };
+    try {
+      if (challenge.scoringConfig) {
+        const sc = JSON.parse(challenge.scoringConfig);
+        scoringConfig = {
+          maxBaseScore: sc.maxBaseScore || 1000,
+          difficultyMultiplier: sc.difficultyMultiplier || scoringConfig.difficultyMultiplier,
+        };
+      }
+    } catch {}
+
+    return {
+      id: challenge.id,
+      slug: challenge.slug,
+      title: challenge.title,
+      description: challenge.description,
+      difficulty: challenge.difficulty as "EASY" | "MEDIUM" | "HARD",
+      order: challenge.order,
+      timeLimitSeconds: challenge.timeLimitSeconds,
+      estimatedDuration: durationLookup.get(challenge.slug) || `${Math.floor(challenge.timeLimitSeconds / 60)} min`,
+      scoringConfig,
+      clueCount,
+      objectiveDescription: objDesc,
+      runStatus: (run?.status as any) || null,
+      runId: run?.id || null,
+      runDurationMs: run?.durationMs || null,
+      finalScore: run?.finalScore || null,
+    };
+  });
+
   return (
     <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
@@ -79,124 +118,8 @@ export default async function LobbyPage() {
           </div>
         </div>
 
-        {/* Challenge Selection Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <KeyRound className="w-4 h-4 text-cyan-400" />
-              Competition Challenge Missions
-            </h2>
-            <span className="text-xs text-neutral-400">
-              Select a mission to begin your timed race
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {challenges.map((challenge) => {
-              const run = team?.runs.find((r) => r.challengeId === challenge.id);
-              const isCompleted = run?.status === "COMPLETED";
-              const isInProgress = run?.status === "IN_PROGRESS";
-
-              let clueCount = 0;
-              try {
-                clueCount = JSON.parse(challenge.clues).length;
-              } catch {}
-
-              let objDesc = "";
-              try {
-                objDesc = JSON.parse(challenge.objectiveConfig).description;
-              } catch {}
-
-              return (
-                <div
-                  key={challenge.id}
-                  className={`flex flex-col justify-between p-5 rounded-xl border bg-[#121215] transition-all ${
-                    isCompleted
-                      ? "border-emerald-500/50 bg-[#0d1612]"
-                      : isInProgress
-                      ? "border-cyan-500 bg-[#0e161c]"
-                      : "border-neutral-800 hover:border-neutral-700"
-                  }`}
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-300">
-                        Level {challenge.order}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase border ${
-                          challenge.difficulty === "EASY"
-                            ? "bg-emerald-950 text-emerald-300 border-emerald-800"
-                            : challenge.difficulty === "MEDIUM"
-                            ? "bg-amber-950 text-amber-300 border-amber-800"
-                            : "bg-rose-950 text-rose-300 border-rose-800"
-                        }`}
-                      >
-                        {challenge.difficulty}
-                      </span>
-                    </div>
-
-                    <h3 className="font-bold text-white text-sm leading-snug">
-                      {challenge.title}
-                    </h3>
-
-                    <p className="text-xs text-neutral-400 line-clamp-3 leading-relaxed">
-                      {challenge.description}
-                    </p>
-
-                    {/* Prominent Mission Objective Preview */}
-                    <div className="p-2.5 rounded bg-[#09090b] border border-neutral-800 space-y-1">
-                      <div className="text-[10px] font-bold text-neutral-400 flex items-center gap-1.5 uppercase tracking-wide">
-                        <Target className="w-3 h-3 text-cyan-400" />
-                        Mission Objective
-                      </div>
-                      <div className="text-xs text-neutral-200 font-medium leading-relaxed">
-                        {objDesc || "Inspect clues & complete challenge goals"}
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] text-neutral-500 flex items-center gap-2 font-mono">
-                      <span>{clueCount} Cipher Clues</span>
-                      <span>•</span>
-                      <span>Sandboxed Shell</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-5 border-t border-neutral-800 mt-5">
-                    {isCompleted ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs text-emerald-400 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Completed
-                          </span>
-                          <span>{formatDuration(run?.durationMs)}</span>
-                        </div>
-                        <Link
-                          href={`/results/${run?.id}`}
-                          className="w-full py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          View Verified Result
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </div>
-                    ) : isInProgress ? (
-                      <Link
-                        href={`/play/${run?.id}`}
-                        className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-neutral-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-current" />
-                        Resume Active Race
-                      </Link>
-                    ) : (
-                      <StartRunButton challengeId={challenge.id} />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        {/* 20 Challenges Catalog with Filters & Sections */}
+        <LobbyCatalog challenges={catalogItems} />
 
         {/* Competition Rules Panel */}
         <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-xs text-neutral-400 space-y-2">
