@@ -15,13 +15,15 @@ import {
 } from "lucide-react";
 import { StartRunButton } from "./StartButton";
 
+import { isMockAuthAllowed } from "@/lib/auth/oidc";
+
 export const dynamic = "force-dynamic";
 
 export default async function LobbyPage() {
   const session = await getSession();
 
   if (!session) {
-    redirect("/api/auth/login?mock=true&role=user");
+    redirect(isMockAuthAllowed() ? "/api/auth/login?mock=true&role=user" : "/api/auth/login");
   }
 
   if (!session.teamId) {

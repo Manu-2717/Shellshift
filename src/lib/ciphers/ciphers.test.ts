@@ -70,3 +70,36 @@ describe("Cipher Puzzle Algorithms", () => {
     expect(decoded).toBe(original);
   });
 });
+
+import {
+  MORSE_ALPHABET,
+  MORSE_DIGITS,
+  ROT13_PAIRS,
+  ASCII_HEX_SAMPLES,
+} from "./referenceData";
+
+describe("Static Cipher Reference Handbook Integrity", () => {
+  it("contains all 26 Morse alphabet letters and 10 digits", () => {
+    expect(MORSE_ALPHABET.length).toBe(26);
+    expect(MORSE_DIGITS.length).toBe(10);
+    const a = MORSE_ALPHABET.find((m) => m.char === "A");
+    expect(a?.morse).toBe(".-");
+    const s = MORSE_ALPHABET.find((m) => m.char === "S");
+    expect(s?.morse).toBe("...");
+    const o = MORSE_ALPHABET.find((m) => m.char === "O");
+    expect(o?.morse).toBe("---");
+  });
+
+  it("contains all 13 symmetric ROT13 alphabet pairs", () => {
+    expect(ROT13_PAIRS.length).toBe(13);
+    const an = ROT13_PAIRS.find(([l, r]) => l === "A" && r === "N");
+    expect(an).toBeDefined();
+  });
+
+  it("provides standard printable ASCII hex reference values", () => {
+    expect(ASCII_HEX_SAMPLES.length).toBeGreaterThan(0);
+    const space = ASCII_HEX_SAMPLES.find((s) => s.char === "Space");
+    expect(space?.hex).toBe("0x20");
+  });
+});
+

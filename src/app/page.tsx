@@ -25,9 +25,7 @@ export default async function LandingPage() {
     where: { isPublished: true },
   });
 
-  const mockAuthEnabled =
-    process.env.MOCK_AUTH_ENABLED === "true" &&
-    process.env.NODE_ENV !== "production";
+  const mockAuthEnabled = process.env.MOCK_AUTH_ENABLED === "true";
 
   return (
     <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">

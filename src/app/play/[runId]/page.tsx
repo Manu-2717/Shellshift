@@ -261,7 +261,7 @@ export default function PlayChallengePage() {
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
-          Clues & Decoder ({clueCount})
+          Investigation & Clues ({clueCount})
         </button>
       </div>
 
@@ -282,7 +282,7 @@ export default function PlayChallengePage() {
           />
         </div>
 
-        {/* Cipher & Scratchpad Area (5 columns on desktop, conditional on mobile) */}
+        {/* Cipher Investigation Area (5 columns on desktop, conditional on mobile) */}
         <div
           className={`lg:col-span-5 h-[500px] lg:h-full p-2 lg:p-2.5 lg:pl-0 overflow-hidden flex flex-col ${
             mobileTab === "ciphers" ? "flex" : "hidden lg:flex"
@@ -292,6 +292,7 @@ export default function PlayChallengePage() {
             clues={runData.challenge.clues}
             treeList={runData.treeList || []}
             unlockedHints={runData.unlockedHints || []}
+            runId={runId}
           />
         </div>
       </div>
