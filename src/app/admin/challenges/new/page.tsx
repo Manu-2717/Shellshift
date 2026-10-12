@@ -1,0 +1,1 @@
+import { ChallengeEditor } from "@/components/admin/ChallengeEditor"; export default function NewChallenge(){return <div className="mx-auto max-w-5xl"><p className="text-sm text-cyan-400">Challenge library</p><h1 className="mt-1 mb-8 text-3xl font-semibold">Author challenge</h1><ChallengeEditor/></div>}
