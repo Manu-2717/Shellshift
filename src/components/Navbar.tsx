@@ -105,9 +105,9 @@ export function Navbar({
               </form>
             </>
           ) : (
-            <Link href="/api/auth/login" className="btn-primary !h-9 !py-0 !text-xs !px-4">
+            <a href="/api/auth/login" className="btn-primary !h-9 !py-0 !text-xs !px-4">
               Sign in
-            </Link>
+            </a>
           )}
         </div>
       </div>

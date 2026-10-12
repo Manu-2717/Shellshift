@@ -74,9 +74,11 @@ export function normalizeIssuer(issuer: string): string {
  * Returns OIDC configuration populated from environment variables with production defaults.
  */
 export function getOidcConfig(): OidcConfig {
+  const defaultProductionUrl = "https://shellshift-ten.vercel.app";
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ||
+    (process.env.NODE_ENV === "production" ? defaultProductionUrl : "http://localhost:3000");
   const defaultRedirectUri = `${baseUrl.replace(/\/+$/, "")}/api/auth/callback`;
 
   return {
