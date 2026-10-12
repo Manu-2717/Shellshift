@@ -237,8 +237,8 @@
 - [ ] **Step 3: Implement registration, waiting room, live lobby, standings, and profile** with server-corrected countdowns and accessible live updates.
 - [ ] **Step 4: Retire team registration from navigation and redirect legacy entry points safely**.
 - [ ] **Step 5: Run focused tests, full tests, lint, and build**.
-- [ ] **Step 6: Capture responsive screenshots and repair every visual mismatch** against accepted player concepts.
-- [ ] **Step 7: Commit** with message `feat: deliver individual player competition flow`.
+- [x] **Step 6: Capture responsive screenshots and repair every visual mismatch** against accepted player concepts.
+- [x] **Step 7: Commit** with message `feat: deliver individual player competition flow`.
 
 ### Task 10: Terminal-first play workspace and completion flow
 
@@ -258,14 +258,14 @@
 - Consumes: Tasks 5–6 APIs and primitives.
 - Produces: responsive terminal-first workspace and individual result summary.
 
-- [ ] **Step 1: Write failing interaction tests** for command focus/history, accessible output, objective updates, context tabs/sheets, mobile keyboard layout, network recovery, pause/end state, and completion transition.
-- [ ] **Step 2: Implement desktop play shell** with stable top status, objective rail, dominant terminal, and tabbed context panel.
-- [ ] **Step 3: Implement mobile play shell** with terminal-first flow, safe-area controls, and accessible sheets/tabs.
-- [ ] **Step 4: Replace emoji status output with semantic icon/text presentation** and prevent screen-reader flooding from timer/output updates.
-- [ ] **Step 5: Implement completion summary** with score breakdown, duration, penalties, personal rank, and next action.
-- [ ] **Step 6: Run interaction tests, full tests, lint, and build**.
-- [ ] **Step 7: Capture native-size desktop and mobile screenshots and repair every visual mismatch**.
-- [ ] **Step 8: Commit** with message `feat: redesign terminal competition workspace`.
+- [x] **Step 1: Write failing interaction tests** for command focus/history, accessible output, objective updates, context tabs/sheets, mobile keyboard layout, network recovery, pause/end state, and completion transition.
+- [x] **Step 2: Implement desktop play shell** with stable top status, objective rail, dominant terminal, and tabbed context panel.
+- [x] **Step 3: Implement mobile play shell** with terminal-first flow, safe-area controls, and accessible sheets/tabs.
+- [x] **Step 4: Replace emoji status output with semantic icon/text presentation** and prevent screen-reader flooding from timer/output updates.
+- [x] **Step 5: Implement completion summary** with score breakdown, duration, penalties, personal rank, and next action.
+- [x] **Step 6: Run interaction tests, full tests, lint, and build**.
+- [x] **Step 7: Capture native-size desktop and mobile screenshots and repair every visual mismatch**.
+- [x] **Step 8: Commit** with message `feat: redesign terminal competition workspace`.
 
 ### Task 11: Live admin operations console
 
@@ -281,12 +281,12 @@
 - Consumes: Task 3 status actions, Task 4 standings, and Task 6 components.
 - Produces: live operational DTO and pause/resume/end command surface.
 
-- [ ] **Step 1: Write failing tests** for registered/active/completed counts, filtered activity, pause/resume/end confirmations, action audit records, and empty states.
-- [ ] **Step 2: Implement the operations query and admin-only route** with bounded recent activity.
-- [ ] **Step 3: Implement the live console** with server time, health notices, participant status, standings, activity, and guarded controls.
-- [ ] **Step 4: Run focused tests, full tests, lint, and build**.
-- [ ] **Step 5: Capture desktop and mobile screenshots and repair every visual mismatch**.
-- [ ] **Step 6: Commit** with message `feat: add live competition operations console`.
+- [x] **Step 1: Write failing tests** for registered/active/completed counts, filtered activity, pause/resume/end confirmations, action audit records, and empty states.
+- [x] **Step 2: Implement the operations query and admin-only route** with bounded recent activity.
+- [x] **Step 3: Implement the live console** with server time, health notices, participant status, standings, activity, and guarded controls.
+- [x] **Step 4: Run focused tests, full tests, lint, and build**.
+- [x] **Step 5: Capture desktop and mobile screenshots and repair every visual mismatch**.
+- [x] **Step 6: Commit** with message `feat: add live competition operations console`.
 
 ### Task 12: End-to-end verification and cleanup
 
@@ -300,12 +300,12 @@
 - Consumes: all previous tasks.
 - Produces: verified release candidate and reproducible QA record.
 
-- [ ] **Step 1: Run `npm test`, `npm run lint`, and `npm run build`** and fix all regressions without weakening tests.
-- [ ] **Step 2: Seed a clean database and complete the core browser path**: admin creates/publishes a scheduled game; player registers; game becomes live; player starts and completes a challenge; individual standings update; admin ends the game.
-- [ ] **Step 3: Repeat critical flows at 320px, tablet, and 1440px**, including keyboard-only and reduced-motion checks.
-- [ ] **Step 4: Inspect the accepted concept images and latest browser screenshots with `view_image`**, comparing at least hierarchy, copy, color, typography, spacing, icon treatment, and responsive composition.
-- [ ] **Step 5: Record and repair every material mismatch** until agency-signoff fidelity is reached and no fixable deviations remain.
-- [ ] **Step 6: Update documentation** for individual games, routes, admin hosting, lifecycle, and migration behavior.
-- [ ] **Step 7: Run final tests, lint, and build again** and record exact results in the QA document.
-- [ ] **Step 8: Commit** documentation and final repairs with message `docs: finalize individual competition rollout`.
+- [x] **Step 1: Run `npm test`, `npm run lint`, and `npm run build`** and fix all regressions without weakening tests.
+- [x] **Step 2: Seed a clean database and complete the core browser path**: admin creates/publishes a scheduled game; player registers; game becomes live; player starts and completes a challenge; individual standings update; admin ends the game.
+- [x] **Step 3: Repeat critical flows at 320px, tablet, and 1440px**, including keyboard-only and reduced-motion checks.
+- [x] **Step 4: Inspect the accepted concept images and latest browser screenshots with `view_image`**, comparing at least hierarchy, copy, color, typography, spacing, icon treatment, and responsive composition.
+- [x] **Step 5: Record and repair every material mismatch** until agency-signoff fidelity is reached and no fixable deviations remain.
+- [x] **Step 6: Update documentation** for individual games, routes, admin hosting, lifecycle, and migration behavior.
+- [x] **Step 7: Run final tests, lint, and build again** and record exact results in the QA document.
+- [x] **Step 8: Commit** documentation and final repairs with message `docs: finalize individual competition rollout`.
 
