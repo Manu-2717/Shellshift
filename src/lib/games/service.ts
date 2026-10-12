@@ -1,0 +1,135 @@
+import { prisma } from "@/lib/prisma";
+import { canTransitionGame, validateGameSchedule } from "./lifecycle";
+import type { StoredGameStatus } from "./types";
+
+export interface GameAdminInput {
+  name: string;
+  slug: string;
+  description?: string;
+  timezone: string;
+  visibility?: "PUBLIC" | "UNLISTED";
+  leaderboardVisibility?: "LIVE" | "AFTER_END" | "HIDDEN";
+  registrationOpensAt: string;
+  registrationClosesAt: string;
+  startsAt: string;
+  endsAt: string;
+  challengeIds: string[];
+}
+
+export interface NormalizedGameInput {
+  name: string;
+  slug: string;
+  description: string | null;
+  timezone: string;
+  visibility: string;
+  leaderboardVisibility: string;
+  registrationOpensAt: Date;
+  registrationClosesAt: Date;
+  startTime: Date;
+  endTime: Date;
+  challengeIds: string[];
+}
+
+export function normalizeGameInput(input: GameAdminInput): {
+  data?: NormalizedGameInput;
+  fieldErrors: Record<string, string>;
+} {
+  const fieldErrors: Record<string, string> = {};
+  if (!input.name?.trim()) fieldErrors.name = "Enter a game name.";
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug || "")) fieldErrors.slug = "Use lowercase words separated by hyphens.";
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: input.timezone }).format();
+  } catch {
+    fieldErrors.timezone = "Choose a valid IANA timezone.";
+  }
+
+  const schedule = {
+    registrationOpensAt: new Date(input.registrationOpensAt),
+    registrationClosesAt: new Date(input.registrationClosesAt),
+    startsAt: new Date(input.startsAt),
+    endsAt: new Date(input.endsAt),
+  };
+  const scheduleResult = validateGameSchedule(schedule);
+  Object.assign(fieldErrors, scheduleResult.errors);
+  if (Object.keys(fieldErrors).length) return { fieldErrors };
+
+  return {
+    fieldErrors,
+    data: {
+      name: input.name.trim(),
+      slug: input.slug,
+      description: input.description?.trim() || null,
+      timezone: input.timezone,
+      visibility: input.visibility || "PUBLIC",
+      leaderboardVisibility: input.leaderboardVisibility || "LIVE",
+      registrationOpensAt: schedule.registrationOpensAt,
+      registrationClosesAt: schedule.registrationClosesAt,
+      startTime: schedule.startsAt,
+      endTime: schedule.endsAt,
+      challengeIds: input.challengeIds || [],
+    },
+  };
+}
+
+export function validatePublishableGame(input: GameAdminInput) {
+  const fieldErrors: Record<string, string> = {};
+  if (!input.challengeIds?.length) fieldErrors.challengeIds = "Choose at least one published challenge.";
+  return { valid: Object.keys(fieldErrors).length === 0, fieldErrors };
+}
+
+export async function createGameDraft(input: GameAdminInput, actorId: string) {
+  const normalized = normalizeGameInput(input);
+  if (!normalized.data) return normalized;
+  const { challengeIds, ...data } = normalized.data;
+  const game = await prisma.$transaction(async (tx) => {
+    const created = await tx.event.create({ data: { ...data, status: "DRAFT", createdById: actorId } });
+    if (challengeIds.length) {
+      await tx.eventChallenge.createMany({ data: challengeIds.map((challengeId, order) => ({ eventId: created.id, challengeId, order })) });
+    }
+    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_CREATED", details: JSON.stringify({ eventId: created.id }) } });
+    return created;
+  });
+  return { game, fieldErrors: {} };
+}
+
+export async function updateGameDraft(gameId: string, input: GameAdminInput, actorId: string) {
+  const normalized = normalizeGameInput(input);
+  if (!normalized.data) return normalized;
+  const { challengeIds, ...data } = normalized.data;
+  const game = await prisma.$transaction(async (tx) => {
+    const updated = await tx.event.update({ where: { id: gameId }, data });
+    await tx.eventChallenge.deleteMany({ where: { eventId: gameId } });
+    if (challengeIds.length) await tx.eventChallenge.createMany({ data: challengeIds.map((challengeId, order) => ({ eventId: gameId, challengeId, order })) });
+    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_UPDATED", details: JSON.stringify({ eventId: gameId }) } });
+    return updated;
+  });
+  return { game, fieldErrors: {} };
+}
+
+export async function publishGame(gameId: string, actorId: string) {
+  const game = await prisma.event.findUnique({ where: { id: gameId }, include: { challenges: { include: { challenge: true } } } });
+  if (!game) return { error: "Game not found." };
+  const fieldErrors: Record<string, string> = {};
+  if (!game.challenges.some((item) => item.challenge.isPublished)) fieldErrors.challengeIds = "Choose at least one published challenge.";
+  if (!game.registrationOpensAt || !game.registrationClosesAt || !game.startTime || !game.endTime) fieldErrors.schedule = "Complete the game schedule.";
+  if (Object.keys(fieldErrors).length) return { error: "Game is not ready to publish.", fieldErrors };
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.event.update({ where: { id: gameId }, data: { status: "PUBLISHED" } });
+    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_PUBLISHED", details: JSON.stringify({ eventId: gameId }) } });
+    return result;
+  });
+  return { game: updated };
+}
+
+export async function transitionGameStatus(gameId: string, status: StoredGameStatus, actorId: string) {
+  const current = await prisma.event.findUnique({ where: { id: gameId } });
+  if (!current) return { error: "Game not found." };
+  if (!canTransitionGame(current.status as StoredGameStatus, status)) return { error: `Cannot move ${current.status} to ${status}.` };
+  const game = await prisma.$transaction(async (tx) => {
+    const updated = await tx.event.update({ where: { id: gameId }, data: { status } });
+    await tx.auditLog.create({ data: { userId: actorId, action: `GAME_${status}`, details: JSON.stringify({ eventId: gameId }) } });
+    return updated;
+  });
+  return { game };
+}
+
