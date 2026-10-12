@@ -6,32 +6,34 @@ import { rateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   const session = await getSession();
-  if (!session || !session.teamId) {
+  if (!session) {
     return NextResponse.json(
-      { error: "Unauthorized. You must be authenticated and registered on a team." },
+      { error: "Unauthorized. You must be authenticated and registered as a contestant." },
       { status: 401 }
     );
   }
 
   // Rate limit run creation
-  const rl = rateLimit(`run_start:${session.teamId}`, 10, 60000);
+  const rl = rateLimit(`run_start:${session.id}`, 10, 60000);
   if (!rl.success) {
     return NextResponse.json({ error: "Too many run start requests. Please wait." }, { status: 429 });
   }
 
   try {
     const body = await request.json();
-    const { challengeId } = body;
+    const { challengeId, gameId } = body;
 
-    if (!challengeId) {
-      return NextResponse.json({ error: "Missing challengeId." }, { status: 400 });
+    if (!challengeId || !gameId) {
+      return NextResponse.json({ error: "Missing gameId or challengeId." }, { status: 400 });
     }
 
     // Verify event status
-    const currentEvent = await prisma.event.findFirst();
-    if (currentEvent && currentEvent.status !== "ACTIVE") {
+    const currentEvent = await prisma.event.findUnique({ where: { id: gameId }, include: { registrations: { where: { userId: session.id, status: "REGISTERED" } }, challenges: { where: { challengeId } } } });
+    const now = new Date();
+    const isLive = currentEvent?.status === "PUBLISHED" && !!currentEvent.startTime && !!currentEvent.endTime && now >= currentEvent.startTime && now < currentEvent.endTime;
+    if (!currentEvent || !isLive || currentEvent.registrations.length === 0 || currentEvent.challenges.length === 0) {
       return NextResponse.json(
-        { error: `Competition is currently ${currentEvent.status.toLowerCase()}. Challenges cannot be started.` },
+        { error: "This game is not live, you are not registered, or the challenge is unavailable." },
         { status: 403 }
       );
     }
@@ -47,7 +49,8 @@ export async function POST(request: Request) {
     // Duplicate-start prevention: check for existing active run
     const existingActiveRun = await prisma.run.findFirst({
       where: {
-        teamId: session.teamId,
+        userId: session.id,
+        eventId: gameId,
         challengeId: challenge.id,
         status: "IN_PROGRESS",
       },
@@ -70,7 +73,8 @@ export async function POST(request: Request) {
     // Check if team already completed this challenge (enforce 1 ranked completion)
     const existingCompleted = await prisma.run.findFirst({
       where: {
-        teamId: session.teamId,
+        userId: session.id,
+        eventId: gameId,
         challengeId: challenge.id,
         status: "COMPLETED",
       },
@@ -130,7 +134,8 @@ export async function POST(request: Request) {
     // Create new run with authoritative server start timestamp and deadline
     const newRun = await prisma.run.create({
       data: {
-        teamId: session.teamId,
+        userId: session.id,
+        eventId: gameId,
         challengeId: challenge.id,
         status: "IN_PROGRESS",
         startedAt,
