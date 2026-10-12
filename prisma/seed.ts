@@ -6,19 +6,27 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Seeding ShellShift database...");
 
-  // 1. Seed or update default event
-  const existingEvent = await prisma.event.findFirst();
-  if (!existingEvent) {
-    await prisma.event.create({
-      data: {
-        name: "ShellShift Inaugural Cipher Championship",
-        description: "Competitive Linux Command Cipher Race. Decode the matrix, master remapped commands, win the race.",
-        status: "ACTIVE",
-        startTime: new Date(),
-      },
-    });
-    console.log("Created active competition event.");
-  }
+  const now = new Date();
+  const registrationOpensAt = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const registrationClosesAt = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const startTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
+
+  const event = await prisma.event.upsert({
+    where: { slug: "autumn-cipher-sprint" },
+    update: {},
+    create: {
+      slug: "autumn-cipher-sprint",
+      name: "Autumn Cipher Sprint",
+      description: "An individual Linux command-cipher competition.",
+      status: "PUBLISHED",
+      registrationOpensAt,
+      registrationClosesAt,
+      startTime,
+      endTime,
+      timezone: "Asia/Kolkata",
+    },
+  });
 
   // 2. Seed challenges & hints
   for (const challengeDef of SEED_CHALLENGES) {
@@ -73,6 +81,27 @@ async function main() {
       });
     }
   }
+
+  const challenges = await prisma.challenge.findMany({ orderBy: { order: "asc" }, take: 8 });
+  await prisma.eventChallenge.deleteMany({ where: { eventId: event.id } });
+  await prisma.eventChallenge.createMany({
+    data: challenges.map((challenge, index) => ({
+      eventId: event.id,
+      challengeId: challenge.id,
+      order: index + 1,
+    })),
+  });
+
+  const demoUser = await prisma.user.upsert({
+    where: { oidcIssuer_oidcSub: { oidcIssuer: "seed", oidcSub: "demo-player" } },
+    update: {},
+    create: { oidcIssuer: "seed", oidcSub: "demo-player", name: "Demo Operator" },
+  });
+  await prisma.gameRegistration.upsert({
+    where: { eventId_userId: { eventId: event.id, userId: demoUser.id } },
+    update: { status: "REGISTERED" },
+    create: { eventId: event.id, userId: demoUser.id },
+  });
 
   console.log("Database seeded successfully!");
 }

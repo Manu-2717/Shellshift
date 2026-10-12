@@ -19,6 +19,9 @@ model User {
   memberships TeamMembership[]
   commandLogs CommandLog[]
   auditLogs   AuditLog[]
+  registrations GameRegistration[]
+  runs        Run[]
+  createdEvents Event[]          @relation("EventCreator")
 
   @@unique([oidcIssuer, oidcSub])
   @@index([oidcIssuer, oidcSub])
@@ -52,18 +55,63 @@ model TeamMembership {
 
 model Event {
   id              String    @id @default(uuid())
+  slug            String?   @unique
   name            String
   description     String?
-  status          String    @default("ACTIVE") // UPCOMING, ACTIVE, PAUSED, ENDED
+  status          String    @default("DRAFT") // DRAFT, PUBLISHED, PAUSED, ENDED, ARCHIVED
+  visibility      String    @default("PUBLIC") // PUBLIC, UNLISTED
   mode            String    @default("POINTS_TOURNAMENT") // FIRST_FINISH, POINTS_TOURNAMENT
   scoringConfig   String?   // JSON string
+  leaderboardVisibility String @default("LIVE") // LIVE, AFTER_END, HIDDEN
+  registrationOpensAt DateTime?
+  registrationClosesAt DateTime?
+  timezone        String    @default("UTC")
+  createdById     String?
   winnerTeamId    String?
   winnerClaimedAt DateTime?
   startTime       DateTime?
   endTime         DateTime?
   createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
 
   winnerTeam Team? @relation("EventWinner", fields: [winnerTeamId], references: [id], onDelete: SetNull)
+  createdBy  User? @relation("EventCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  challenges EventChallenge[]
+  registrations GameRegistration[]
+  runs Run[]
+
+  @@index([status, startTime])
+}
+
+model EventChallenge {
+  id               String @id @default(uuid())
+  eventId          String
+  challengeId      String
+  order            Int
+  pointsOverride   Int?
+  timeLimitSeconds Int?
+  unlocksAt        DateTime?
+
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, challengeId])
+  @@index([eventId, order])
+}
+
+model GameRegistration {
+  id           String   @id @default(uuid())
+  eventId      String
+  userId       String
+  status       String   @default("REGISTERED")
+  registeredAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId, status])
 }
 
 model Challenge {
@@ -84,13 +132,18 @@ model Challenge {
   updatedAt         DateTime @updatedAt
   runs              Run[]
   hints             Hint[]
+  events            EventChallenge[]
 
   @@index([order])
 }
 
 model Run {
   id                   String                @id @default(uuid())
-  teamId               String
+  teamId               String?
+  legacyTeamId         String?
+  legacyIndividualEligible Boolean           @default(false)
+  userId               String?
+  eventId              String?
   challengeId          String
   status               String                @default("IN_PROGRESS") // NOT_STARTED, IN_PROGRESS, COMPLETED, EXPIRED, FAILED, ABANDONED
   startedAt            DateTime              @default(now())
@@ -113,13 +166,16 @@ model Run {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
-  team                 Team                  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team                 Team?                 @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  user                 User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+  event                Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
   challenge            Challenge             @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   commandLogs          CommandLog[]
   hintUsages           HintUsage[]
   objectiveCompletions ObjectiveCompletion[]
 
   @@index([teamId, challengeId])
+  @@index([eventId, userId, challengeId])
   @@index([status, durationMs])
   @@index([finalScore])
 }
