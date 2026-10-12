@@ -213,8 +213,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(destination, request.url));
   } catch (err) {
     console.error("OIDC callback exception:", err);
+    const msg = (err as Error)?.message || "Authentication processing failure";
     return NextResponse.redirect(
-      new URL("/?error=Authentication+processing+failure", request.url)
+      new URL(`/?error=${encodeURIComponent(msg)}`, request.url)
     );
   }
 }

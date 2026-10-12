@@ -84,7 +84,9 @@ export function getOidcConfig(): OidcConfig {
   return {
     issuer: normalizeIssuer(process.env.OIDC_ISSUER || "https://oidc.fossclub.tech"),
     clientId: process.env.OIDC_CLIENT_ID || "shellshift",
-    clientSecret: process.env.OIDC_CLIENT_SECRET || "",
+    clientSecret:
+      process.env.OIDC_CLIENT_SECRET ||
+      "wIqfTYzFe9KFMdnbaBYk3Fir_Y3xLaWkWgzJTnqcUHjyzzphr_9H8VylZssBTgzj",
     redirectUri: process.env.OIDC_REDIRECT_URI || defaultRedirectUri,
     scopes: process.env.OIDC_SCOPES || "openid profile email club",
   };

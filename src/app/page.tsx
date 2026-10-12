@@ -8,7 +8,14 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
+  const params = searchParams ? await searchParams : {};
+  const errorMsg = params.error;
+
   const [session, next] = await Promise.all([
     getSession().catch(() => null),
     prisma.event
@@ -47,6 +54,13 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-[#07080b] text-white">
       <Navbar user={session} />
+      {errorMsg ? (
+        <div className="mx-auto max-w-7xl px-5 pt-6">
+          <div className="rounded-xl border border-rose-800 bg-rose-950/60 p-4 text-sm text-rose-200">
+            <strong>Authentication Alert:</strong> {errorMsg}
+          </div>
+        </div>
+      ) : null}
       <main>
         <section className="relative overflow-hidden border-b border-zinc-800">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(6,182,212,.12),transparent_38%),radial-gradient(circle_at_20%_70%,rgba(139,92,246,.08),transparent_35%)]" />
