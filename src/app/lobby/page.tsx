@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { Users, ShieldAlert } from "lucide-react";
+import { Users, ShieldCheck, Trophy } from "lucide-react";
 import { LobbyCatalog, LobbyChallengeItem } from "./LobbyCatalog";
 import { isMockAuthAllowed } from "@/lib/auth/oidc";
 import { SEED_CHALLENGES } from "@/lib/challenges/seedData";
@@ -88,32 +88,76 @@ export default async function LobbyPage() {
     };
   });
 
+  const completedRuns = team?.runs.filter((r) => r.status === "COMPLETED") || [];
+  const completedCount = completedRuns.length;
+  const totalScore = completedRuns.reduce((acc, r) => acc + (r.finalScore || 0), 0);
+  const progressPercent = challenges.length > 0 ? Math.round((completedCount / challenges.length) * 100) : 0;
+
   return (
-    <div className="min-h-screen bg-[#09090b] text-neutral-100 flex flex-col font-mono selection:bg-cyan-500 selection:text-black">
+    <div className="min-h-screen bg-[#09090b] text-[#fafafa] flex flex-col selection:bg-cyan-500 selection:text-black">
       <Navbar user={session} />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-6">
-        {/* Team Banner Card */}
-        <div className="bg-[#121215] border border-neutral-800 rounded-xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <span className="w-7 h-7 rounded bg-neutral-900 border border-neutral-700 flex items-center justify-center text-cyan-400 font-bold">
-                <Users className="w-3.5 h-3.5" />
+      <main className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 sm:py-10 w-full flex-1 space-y-6">
+        {/* Lobby Heading */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#27272a]">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              Mission Catalog
+            </h1>
+            <p className="text-xs text-[#a1a1aa] mt-0.5">
+              Twenty cipher-driven Linux missions. Uncover the command transpositions and complete the objectives.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="px-2.5 py-1 rounded bg-[#18181b] border border-[#27272a] text-xs font-mono font-medium flex items-center gap-2 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Event: {event?.status || "ACTIVE"}
+            </span>
+          </div>
+        </div>
+
+        {/* Team Profile Banner */}
+        <div className="shell-panel p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center justify-center text-cyan-400 font-bold shrink-0">
+                <Users className="w-4 h-4" />
               </span>
-              <h1 className="text-lg font-bold text-white">{team?.name}</h1>
-              <span className="px-2 py-0.5 rounded bg-neutral-900 text-neutral-300 border border-neutral-700 text-xs font-mono">
-                Team Code: #{team?.inviteCode}
+              <h2 className="text-base sm:text-lg font-bold text-white truncate">
+                {team?.name || session.name}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded bg-[#18181b] text-cyan-400 border border-[#27272a] text-xs font-mono font-bold">
+                Code: {team?.inviteCode}
               </span>
             </div>
-            <p className="text-xs text-neutral-400">
-              Active Members: {team?.memberships.map((m) => m.user.name).join(", ")}
+            <p className="text-xs text-[#a1a1aa]">
+              Operator: <span className="text-[#fafafa] font-medium">{session.name || "Contestant"}</span> · {team?.memberships.length || 1} team member{(team?.memberships.length || 1) > 1 ? "s" : ""}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
-            <div className="px-3 py-1.5 rounded bg-neutral-950 border border-neutral-800 flex items-center gap-2">
-              <span className="text-neutral-500">Competition:</span>
-              <span className="text-emerald-400 font-bold uppercase">{event?.status || "ACTIVE"}</span>
+          <div className="flex flex-wrap items-center gap-3 text-xs w-full md:w-auto justify-between md:justify-end">
+            <div className="px-3.5 py-2 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center gap-2.5 font-mono">
+              <Trophy className="w-4 h-4 text-amber-400 shrink-0" />
+              <div>
+                <span className="text-[10px] text-[#a1a1aa] block uppercase font-semibold">Total Points</span>
+                <span className="text-cyan-400 font-bold text-sm tabular-nums">{totalScore} PTS</span>
+              </div>
+            </div>
+
+            <div className="px-3.5 py-2 rounded-lg bg-[#18181b] border border-[#27272a] flex items-center gap-3 font-mono">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div>
+                <div className="flex items-center justify-between gap-3 text-[10px]">
+                  <span className="text-[#a1a1aa] uppercase font-semibold">Missions</span>
+                  <span className="text-emerald-400 font-bold tabular-nums">{completedCount} / {challenges.length}</span>
+                </div>
+                <div className="w-24 bg-[#09090b] h-1.5 rounded-full overflow-hidden mt-1 border border-[#27272a]">
+                  <div
+                    className="h-full bg-emerald-500 transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -121,18 +165,14 @@ export default async function LobbyPage() {
         {/* 20 Challenges Catalog with Filters & Sections */}
         <LobbyCatalog challenges={catalogItems} />
 
-        {/* Competition Rules Panel */}
-        <div className="p-5 rounded-xl bg-[#121215] border border-neutral-800 text-xs text-neutral-400 space-y-2">
-          <div className="font-bold text-white flex items-center gap-1.5 text-xs">
-            <ShieldAlert className="w-4 h-4 text-amber-400" />
-            Competition Rules & Fair-Play Protocols
-          </div>
-          <ul className="list-disc list-inside space-y-1 text-neutral-400 text-[11px] leading-relaxed">
-            <li>The authoritative timer begins the moment you press &quot;Start Challenge Race&quot;.</li>
-            <li>Commands are executed strictly inside a simulated virtual shell. No host commands are executed.</li>
-            <li>Objectives are verified by the server inspecting the resulting virtual filesystem state.</li>
-            <li>First team with valid server verification wins. Unlocked hints add penalty seconds.</li>
-          </ul>
+        {/* Fair play banner */}
+        <div className="flex items-center justify-center gap-2 py-3 border-t border-[#27272a] text-[11px] text-[#a1a1aa]">
+          <ShieldCheck className="w-4 h-4 text-cyan-400" />
+          <span>Server-authoritative timers</span>
+          <span>·</span>
+          <span>Sandboxed virtual filesystem</span>
+          <span>·</span>
+          <span>Cryptographically audited leaderboard</span>
         </div>
       </main>
     </div>

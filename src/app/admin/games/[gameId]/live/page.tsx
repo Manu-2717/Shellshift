@@ -33,7 +33,7 @@ export default async function AdminGameLivePage({
     notFound();
   }
 
-  const [registeredCount, activeCount, completedCount, participants, activity, standings] =
+  const [registeredCount, activeCount, completedCount, participants, activity, standingsResult] =
     await Promise.all([
       prisma.gameRegistration.count({ where: { eventId: gameId } }),
       prisma.run.count({ where: { eventId: gameId, status: "IN_PROGRESS" } }),
@@ -70,7 +70,7 @@ export default async function AdminGameLivePage({
     },
     participants,
     activity,
-    standings,
+    standings: standingsResult.standings || [],
   };
 
   return (

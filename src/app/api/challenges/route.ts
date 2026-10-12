@@ -16,7 +16,6 @@ export function sanitizeChallengeForPlayer(challenge: any) {
     title: c.title,
     type: c.type,
     encodedContent: c.encodedContent,
-    hintNote: c.hintNote,
   }));
 
   let objConfig = { description: "", rules: [] as any[] };

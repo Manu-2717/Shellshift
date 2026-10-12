@@ -8,6 +8,8 @@ import {
   StopCircle,
   Eye,
   Plus,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { formatDuration } from "../api/leaderboard/route";
 
@@ -23,8 +25,8 @@ export function AdminDashboardClient({
   initialRuns,
 }: AdminClientProps) {
   const [event, setEvent] = useState(initialEvent);
-  const [challenges, setChallenges] = useState(initialChallenges);
-  const [runs, setRuns] = useState(initialRuns);
+  const [challenges] = useState(initialChallenges);
+  const [runs] = useState(initialRuns);
   const [activeTab, setActiveTab] = useState<"challenges" | "runs" | "create">("challenges");
   const [selectedChallenge, setSelectedChallenge] = useState<any | null>(null);
   const [updatingEvent, setUpdatingEvent] = useState(false);
@@ -152,51 +154,54 @@ export function AdminDashboardClient({
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 w-full flex-1 space-y-6">
       {/* Admin Title & Event Control */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-[#121215] border border-neutral-800 p-5 sm:p-6 rounded-xl">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 bg-[#121215] border border-[#27272a] p-5 sm:p-6 rounded-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
             <Shield className="w-5 h-5 text-cyan-400 shrink-0" />
-            <h1 className="text-lg sm:text-xl font-bold text-white">Administrator Command Console</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Admin Console</h1>
           </div>
-          <p className="text-xs text-neutral-400">
-            Control competition status, inspect decoded answer keys, author challenges, and monitor live runs.
+          <p className="text-xs text-[#a1a1aa]">
+            Control tournament state, inspect decoded answer keys, author challenges, and monitor active runs.
           </p>
         </div>
 
         {/* Status controls */}
         <div className="flex flex-wrap items-center gap-2 text-xs w-full lg:w-auto">
-          <span className="text-neutral-500 mr-1 text-[11px] font-semibold uppercase tracking-wider">Event:</span>
+          <span className="text-[#a1a1aa] mr-1 text-[11px] font-semibold uppercase tracking-wider">Tournament:</span>
           <button
+            type="button"
             onClick={() => handleUpdateEventStatus("ACTIVE")}
             disabled={updatingEvent || event?.status === "ACTIVE"}
             className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
               event?.status === "ACTIVE"
-                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold"
-                : "bg-neutral-800 text-neutral-400 hover:text-white"
+                ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800 font-bold"
+                : "bg-[#18181b] text-[#a1a1aa] hover:text-white border border-[#27272a]"
             }`}
           >
             <Play className="w-3.5 h-3.5" />
             Active
           </button>
           <button
+            type="button"
             onClick={() => handleUpdateEventStatus("PAUSED")}
             disabled={updatingEvent || event?.status === "PAUSED"}
             className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
               event?.status === "PAUSED"
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 font-bold"
-                : "bg-neutral-800 text-neutral-400 hover:text-white"
+                ? "bg-amber-950/60 text-amber-400 border border-amber-800 font-bold"
+                : "bg-[#18181b] text-[#a1a1aa] hover:text-white border border-[#27272a]"
             }`}
           >
             <Pause className="w-3.5 h-3.5" />
             Paused
           </button>
           <button
+            type="button"
             onClick={() => handleUpdateEventStatus("ENDED")}
             disabled={updatingEvent || event?.status === "ENDED"}
             className={`px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors ${
               event?.status === "ENDED"
-                ? "bg-rose-500/20 text-rose-400 border border-rose-500/40 font-bold"
-                : "bg-neutral-800 text-neutral-400 hover:text-white"
+                ? "bg-rose-950/60 text-rose-400 border border-rose-800 font-bold"
+                : "bg-[#18181b] text-[#a1a1aa] hover:text-white border border-[#27272a]"
             }`}
           >
             <StopCircle className="w-3.5 h-3.5" />
@@ -206,37 +211,40 @@ export function AdminDashboardClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-neutral-800 pb-2 text-xs">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#27272a] pb-2 text-xs">
         <button
+          type="button"
           onClick={() => setActiveTab("challenges")}
           className={`px-3.5 py-2 rounded-lg font-bold transition-colors ${
             activeTab === "challenges"
-              ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
-              : "text-neutral-400 hover:text-white"
+              ? "bg-[#18181b] text-cyan-400 border border-[#27272a]"
+              : "text-[#a1a1aa] hover:text-white"
           }`}
         >
           Challenge Master Keys ({challenges.length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("runs")}
           className={`px-3.5 py-2 rounded-lg font-bold transition-colors ${
             activeTab === "runs"
-              ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
-              : "text-neutral-400 hover:text-white"
+              ? "bg-[#18181b] text-cyan-400 border border-[#27272a]"
+              : "text-[#a1a1aa] hover:text-white"
           }`}
         >
-          Live Team Runs ({runs.length})
+          Active Runs ({runs.length})
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab("create")}
           className={`px-3.5 py-2 rounded-lg font-bold transition-colors flex items-center gap-1.5 ${
             activeTab === "create"
-              ? "bg-neutral-800 text-cyan-400 border border-neutral-700"
-              : "text-neutral-400 hover:text-white"
+              ? "bg-[#18181b] text-cyan-400 border border-[#27272a]"
+              : "text-[#a1a1aa] hover:text-white"
           }`}
         >
           <Plus className="w-3.5 h-3.5" />
-          Author New Challenge
+          Author Challenge
         </button>
       </div>
 
@@ -250,56 +258,62 @@ export function AdminDashboardClient({
                 onClick={() => setSelectedChallenge(c)}
                 className={`p-4 rounded-xl border bg-[#121215] cursor-pointer transition-colors ${
                   selectedChallenge?.id === c.id
-                    ? "border-cyan-500 bg-[#16161b]"
-                    : "border-neutral-800 hover:border-neutral-700"
+                    ? "border-cyan-500 bg-[#18181b]"
+                    : "border-[#27272a] hover:border-[#3f3f46]"
                 }`}
               >
                 <div className="flex items-center justify-between text-xs mb-2">
-                  <span className="font-bold text-neutral-300">Level {c.order}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded uppercase font-bold bg-neutral-800 text-cyan-300">
+                  <span className="font-bold text-[#fafafa]">#{String(c.order).padStart(2, "0")}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded uppercase font-bold ${
+                    c.difficulty === "EASY"
+                      ? "badge-easy"
+                      : c.difficulty === "MEDIUM"
+                      ? "badge-medium"
+                      : "badge-hard"
+                  }`}>
                     {c.difficulty}
                   </span>
                 </div>
                 <h3 className="font-bold text-white text-sm">{c.title}</h3>
                 {c.objectiveConfig?.description && (
-                  <p className="text-xs text-neutral-400 line-clamp-2 mt-1">
+                  <p className="text-xs text-[#a1a1aa] line-clamp-2 mt-1">
                     {c.objectiveConfig.description}
                   </p>
                 )}
                 <div className="mt-3 text-[11px] text-cyan-400 flex items-center gap-1 font-semibold">
                   <Eye className="w-3.5 h-3.5" />
-                  Click to inspect decoded answer keys & mappings
+                  Inspect master keys & mappings
                 </div>
               </div>
             ))}
           </div>
 
           {selectedChallenge && (
-            <div className="p-6 rounded-xl bg-[#121215] border border-neutral-800 space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+            <div className="p-6 rounded-xl bg-[#121215] border border-[#27272a] space-y-6">
+              <div className="flex items-center justify-between border-b border-[#27272a] pb-4">
                 <div>
                   <h2 className="text-lg font-bold text-white">
                     Master Key Preview: {selectedChallenge.title}
                   </h2>
-                  <p className="text-xs text-neutral-400">
-                    Private server verification parameters (never exposed in player API responses).
+                  <p className="text-xs text-[#a1a1aa]">
+                    Confidential server verification parameters (never exposed in public API responses).
                   </p>
                 </div>
-                <span className="px-2.5 py-1 rounded bg-rose-950 border border-rose-800 text-rose-300 text-xs font-bold uppercase">
+                <span className="px-2.5 py-1 rounded bg-rose-950/60 border border-rose-800 text-rose-300 text-xs font-bold uppercase">
                   CONFIDENTIAL ADMIN VIEW
                 </span>
               </div>
 
               {/* Command Mappings */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-[#fafafa] uppercase tracking-wider">
                   Configured Command Mapping Matrix:
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {Object.entries(selectedChallenge.commandMappings).map(([entered, target]) => (
                     <div
                       key={entered}
-                      className="p-2.5 rounded bg-neutral-950 border border-neutral-800 text-xs flex items-center justify-between"
+                      className="p-2.5 rounded bg-[#18181b] border border-[#27272a] text-xs flex items-center justify-between font-mono"
                     >
                       <span className="text-rose-400 font-bold">&quot;{entered}&quot;</span>
                       <span className="text-neutral-500">→</span>
@@ -311,30 +325,30 @@ export function AdminDashboardClient({
 
               {/* Decoded Clues with Plaintext Answers */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-[#fafafa] uppercase tracking-wider">
                   Decoded Clues & Answers:
                 </h3>
                 <div className="space-y-3">
                   {selectedChallenge.clues.map((clue: any, idx: number) => (
                     <div
                       key={clue.id || idx}
-                      className="p-4 rounded-lg bg-neutral-950 border border-neutral-800 space-y-2 text-xs"
+                      className="p-4 rounded-lg bg-[#18181b] border border-[#27272a] space-y-2 text-xs"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-cyan-300">{clue.title}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 uppercase">
+                        <span className="font-bold text-cyan-400">{clue.title}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#121215] text-[#a1a1aa] uppercase border border-[#27272a]">
                           {clue.type}
                         </span>
                       </div>
                       <div>
-                        <span className="text-neutral-500 block mb-0.5">Plaintext Solution:</span>
+                        <span className="text-[#a1a1aa] block mb-0.5">Plaintext Solution:</span>
                         <span className="text-emerald-300 font-mono font-medium bg-emerald-950/30 px-2 py-1 rounded block">
                           {clue.plaintextAnswer}
                         </span>
                       </div>
                       <div>
-                        <span className="text-neutral-500 block mb-0.5">Encoded String (Player Facing):</span>
-                        <span className="text-neutral-400 font-mono break-all text-[11px]">
+                        <span className="text-[#a1a1aa] block mb-0.5">Encoded String (Player Facing):</span>
+                        <span className="text-cyan-300 font-mono break-all text-[11px]">
                           {clue.encodedContent}
                         </span>
                       </div>
@@ -345,10 +359,10 @@ export function AdminDashboardClient({
 
               {/* Objectives */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider">
+                <h3 className="text-xs font-bold text-[#fafafa] uppercase tracking-wider">
                   Objective Evaluation Rules:
                 </h3>
-                <pre className="p-3 rounded-lg bg-neutral-950 border border-neutral-800 text-cyan-300 text-xs overflow-x-auto">
+                <pre className="p-3 rounded-lg bg-[#18181b] border border-[#27272a] text-cyan-300 text-xs overflow-x-auto font-mono">
                   {JSON.stringify(selectedChallenge.objectiveConfig, null, 2)}
                 </pre>
               </div>
@@ -359,10 +373,10 @@ export function AdminDashboardClient({
 
       {/* TAB 2: LIVE TEAM RUNS */}
       {activeTab === "runs" && (
-        <div className="bg-[#121215] border border-neutral-800 rounded-xl overflow-hidden">
+        <div className="bg-[#121215] border border-[#27272a] rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#18181b] border-b border-neutral-800 text-neutral-400 font-semibold uppercase text-[10px]">
+            <table className="w-full text-left text-xs font-mono">
+              <thead className="bg-[#18181b] border-b border-[#27272a] text-[#a1a1aa] font-semibold uppercase text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Run ID</th>
                   <th className="py-3 px-4">Team</th>
@@ -373,43 +387,43 @@ export function AdminDashboardClient({
                   <th className="py-3 px-4">Recent Command</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800/60 font-mono">
+              <tbody className="divide-y divide-[#27272a]">
                 {runs.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-neutral-500 italic">
+                    <td colSpan={7} className="py-8 text-center text-[#a1a1aa] italic">
                       No active runs recorded.
                     </td>
                   </tr>
                 ) : (
                   runs.map((run) => (
-                    <tr key={run.id} className="hover:bg-neutral-800/40">
-                      <td className="py-3 px-4 text-neutral-500 text-[10px]">
+                    <tr key={run.id} className="hover:bg-[#18181b]/50">
+                      <td className="py-3 px-4 text-[#a1a1aa] text-[10px]">
                         {run.id.slice(0, 8)}...
                       </td>
-                      <td className="py-3 px-4 font-bold text-white">
+                      <td className="py-3 px-4 font-bold text-white font-sans">
                         {run.team.name}
                       </td>
-                      <td className="py-3 px-4 text-neutral-300">
+                      <td className="py-3 px-4 text-[#fafafa]">
                         {run.challenge.title}
                       </td>
                       <td className="py-3 px-4">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                             run.status === "COMPLETED"
-                              ? "bg-emerald-950 text-emerald-300 border border-emerald-800"
+                              ? "bg-emerald-950/60 text-emerald-400 border border-emerald-800"
                               : run.status === "IN_PROGRESS"
-                              ? "bg-cyan-950 text-cyan-300 border border-cyan-800"
-                              : "bg-neutral-800 text-neutral-400"
+                              ? "bg-cyan-950/60 text-cyan-400 border border-cyan-800"
+                              : "bg-[#18181b] text-[#a1a1aa] border border-[#27272a]"
                           }`}
                         >
                           {run.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-emerald-400 font-bold">
+                      <td className="py-3 px-4 text-emerald-400 font-bold tabular-nums">
                         {formatDuration(run.durationMs)}
                       </td>
-                      <td className="py-3 px-4 text-cyan-300">{run.commandCount}</td>
-                      <td className="py-3 px-4 text-neutral-400 text-[11px] truncate max-w-xs">
+                      <td className="py-3 px-4 text-cyan-400 tabular-nums">{run.commandCount}</td>
+                      <td className="py-3 px-4 text-[#a1a1aa] text-[11px] truncate max-w-xs">
                         {run.commandLogs[0] ? (
                           <span>
                             $ {run.commandLogs[0].enteredCommand} → {run.commandLogs[0].mappedOperation}
@@ -429,32 +443,32 @@ export function AdminDashboardClient({
 
       {/* TAB 3: AUTHOR NEW CHALLENGE */}
       {activeTab === "create" && (
-        <form onSubmit={handleCreateChallenge} className="bg-neutral-900 border border-neutral-800 p-6 rounded-xl space-y-4 text-xs">
-          <div className="border-b border-neutral-800 pb-3">
+        <form onSubmit={handleCreateChallenge} className="bg-[#121215] border border-[#27272a] p-6 rounded-xl space-y-4 text-xs">
+          <div className="border-b border-[#27272a] pb-3">
             <h2 className="text-base font-bold text-white">Author Custom Challenge</h2>
-            <p className="text-neutral-400 text-xs">
+            <p className="text-[#a1a1aa] text-xs">
               Configure command mappings, encoded clues, virtual filesystem seeds, and objective rules.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-neutral-400 block mb-1">Unique Slug:</label>
+              <label className="text-[#a1a1aa] block mb-1">Unique Slug:</label>
               <input
                 type="text"
                 required
                 value={newSlug}
                 onChange={(e) => setNewSlug(e.target.value)}
                 placeholder="e.g. quantum-divergence"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
               />
             </div>
             <div>
-              <label className="text-neutral-400 block mb-1">Difficulty:</label>
+              <label className="text-[#a1a1aa] block mb-1">Difficulty:</label>
               <select
                 value={newDiff}
                 onChange={(e) => setNewDiff(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-white outline-none focus:border-cyan-500"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-white outline-none focus:border-cyan-500"
               >
                 <option value="EASY">EASY</option>
                 <option value="MEDIUM">MEDIUM</option>
@@ -464,26 +478,26 @@ export function AdminDashboardClient({
           </div>
 
           <div>
-            <label className="text-neutral-400 block mb-1">Challenge Title:</label>
+            <label className="text-[#a1a1aa] block mb-1">Challenge Title:</label>
             <input
               type="text"
               required
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g. Operation Quantum Divergence (Level 4)"
-              className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
+              className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
             />
           </div>
 
           <div>
-            <label className="text-neutral-400 block mb-1">Description / Briefing:</label>
+            <label className="text-[#a1a1aa] block mb-1">Description / Briefing:</label>
             <textarea
               required
               rows={2}
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
               placeholder="Briefing instructions for competitors..."
-              className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
+              className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-white outline-none focus:border-cyan-500 font-mono"
             />
           </div>
 
@@ -495,17 +509,17 @@ export function AdminDashboardClient({
                 rows={5}
                 value={newMappingJson}
                 onChange={(e) => setNewMappingJson(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
               />
             </div>
             <div>
-              <label className="text-cyan-400 font-semibold block mb-1">Clues (JSON Array with plaintext & encoded):</label>
+              <label className="text-cyan-400 font-semibold block mb-1">Clues (JSON Array):</label>
               <textarea
                 required
                 rows={5}
                 value={newCluesJson}
                 onChange={(e) => setNewCluesJson(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -518,7 +532,7 @@ export function AdminDashboardClient({
                 rows={5}
                 value={newSeedJson}
                 onChange={(e) => setNewSeedJson(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
               />
             </div>
             <div>
@@ -528,7 +542,7 @@ export function AdminDashboardClient({
                 rows={5}
                 value={newObjJson}
                 onChange={(e) => setNewObjJson(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
+                className="w-full bg-[#18181b] border border-[#27272a] rounded p-2 text-cyan-300 font-mono text-[11px] outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -543,7 +557,17 @@ export function AdminDashboardClient({
               }`}
             >
               <div className="font-bold flex items-center gap-1.5">
-                {validationResult.valid ? "✓ Configuration Valid:" : "✗ Validation Errors Found:"}
+                {validationResult.valid ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    Configuration Validated:
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400" />
+                    Validation Errors Found:
+                  </>
+                )}
               </div>
               {validationResult.valid ? (
                 <p className="text-[11px] text-emerald-400">
@@ -564,14 +588,14 @@ export function AdminDashboardClient({
               type="button"
               onClick={handleValidateForm}
               disabled={validating || savingChallenge}
-              className="px-5 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold border border-neutral-700 transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 rounded-lg btn-secondary text-xs font-bold transition-colors disabled:opacity-50"
             >
               {validating ? "Validating..." : "Validate Rules (Server Check)"}
             </button>
             <button
               type="submit"
               disabled={savingChallenge || validating}
-              className="px-6 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-neutral-950 text-xs font-bold transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 rounded-lg btn-primary text-xs font-bold transition-colors disabled:opacity-50"
             >
               {savingChallenge ? "Saving Challenge..." : "Publish New Challenge"}
             </button>

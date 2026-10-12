@@ -54,7 +54,8 @@ export function LiveTimer({
 
   if (deadlineAt) {
     const deadlineMs = new Date(deadlineAt).getTime();
-    const remainingMs = deadlineMs - (Date.now());
+    const configuredWindowMs = Math.max(0, deadlineMs - new Date(startedAt).getTime());
+    const remainingMs = configuredWindowMs - elapsedMs;
     remainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
     if (remainingMs <= 0 && !isCompleted) {
       isExpired = true;
@@ -77,7 +78,7 @@ export function LiveTimer({
             ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
             : isExpired
             ? "bg-rose-950/40 border-rose-500/50 text-rose-300"
-            : "bg-neutral-900 border-neutral-800 text-cyan-300"
+            : "bg-[#18181b] border-[#27272a] text-cyan-400"
         }`}
       >
         {isCompleted ? (
@@ -86,26 +87,26 @@ export function LiveTimer({
           <Timer className={`w-4 h-4 ${isExpired ? "text-rose-400" : "text-cyan-400 animate-pulse"}`} />
         )}
 
-        <div className="flex items-baseline gap-1">
-          <span className="text-[10px] text-neutral-400 font-sans tracking-wide uppercase">
-            {isCompleted ? "Verified Time" : isExpired ? "Expired" : "Server Clock"}
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[10px] text-[#a1a1aa] font-sans tracking-wide uppercase">
+            {isCompleted ? "Time" : isExpired ? "Expired" : "Timer"}
           </span>
-          <span className="text-sm font-bold tracking-wider">
+          <span className="text-sm font-bold tracking-wider tabular-nums">
             {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
-            <span className="text-xs text-neutral-400">{tenths}</span>
+            <span className="text-xs text-[#a1a1aa]">{tenths}</span>
           </span>
         </div>
       </div>
 
       {!isCompleted && remainingSeconds !== null && (
         <div
-          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono ${
+          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono tabular-nums ${
             isExpired || remainingSeconds <= 120
               ? "bg-rose-950/40 border-rose-800/80 text-rose-400 font-bold animate-pulse"
-              : "bg-neutral-900/80 border-neutral-800 text-neutral-400"
+              : "bg-[#18181b] border-[#27272a] text-[#a1a1aa]"
           }`}
         >
-          <span className="text-[10px] text-neutral-500 uppercase font-sans">Time Left:</span>
+          <span className="text-[10px] text-[#a1a1aa] uppercase font-sans">Remaining:</span>
           <span>
             {remMinutes?.toString().padStart(2, "0")}:{remSecs?.toString().padStart(2, "0")}
           </span>

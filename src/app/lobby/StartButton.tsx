@@ -6,7 +6,7 @@ import { Play } from "lucide-react";
 
 export function StartRunButton({
   challengeId,
-  label = "Start Challenge Race",
+  label = "Start Mission",
   className,
 }: {
   challengeId: string;
@@ -31,11 +31,11 @@ export function StartRunButton({
       if (res.ok && data.run?.id) {
         router.push(`/play/${data.run.id}`);
       } else {
-        alert(data.error || "Failed to start challenge run.");
+        alert(data.error || "Failed to start mission run.");
         setLoading(false);
       }
     } catch (err) {
-      alert("Error starting run: " + (err as Error).message);
+      alert("Error starting mission: " + (err as Error).message);
       setLoading(false);
     }
   };
@@ -47,11 +47,11 @@ export function StartRunButton({
       type="button"
       className={
         className ||
-        "w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-neutral-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+        "w-full py-2.5 rounded-lg btn-primary disabled:opacity-50 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
       }
     >
       <Play className="w-3.5 h-3.5 fill-current" />
-      {loading ? "Starting Problem..." : label}
+      {loading ? "Launching Mission..." : label}
     </button>
   );
 }

@@ -27,7 +27,7 @@ export async function GET(
     return Response.json({ error: "Game not found." }, { status: 404 });
   }
 
-  const [registeredCount, activeCount, completedCount, participants, activity, standings] =
+  const [registeredCount, activeCount, completedCount, participants, activity, standingsResult] =
     await Promise.all([
       prisma.gameRegistration.count({ where: { eventId: gameId } }),
       prisma.run.count({ where: { eventId: gameId, status: "IN_PROGRESS" } }),
@@ -64,6 +64,6 @@ export async function GET(
     },
     participants,
     activity,
-    standings,
+    standings: standingsResult.standings || [],
   });
 }

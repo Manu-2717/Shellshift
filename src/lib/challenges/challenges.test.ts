@@ -6,6 +6,7 @@ import { evaluateObjective } from "../vfs/evaluator";
 import { createInitialVfs } from "../vfs/vfs";
 import { VfsState } from "../vfs/types";
 import { calculateRunScore } from "../scoring/scoringEngine";
+import { decodeCipher } from "../ciphers/ciphers";
 
 function setupInitialVfs(challenge: SeedChallengeDef): VfsState {
   return createInitialVfs(challenge.initialFilesystem);
@@ -59,6 +60,12 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
         expect(clue.encodedContent.length).toBeGreaterThan(0);
         expect(clue.plaintextAnswer).toBeDefined();
         expect(clue.plaintextAnswer.length).toBeGreaterThan(0);
+        const decoded = decodeCipher(clue.type, clue.encodedContent);
+        const normalize = (value: string) => value.replace(/\s+/g, " ").trim().toUpperCase();
+        expect(
+          normalize(decoded),
+          `Challenge ${challenge.order} (${challenge.slug}) clue ${clue.id} does not decode to its configured answer.`
+        ).toBe(normalize(clue.plaintextAnswer));
       }
     }
   });

@@ -22,6 +22,31 @@ export interface OperationContext {
 
 export type OperationHandler = (ctx: OperationContext) => CommandResult;
 
+function commandResult(
+  ctx: OperationContext,
+  output = "",
+  exitCode = 0,
+  stateChanged = false
+): CommandResult {
+  return {
+    output,
+    exitCode,
+    newCwd: ctx.state.cwd,
+    stateChanged,
+    enteredCommand: ctx.enteredCommand,
+    mappedOperation: ctx.mappedOperation,
+    objectiveCheckNeeded: stateChanged,
+  };
+}
+
+function readFileOperand(ctx: OperationContext, command: string) {
+  const targetArg = ctx.parsed.positionalArgs.at(-1);
+  if (!targetArg) return { error: `${command}: missing file operand` };
+  const file = getFile(ctx.state.root, resolvePath(ctx.state.cwd, targetArg));
+  if (!file) return { error: `${command}: ${targetArg}: No such file or directory` };
+  return { targetArg, file };
+}
+
 export const operations: Record<string, OperationHandler> = {
   pwd: (ctx) => {
     return {
@@ -754,6 +779,261 @@ export const operations: Record<string, OperationHandler> = {
     };
   },
 
+  whoami: (ctx) => ({
+    output: "player",
+    exitCode: 0,
+    newCwd: ctx.state.cwd,
+    stateChanged: false,
+    enteredCommand: ctx.enteredCommand,
+    mappedOperation: ctx.mappedOperation,
+    objectiveCheckNeeded: false,
+  }),
+
+  hostname: (ctx) => ({
+    output: "shellshift",
+    exitCode: 0,
+    newCwd: ctx.state.cwd,
+    stateChanged: false,
+    enteredCommand: ctx.enteredCommand,
+    mappedOperation: ctx.mappedOperation,
+    objectiveCheckNeeded: false,
+  }),
+
+  id: (ctx) => ({
+    output: "uid=1000(player) gid=1000(player) groups=1000(player)",
+    exitCode: 0,
+    newCwd: ctx.state.cwd,
+    stateChanged: false,
+    enteredCommand: ctx.enteredCommand,
+    mappedOperation: ctx.mappedOperation,
+    objectiveCheckNeeded: false,
+  }),
+
+  uname: (ctx) => ({
+    output: ctx.parsed.flags.has("a")
+      ? "Linux shellshift 6.8.0-virtual #1 SMP x86_64 GNU/Linux"
+      : "Linux",
+    exitCode: 0,
+    newCwd: ctx.state.cwd,
+    stateChanged: false,
+    enteredCommand: ctx.enteredCommand,
+    mappedOperation: ctx.mappedOperation,
+    objectiveCheckNeeded: false,
+  }),
+
+  file: (ctx) => {
+    const targetArg = ctx.parsed.positionalArgs[0];
+    if (!targetArg) {
+      return {
+        output: "file: missing file operand",
+        exitCode: 1,
+        newCwd: ctx.state.cwd,
+        stateChanged: false,
+        enteredCommand: ctx.enteredCommand,
+        mappedOperation: ctx.mappedOperation,
+        objectiveCheckNeeded: false,
+      };
+    }
+    const node = getNode(ctx.state.root, resolvePath(ctx.state.cwd, targetArg));
+    return {
+      output: !node
+        ? `${targetArg}: cannot open: No such file or directory`
+        : node.type === "dir"
+          ? `${targetArg}: directory`
+          : `${targetArg}: ASCII text`,
+      exitCode: node ? 0 : 1,
+      newCwd: ctx.state.cwd,
+      stateChanged: false,
+      enteredCommand: ctx.enteredCommand,
+      mappedOperation: ctx.mappedOperation,
+      objectiveCheckNeeded: false,
+    };
+  },
+
+  wc: (ctx) => {
+    const targetArg = ctx.parsed.positionalArgs[0];
+    const file = targetArg
+      ? getFile(ctx.state.root, resolvePath(ctx.state.cwd, targetArg))
+      : null;
+    if (!targetArg || !file) {
+      return {
+        output: targetArg ? `wc: ${targetArg}: No such file or directory` : "wc: missing file operand",
+        exitCode: 1,
+        newCwd: ctx.state.cwd,
+        stateChanged: false,
+        enteredCommand: ctx.enteredCommand,
+        mappedOperation: ctx.mappedOperation,
+        objectiveCheckNeeded: false,
+      };
+    }
+    const lines = file.content === "" ? 0 : file.content.split("\n").length;
+    const words = file.content.trim() ? file.content.trim().split(/\s+/).length : 0;
+    const bytes = Buffer.byteLength(file.content, "utf8");
+    const counts = ctx.parsed.flags.has("l")
+      ? `${lines}`
+      : ctx.parsed.flags.has("w")
+        ? `${words}`
+        : ctx.parsed.flags.has("c")
+          ? `${bytes}`
+          : `${lines} ${words} ${bytes}`;
+    return {
+      output: `${counts} ${targetArg}`,
+      exitCode: 0,
+      newCwd: ctx.state.cwd,
+      stateChanged: false,
+      enteredCommand: ctx.enteredCommand,
+      mappedOperation: ctx.mappedOperation,
+      objectiveCheckNeeded: false,
+    };
+  },
+
+  rmdir: (ctx) => {
+    if (ctx.parsed.positionalArgs.length === 0) return commandResult(ctx, "rmdir: missing operand", 1);
+    const errors: string[] = [];
+    let changed = false;
+    for (const targetArg of ctx.parsed.positionalArgs) {
+      const path = resolvePath(ctx.state.cwd, targetArg);
+      const node = getNode(ctx.state.root, path);
+      if (!node) errors.push(`rmdir: failed to remove '${targetArg}': No such file or directory`);
+      else if (node.type !== "dir") errors.push(`rmdir: failed to remove '${targetArg}': Not a directory`);
+      else if (Object.keys(node.children).length > 0) errors.push(`rmdir: failed to remove '${targetArg}': Directory not empty`);
+      else {
+        const removed = removeNode(ctx.state.root, path, true);
+        if (removed.success) changed = true;
+        else errors.push(removed.error || `rmdir: failed to remove '${targetArg}'`);
+      }
+    }
+    return commandResult(ctx, errors.join("\n"), errors.length ? 1 : 0, changed);
+  },
+
+  basename: (ctx) => {
+    const input = ctx.parsed.positionalArgs[0];
+    if (!input) return commandResult(ctx, "basename: missing operand", 1);
+    const clean = input.replace(/\/+$/, "") || "/";
+    let value = clean === "/" ? "/" : clean.split("/").pop() || "";
+    const suffix = ctx.parsed.positionalArgs[1];
+    if (suffix && value.endsWith(suffix)) value = value.slice(0, -suffix.length);
+    return commandResult(ctx, value);
+  },
+
+  dirname: (ctx) => {
+    const input = ctx.parsed.positionalArgs[0];
+    if (!input) return commandResult(ctx, "dirname: missing operand", 1);
+    const clean = input.replace(/\/+$/, "") || "/";
+    const slash = clean.lastIndexOf("/");
+    return commandResult(ctx, slash < 0 ? "." : slash === 0 ? "/" : clean.slice(0, slash));
+  },
+
+  stat: (ctx) => {
+    const targetArg = ctx.parsed.positionalArgs[0];
+    if (!targetArg) return commandResult(ctx, "stat: missing operand", 1);
+    const node = getNode(ctx.state.root, resolvePath(ctx.state.cwd, targetArg));
+    if (!node) return commandResult(ctx, `stat: cannot stat '${targetArg}': No such file or directory`, 1);
+    const size = node.type === "file" ? Buffer.byteLength(node.content, "utf8") : 4096;
+    const kind = node.type === "file" ? "regular file" : "directory";
+    const perms = node.permissions || (node.type === "file" ? "rw-r--r--" : "rwxr-xr-x");
+    return commandResult(ctx, `  File: ${targetArg}\n  Size: ${size}\tType: ${kind}\nAccess: (${perms})\tOwner: player\nModify: virtual filesystem`);
+  },
+
+  du: (ctx) => {
+    const targetArg = ctx.parsed.positionalArgs[0] || ".";
+    const node = getNode(ctx.state.root, resolvePath(ctx.state.cwd, targetArg));
+    if (!node) return commandResult(ctx, `du: cannot access '${targetArg}': No such file or directory`, 1);
+    const bytes = (current: VfsNode): number => current.type === "file"
+      ? Buffer.byteLength(current.content, "utf8")
+      : Object.values(current.children).reduce((total, child) => total + bytes(child), 0);
+    const size = bytes(node);
+    return commandResult(ctx, `${ctx.parsed.flags.has("h") ? `${Math.max(1, Math.ceil(size / 1024))}K` : Math.max(1, Math.ceil(size / 1024))}\t${targetArg}`);
+  },
+
+  sort: (ctx) => {
+    const source = readFileOperand(ctx, "sort");
+    if (source.error || !source.file) return commandResult(ctx, source.error, 1);
+    const numeric = ctx.parsed.flags.has("n");
+    const reverse = ctx.parsed.flags.has("r");
+    const unique = ctx.parsed.flags.has("u");
+    let lines = source.file.content.split("\n").sort((a, b) => numeric ? Number(a) - Number(b) : a.localeCompare(b));
+    if (unique) lines = lines.filter((line, index) => index === 0 || line !== lines[index - 1]);
+    if (reverse) lines.reverse();
+    return commandResult(ctx, lines.join("\n"));
+  },
+
+  uniq: (ctx) => {
+    const source = readFileOperand(ctx, "uniq");
+    if (source.error || !source.file) return commandResult(ctx, source.error, 1);
+    const lines = source.file.content.split("\n");
+    const groups: Array<{ line: string; count: number }> = [];
+    for (const line of lines) {
+      const last = groups.at(-1);
+      if (last?.line === line) last.count++;
+      else groups.push({ line, count: 1 });
+    }
+    const selected = groups.filter((group) => !ctx.parsed.flags.has("d") || group.count > 1);
+    return commandResult(ctx, selected.map((group) => ctx.parsed.flags.has("c") ? `${String(group.count).padStart(7)} ${group.line}` : group.line).join("\n"));
+  },
+
+  nl: (ctx) => {
+    const source = readFileOperand(ctx, "nl");
+    if (source.error || !source.file) return commandResult(ctx, source.error, 1);
+    return commandResult(ctx, source.file.content.split("\n").map((line, index) => `${String(index + 1).padStart(6)}\t${line}`).join("\n"));
+  },
+
+  tac: (ctx) => {
+    const source = readFileOperand(ctx, "tac");
+    if (source.error || !source.file) return commandResult(ctx, source.error, 1);
+    return commandResult(ctx, source.file.content.split("\n").reverse().join("\n"));
+  },
+
+  rev: (ctx) => {
+    const source = readFileOperand(ctx, "rev");
+    if (source.error || !source.file) return commandResult(ctx, source.error, 1);
+    return commandResult(ctx, source.file.content.split("\n").map((line) => [...line].reverse().join("")).join("\n"));
+  },
+
+  cut: (ctx) => {
+    let delimiter = "\t";
+    let field = 0;
+    let fileArg = "";
+    for (let i = 0; i < ctx.parsed.args.length; i++) {
+      const arg = ctx.parsed.args[i];
+      if (arg === "-d" && ctx.parsed.args[i + 1]) delimiter = ctx.parsed.args[++i];
+      else if (arg.startsWith("-d") && arg.length > 2) delimiter = arg.slice(2);
+      else if (arg === "-f" && ctx.parsed.args[i + 1]) field = Number(ctx.parsed.args[++i]);
+      else if (arg.startsWith("-f") && arg.length > 2) field = Number(arg.slice(2));
+      else if (!arg.startsWith("-")) fileArg = arg;
+    }
+    if (!field || !fileArg) return commandResult(ctx, "cut: you must specify a field list and file", 1);
+    const file = getFile(ctx.state.root, resolvePath(ctx.state.cwd, fileArg));
+    if (!file) return commandResult(ctx, `cut: ${fileArg}: No such file or directory`, 1);
+    return commandResult(ctx, file.content.split("\n").map((line) => line.split(delimiter)[field - 1] ?? "").join("\n"));
+  },
+
+  date: (ctx) => commandResult(ctx, new Date().toUTCString()),
+
+  env: (ctx) => commandResult(ctx, Object.entries({ HOME: "/workspace", USER: "player", SHELL: "/bin/shellshift", PWD: ctx.state.cwd, ...(ctx.state.env || {}) }).map(([key, value]) => `${key}=${value}`).join("\n")),
+
+  printenv: (ctx) => {
+    const vars = { HOME: "/workspace", USER: "player", SHELL: "/bin/shellshift", PWD: ctx.state.cwd, ...(ctx.state.env || {}) };
+    const name = ctx.parsed.positionalArgs[0];
+    if (!name) return commandResult(ctx, Object.entries(vars).map(([key, value]) => `${key}=${value}`).join("\n"));
+    return name in vars ? commandResult(ctx, vars[name as keyof typeof vars]) : commandResult(ctx, "", 1);
+  },
+
+  which: (ctx) => {
+    const name = ctx.parsed.positionalArgs[0];
+    if (!name) return commandResult(ctx, "which: missing command name", 1);
+    return operations[name] ? commandResult(ctx, `/usr/bin/${name}`) : commandResult(ctx, `${name} not found`, 1);
+  },
+
+  type: (ctx) => {
+    const name = ctx.parsed.positionalArgs[0];
+    if (!name) return commandResult(ctx, "type: missing command name", 1);
+    return operations[name] ? commandResult(ctx, `${name} is a virtual shell command`) : commandResult(ctx, `bash: type: ${name}: not found`, 1);
+  },
+
+  true: (ctx) => commandResult(ctx),
+  false: (ctx) => commandResult(ctx, "", 1),
+
   clear: (ctx) => {
     return {
       output: "",
@@ -769,10 +1049,15 @@ export const operations: Record<string, OperationHandler> = {
 
   help: (ctx) => {
     const msg = [
-      "ShellShift Virtual Shell v2.4 (Simulated Sandbox)",
+      "ShellShift Virtual Shell v2.5 (Simulated Sandbox)",
       "--------------------------------------------------",
       "Available command utilities:",
-      "  pwd, ls, cd, cat, mkdir, touch, cp, mv, rm, find, grep, head, tail, echo, tree, help, clear",
+      "  Navigation: pwd, ls, cd, tree",
+      "  Files: cat, touch, mkdir, rmdir, cp, mv, rm, file, stat, du, wc",
+      "  Paths: basename, dirname",
+      "  Search/text: find, grep, head, tail, sort, uniq, cut, nl, tac, rev, echo",
+      "  System: whoami, hostname, id, uname, date, env, printenv, which, type",
+      "  Control: true, false, help, clear",
       "",
       "NOTE: In this cipher race, command tokens may be mapped to unexpected operations!",
       "Decode the cipher sheet clues to reveal the active command matrix.",

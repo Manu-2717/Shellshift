@@ -3,21 +3,32 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import {
   buildAuthorizationUrl,
-  checkIsAdmin,
   generateNonce,
   generatePkcePair,
   generateRandomState,
   getOidcConfig,
   isMockAuthAllowed,
   isMockAdminAllowed,
+  validateOidcConfig,
 } from "@/lib/auth/oidc";
 import { SessionUser, setSessionCookie } from "@/lib/auth/session";
+
+function sanitizeRedirectTarget(target?: string | null): string {
+  if (!target || typeof target !== "string") {
+    return "/lobby";
+  }
+  if (target.startsWith("/") && !target.startsWith("//") && !target.includes("://")) {
+    return target;
+  }
+  return "/lobby";
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const isMock = searchParams.get("mock") === "true";
   const roleParam = searchParams.get("role") || "user";
-  const redirectTarget = searchParams.get("redirect") || "/lobby";
+  const rawRedirect = searchParams.get("redirect") || "/lobby";
+  const redirectTarget = sanitizeRedirectTarget(rawRedirect);
 
   // Check Mock Auth Mode
   if (isMock) {
@@ -93,15 +104,36 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL(destination, request.url));
   }
 
-  // Real OIDC Flow with PKCE
+  // Real OIDC Flow with Dynamic Discovery & PKCE
   const config = getOidcConfig();
+  const validation = validateOidcConfig(config);
+  if (!validation.valid) {
+    console.error("OIDC configuration error:", validation.error);
+    return NextResponse.redirect(
+      new URL("/?error=OIDC+configuration+is+incomplete+or+invalid", request.url)
+    );
+  }
+
   const state = generateRandomState();
   const nonce = generateNonce();
   const { codeVerifier, codeChallenge } = generatePkcePair();
 
-  // Store PKCE verifier, state and nonce in secure cookies for callback validation
+  let authUrl: string;
+  try {
+    authUrl = await buildAuthorizationUrl(config, state, codeChallenge, nonce);
+  } catch (err) {
+    console.error("Failed to construct authorization URL:", err);
+    return NextResponse.redirect(
+      new URL("/?error=Unable+to+reach+USAR+FOSS+OIDC+provider", request.url)
+    );
+  }
+
+  // Store PKCE verifier, state, nonce, and target in secure cookies for callback validation
   const cookieStore = await cookies();
-  const isSecure = process.env.COOKIE_SECURE === "true" || (process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false" && process.env.MOCK_AUTH_ENABLED !== "true");
+  const isSecure =
+    process.env.COOKIE_SECURE === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false");
+
   const cookieOpts = {
     httpOnly: true,
     secure: isSecure,
@@ -115,6 +147,5 @@ export async function GET(request: Request) {
   cookieStore.set("oidc_code_verifier", codeVerifier, cookieOpts);
   cookieStore.set("oidc_redirect_target", redirectTarget, cookieOpts);
 
-  const authUrl = buildAuthorizationUrl(config, state, codeChallenge, nonce);
   return NextResponse.redirect(authUrl);
 }

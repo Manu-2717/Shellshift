@@ -1,112 +1,141 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { checkIsAdmin, getOidcConfig } from "@/lib/auth/oidc";
+import {
+  checkIsAdmin,
+  discoverEndpoints,
+  exchangeAuthorizationCode,
+  fetchUserInfo,
+  getOidcConfig,
+  verifyIdToken,
+} from "@/lib/auth/oidc";
 import { SessionUser, setSessionCookie } from "@/lib/auth/session";
+
+function sanitizeRedirectTarget(target?: string | null): string {
+  if (!target || typeof target !== "string") {
+    return "/lobby";
+  }
+  if (target.startsWith("/") && !target.startsWith("//") && !target.includes("://")) {
+    return target;
+  }
+  return "/lobby";
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");
   const error = searchParams.get("error");
+  const errorDescription = searchParams.get("error_description");
 
   const cookieStore = await cookies();
   const storedState = cookieStore.get("oidc_state")?.value;
   const storedNonce = cookieStore.get("oidc_nonce")?.value;
   const storedVerifier = cookieStore.get("oidc_code_verifier")?.value;
-  const redirectTarget = cookieStore.get("oidc_redirect_target")?.value || "/lobby";
+  const rawTarget = cookieStore.get("oidc_redirect_target")?.value;
+  const redirectTarget = sanitizeRedirectTarget(rawTarget);
 
-  // Clean up transient auth cookies
+  // Strictly clean up transient authentication cookies immediately
   cookieStore.delete("oidc_state");
   cookieStore.delete("oidc_nonce");
   cookieStore.delete("oidc_code_verifier");
   cookieStore.delete("oidc_redirect_target");
 
+  // Handle provider-reported errors gracefully
   if (error) {
+    console.warn(`OIDC provider returned error: ${error} (${errorDescription || "no description"})`);
+    if (error === "access_denied") {
+      return NextResponse.redirect(
+        new URL("/?error=Access+was+denied+by+the+identity+provider", request.url)
+      );
+    }
     return NextResponse.redirect(
-      new URL(`/?error=${encodeURIComponent(`OIDC Error: ${error}`)}`, request.url)
+      new URL("/?error=Authentication+was+cancelled+or+failed+at+provider", request.url)
     );
   }
 
-  if (!code || !state || !storedState || state !== storedState) {
+  // Validate state and PKCE verifier
+  if (!state || !storedState || state !== storedState) {
+    console.error("OIDC state mismatch or state expired");
     return NextResponse.redirect(
-      new URL("/?error=Invalid+OIDC+State+or+authorization+code", request.url)
+      new URL("/?error=Authentication+state+validation+failed.+Please+try+again.", request.url)
+    );
+  }
+
+  if (!code || !storedVerifier || !storedNonce) {
+    console.error("Missing authorization code, verifier, or nonce");
+    return NextResponse.redirect(
+      new URL("/?error=Missing+authentication+parameters", request.url)
     );
   }
 
   const config = getOidcConfig();
 
   try {
-    // Exchange code for tokens at the OIDC token endpoint
-    const tokenEndpoint = `${config.issuer.replace(/\/+$/, "")}/token`;
-    const tokenRes = await fetch(tokenEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`,
-      },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code,
-        redirect_uri: config.redirectUri,
-        code_verifier: storedVerifier || "",
-      }),
-    });
+    // 1. Discover endpoints
+    const metadata = await discoverEndpoints(config.issuer);
 
-    if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      console.error("Token exchange failed:", errText);
+    // 2. Exchange authorization code for tokens with PKCE verifier
+    const tokenData = await exchangeAuthorizationCode(
+      config,
+      code,
+      storedVerifier,
+      metadata
+    );
+
+    if (!tokenData.id_token) {
+      console.error("Token response missing id_token");
       return NextResponse.redirect(
-        new URL("/?error=Failed+to+exchange+authorization+code", request.url)
+        new URL("/?error=Provider+failed+to+return+identity+token", request.url)
       );
     }
 
-    const tokenData = await tokenRes.json();
+    // 3. Validate ID token cryptographically with RS256 and discovered JWKS
+    const validatedClaims = await verifyIdToken(
+      tokenData.id_token,
+      config,
+      storedNonce,
+      metadata
+    );
 
-    // Validate ID token if present
-    if (tokenData.id_token) {
+    // 4. Optionally fetch userinfo if userinfo_endpoint exists and access_token was returned
+    let userInfo: Record<string, unknown> = {};
+    if (tokenData.access_token && metadata.userinfo_endpoint) {
       try {
-        const parts = tokenData.id_token.split(".");
-        if (parts.length === 3) {
-          const idPayload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
-          if (storedNonce && idPayload.nonce && idPayload.nonce !== storedNonce) {
-            console.error("OIDC ID token nonce mismatch");
-            return NextResponse.redirect(
-              new URL("/?error=OIDC+Nonce+validation+failed", request.url)
-            );
-          }
-          if (idPayload.exp && idPayload.exp * 1000 < Date.now()) {
-            console.error("OIDC ID token expired");
-            return NextResponse.redirect(
-              new URL("/?error=OIDC+ID+Token+has+expired", request.url)
-            );
-          }
+        userInfo = await fetchUserInfo(tokenData.access_token, metadata.userinfo_endpoint);
+        // Verify subject binding if userinfo returns sub
+        if (userInfo.sub && userInfo.sub !== validatedClaims.sub) {
+          console.error("UserInfo subject does not match ID token subject");
+          return NextResponse.redirect(
+            new URL("/?error=Identity+binding+mismatch", request.url)
+          );
         }
-      } catch (jwtErr) {
-        console.warn("Could not parse ID token:", jwtErr);
-      }
-    }
-    const userinfoEndpoint = `${config.issuer.replace(/\/+$/, "")}/userinfo`;
-
-    let profile: { sub: string; email?: string | null; name?: string | null } = {
-      sub: "oidc-sub",
-      email: null,
-      name: "Competitor",
-    };
-    if (tokenData.access_token) {
-      const userinfoRes = await fetch(userinfoEndpoint, {
-        headers: { Authorization: `Bearer ${tokenData.access_token}` },
-      });
-      if (userinfoRes.ok) {
-        profile = await userinfoRes.json();
+      } catch (uiErr) {
+        // Log userinfo fetch failure but continue with verified ID token claims
+        console.warn("UserInfo endpoint fetch optional warning:", uiErr);
       }
     }
 
-    const oidcSub = profile.sub;
-    const email: string | null = profile.email || null;
-    const name = profile.name || (email ? email.split("@")[0] : "Competitor");
-    const isAdmin = checkIsAdmin(email);
+    // 5. Resolve stable identity
+    const oidcSub = validatedClaims.sub;
+    const email: string | null =
+      (typeof validatedClaims.email === "string" && validatedClaims.email) ||
+      (typeof userInfo.email === "string" && userInfo.email) ||
+      null;
 
+    const rawName =
+      (typeof validatedClaims.name === "string" && validatedClaims.name) ||
+      (typeof userInfo.name === "string" && userInfo.name) ||
+      (typeof validatedClaims.preferred_username === "string" && validatedClaims.preferred_username) ||
+      (typeof userInfo.preferred_username === "string" && userInfo.preferred_username) ||
+      (email ? email.split("@")[0] : "Competitor");
+
+    const name = rawName.trim() || "Competitor";
+
+    // 6. Check administrator authorization
+    const isAdmin = checkIsAdmin(email, { ...validatedClaims, ...userInfo });
+
+    // 7. Find or create local ShellShift user by stable (oidcIssuer, oidcSub) pair
     let user = await prisma.user.findUnique({
       where: {
         oidcIssuer_oidcSub: {
@@ -136,6 +165,30 @@ export async function GET(request: Request) {
           },
         },
       });
+    } else {
+      // User exists - preserve existing team memberships, progress, and history.
+      // Update email/name if changed, and promote to ADMIN if administrator allowlist applies.
+      const updateData: { email?: string | null; name?: string; role?: string } = {};
+
+      if (email && email !== user.email) {
+        updateData.email = email;
+      }
+
+      if (isAdmin && user.role !== "ADMIN") {
+        updateData.role = "ADMIN";
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: updateData,
+          include: {
+            memberships: {
+              include: { team: true },
+            },
+          },
+        });
+      }
     }
 
     const activeMembership = user.memberships[0];
@@ -152,12 +205,14 @@ export async function GET(request: Request) {
       teamRole: (activeMembership?.role as "LEADER" | "MEMBER") || null,
     };
 
+    // 8. Establish secure application session
     await setSessionCookie(sessionUser);
 
+    // 9. Redirect to contestant registration if no team yet, else destination
     const destination = !sessionUser.teamId ? "/register" : redirectTarget;
     return NextResponse.redirect(new URL(destination, request.url));
   } catch (err) {
-    console.error("OIDC callback handling exception:", err);
+    console.error("OIDC callback exception:", err);
     return NextResponse.redirect(
       new URL("/?error=Authentication+processing+failure", request.url)
     );

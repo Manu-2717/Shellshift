@@ -221,3 +221,55 @@ describe("Advanced VFS Commands: head, tail, grep, find, echo", () => {
   });
 });
 
+describe("Familiar read-only shell utilities", () => {
+  it("supports system identity commands without leaving the virtual sandbox", () => {
+    const vfs = createInitialVfs();
+    expect(executeCommand(vfs, "whoami").output).toBe("player");
+    expect(executeCommand(vfs, "hostname").output).toBe("shellshift");
+    expect(executeCommand(vfs, "id").output).toContain("uid=1000(player)");
+    expect(executeCommand(vfs, "uname -a").output).toContain("Linux shellshift");
+  });
+
+  it("supports file inspection and wc counts", () => {
+    const vfs = createInitialVfs({ "/workspace/note.txt": "one two\nthree" });
+    expect(executeCommand(vfs, "file note.txt").output).toBe("note.txt: ASCII text");
+    expect(executeCommand(vfs, "wc note.txt").output).toBe("2 3 13 note.txt");
+    expect(executeCommand(vfs, "wc -l note.txt").output).toBe("2 note.txt");
+  });
+
+  it("supports common path, metadata, environment, and command discovery utilities", () => {
+    const vfs = createInitialVfs({ "/workspace/docs/note.txt": "hello world" });
+    expect(executeCommand(vfs, "basename /workspace/docs/note.txt .txt").output).toBe("note");
+    expect(executeCommand(vfs, "dirname /workspace/docs/note.txt").output).toBe("/workspace/docs");
+    expect(executeCommand(vfs, "stat docs/note.txt").output).toContain("regular file");
+    expect(executeCommand(vfs, "du -h docs").output).toMatch(/^1K/);
+    expect(executeCommand(vfs, "printenv HOME").output).toBe("/workspace");
+    expect(executeCommand(vfs, "which grep").output).toBe("/usr/bin/grep");
+    expect(executeCommand(vfs, "type grep").output).toContain("virtual shell command");
+    expect(executeCommand(vfs, "false").exitCode).toBe(1);
+  });
+
+  it("supports common single-file text processing utilities", () => {
+    const vfs = createInitialVfs({
+      "/workspace/values.txt": "3,pear\n1,apple\n1,apple\n2,banana",
+    });
+    expect(executeCommand(vfs, "sort values.txt").output.split("\n")[0]).toBe("1,apple");
+    expect(executeCommand(vfs, "uniq -c values.txt").output).toContain("2 1,apple");
+    expect(executeCommand(vfs, "cut -d, -f2 values.txt").output).toBe("pear\napple\napple\nbanana");
+    expect(executeCommand(vfs, "nl values.txt").output).toContain("     1\t3,pear");
+    expect(executeCommand(vfs, "tac values.txt").output.split("\n")[0]).toBe("2,banana");
+    expect(executeCommand(vfs, "rev values.txt").output.split("\n")[0]).toBe("raep,3");
+  });
+
+  it("removes only empty directories with rmdir", () => {
+    const vfs = createInitialVfs({
+      "/workspace/empty/.keep": "temporary",
+      "/workspace/full/data.txt": "data",
+    });
+    expect(executeCommand(vfs, "rm empty/.keep").exitCode).toBe(0);
+    expect(executeCommand(vfs, "rmdir empty").exitCode).toBe(0);
+    expect(getNode(vfs.root, "/workspace/empty")).toBeNull();
+    expect(executeCommand(vfs, "rmdir full").output).toContain("Directory not empty");
+  });
+});
+

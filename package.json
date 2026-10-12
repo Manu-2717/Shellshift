@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:push": "prisma db push",
-    "db:seed": "node --loader ts-node/esm prisma/seed.ts || npx tsx prisma/seed.ts || node scripts/seed.mjs"
+    "db:seed": "node --loader ts-node/esm prisma/seed.ts || npx tsx prisma/seed.ts || node scripts/seed.mjs",
+    "simulate": "tsx scripts/simulate-competition.ts",
+    "oidc:check": "tsx scripts/check-oidc.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
