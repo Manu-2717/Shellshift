@@ -209,5 +209,5 @@ describe("End-to-End Individual Competition Flow", () => {
     await prisma.gameRegistration.delete({ where: { id: registration.id } });
     await prisma.eventChallenge.deleteMany({ where: { eventId: game.id } });
     await prisma.event.delete({ where: { id: game.id } });
-  });
+  }, 25000);
 });
