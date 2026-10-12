@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   },
   description:
     "Decode clues, discover remapped Linux commands, and race through a safe simulated shell.",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
