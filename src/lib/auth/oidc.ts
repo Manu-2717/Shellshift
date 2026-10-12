@@ -74,11 +74,16 @@ export function normalizeIssuer(issuer: string): string {
  * Returns OIDC configuration populated from environment variables with production defaults.
  */
 export function getOidcConfig(): OidcConfig {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const defaultRedirectUri = `${baseUrl.replace(/\/+$/, "")}/api/auth/callback`;
+
   return {
     issuer: normalizeIssuer(process.env.OIDC_ISSUER || "https://oidc.fossclub.tech"),
     clientId: process.env.OIDC_CLIENT_ID || "shellshift",
     clientSecret: process.env.OIDC_CLIENT_SECRET || "",
-    redirectUri: process.env.OIDC_REDIRECT_URI || "http://localhost:3000/api/auth/callback",
+    redirectUri: process.env.OIDC_REDIRECT_URI || defaultRedirectUri,
     scopes: process.env.OIDC_SCOPES || "openid profile email club",
   };
 }

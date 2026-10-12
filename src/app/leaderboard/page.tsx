@@ -7,22 +7,29 @@ import { LeaderboardView, LeaderboardEntry } from "./LeaderboardView";
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
-  const session = await getSession();
+  const session = await getSession().catch(() => null);
 
-  const totalChallenges = await prisma.challenge.count({
-    where: { isPublished: true },
-  });
+  let totalChallenges = 0;
+  let allRuns: any[] = [];
 
-  const allRuns = await prisma.run.findMany({
-    where: {
-      status: "COMPLETED",
-      isRanked: true,
-    },
-    include: {
-      user: true,
-    },
-    orderBy: [{ completedAt: "asc" }],
-  });
+  try {
+    totalChallenges = await prisma.challenge.count({
+      where: { isPublished: true },
+    });
+
+    allRuns = await prisma.run.findMany({
+      where: {
+        status: "COMPLETED",
+        isRanked: true,
+      },
+      include: {
+        user: true,
+      },
+      orderBy: [{ completedAt: "asc" }],
+    });
+  } catch (err) {
+    console.error("[Leaderboard] Database query notice:", (err as Error)?.message || err);
+  }
 
   interface TeamAgg extends LeaderboardEntry {
     challenges: Record<string, { score: number; durationMs: number }>;
