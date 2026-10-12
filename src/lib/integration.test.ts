@@ -278,6 +278,6 @@ describe("Database & Competition Integrity Integration Tests", () => {
 
     expect(leaderboardEntry?.status).toBe("COMPLETED");
     expect(leaderboardEntry?.durationMs).toBeGreaterThanOrEqual(0);
-    expect(leaderboardEntry?.team.name).toBe(testTeam1.name);
+    expect(leaderboardEntry?.team?.name).toBe(testTeam1.name);
   });
 });

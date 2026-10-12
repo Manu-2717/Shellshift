@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { sanitizeChallengeForPlayer } from "../../challenges/route";
 import { evaluateObjective } from "@/lib/vfs/evaluator";
-import { ObjectiveConfig, VfsDirectory, VfsNode, VfsState } from "@/lib/vfs/types";
+import { ObjectiveConfig, VfsDirectory, VfsState } from "@/lib/vfs/types";
 
 function extractTreeList(dir: VfsDirectory, basePath: string = ""): Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> {
   const items: Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> = [];
@@ -35,7 +35,8 @@ export async function GET(
   const run = await prisma.run.findUnique({
     where: { id: runId },
     include: {
-      team: { select: { id: true, name: true } },
+      user: { select: { id: true, name: true } },
+      event: true,
       challenge: {
         include: {
           hints: {
@@ -53,8 +54,8 @@ export async function GET(
     return NextResponse.json({ error: "Run not found." }, { status: 404 });
   }
 
-  if (run.teamId !== session.teamId && session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden: Run belongs to another team." }, { status: 403 });
+  if (run.userId !== session.id && session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden: Run belongs to another player." }, { status: 403 });
   }
 
   const nextChallenge = await prisma.challenge.findFirst({
@@ -134,7 +135,7 @@ export async function GET(
       difficultyMultiplier: run.difficultyMultiplier,
       finalScore: run.finalScore,
       scoringBreakdown: parsedBreakdown,
-      team: run.team,
+      player: run.user,
       challenge: sanitizeChallengeForPlayer(run.challenge),
       nextChallenge: nextChallenge || null,
       objectiveEvaluation: evaluation,

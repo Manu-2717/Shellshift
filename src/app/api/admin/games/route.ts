@@ -13,6 +13,6 @@ export async function POST(request: Request) {
   const session = await getSession();
   if (session?.role !== "ADMIN") return Response.json({ error: "Forbidden" }, { status: 403 });
   const result = await createGameDraft(await request.json(), session.id);
-  return Response.json(result, { status: result.game ? 201 : 400 });
+  return Response.json(result, { status: "game" in result ? 201 : 400 });
 }
 

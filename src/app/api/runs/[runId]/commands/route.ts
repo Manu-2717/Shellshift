@@ -6,6 +6,7 @@ import { evaluateObjective } from "@/lib/vfs/evaluator";
 import { CommandMapping, ObjectiveConfig, VfsState } from "@/lib/vfs/types";
 import { rateLimit } from "@/lib/rateLimit";
 import { calculateRunScore } from "@/lib/scoring/scoringEngine";
+import { evaluateRunAccess } from "@/lib/games/runAccess";
 
 export async function POST(
   request: Request,
@@ -14,9 +15,9 @@ export async function POST(
   const { runId } = await params;
   const session = await getSession();
 
-  if (!session || !session.teamId) {
+  if (!session) {
     return NextResponse.json(
-      { error: "Unauthorized. Please authenticate and register with a team." },
+      { error: "Unauthorized. Please authenticate and register as a contestant." },
       { status: 401 }
     );
   }
@@ -45,17 +46,15 @@ export async function POST(
     // Fetch run and challenge
     const run = await prisma.run.findUnique({
       where: { id: runId },
-      include: { challenge: true },
+      include: { challenge: true, event: true },
     });
 
     if (!run) {
       return NextResponse.json({ error: "Run not found." }, { status: 404 });
     }
 
-    // Verify team ownership
-    if (run.teamId !== session.teamId && session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Access denied. Run belongs to another team." }, { status: 403 });
-    }
+    const access = evaluateRunAccess(run, session);
+    if (access !== "OK") return NextResponse.json({ error: access }, { status: access === "RUN_FORBIDDEN" ? 403 : 409 });
 
     // Check if run is already completed
     if (run.status === "COMPLETED") {
@@ -77,13 +76,7 @@ export async function POST(
     }
 
     // Verify event status
-    const event = await prisma.event.findFirst();
-    if (event && event.status !== "ACTIVE") {
-      return NextResponse.json(
-        { error: `Event is currently ${event.status.toLowerCase()}. Command execution halted.` },
-        { status: 403 }
-      );
-    }
+    const event = run.event;
 
     const now = new Date();
     const timeLimitSeconds = run.challenge.timeLimitSeconds || 1200;
@@ -215,30 +208,39 @@ export async function POST(
     const evaluation = evaluateObjective(vfsState, objectiveConfig, nextCommandCount);
 
     // Intermediate Objective Scoring:
-    // Atomically persist verified objectives; unique constraint prevents duplicate points
+    // Persist verified objectives without triggering duplicate unique constraint errors
     const availableObjectives = (objectiveConfig.rules || []).map((r, idx) => ({
       id: r.id || `rule-${idx}`,
       description: r.description,
       points: r.points || 0,
     }));
 
+    const existingCompletions = await prisma.objectiveCompletion.findMany({
+      where: { runId: run.id },
+    });
+    const completedSet = new Set(existingCompletions.map((c) => c.objectiveId));
+
     for (let i = 0; i < evaluation.details.length; i++) {
       const detail = evaluation.details[i];
       if (detail.passed) {
         const objId = detail.id || `rule-${i}`;
-        const pts = detail.points || 0;
-        try {
-          await prisma.objectiveCompletion.create({
-            data: {
-              runId: run.id,
-              objectiveId: objId,
-              ruleIndex: i,
-              pointsAwarded: pts,
-              completedAt: now,
-            },
-          });
-        } catch {
-          // Already recorded
+        if (!completedSet.has(objId)) {
+          const pts = detail.points || 0;
+          try {
+            const created = await prisma.objectiveCompletion.create({
+              data: {
+                runId: run.id,
+                objectiveId: objId,
+                ruleIndex: i,
+                pointsAwarded: pts,
+                completedAt: now,
+              },
+            });
+            completedSet.add(objId);
+            existingCompletions.push(created);
+          } catch {
+            // Handled concurrency / already recorded
+          }
         }
       }
     }
@@ -257,9 +259,7 @@ export async function POST(
       finalDurationMs = now.getTime() - run.startedAt.getTime();
 
       // Retrieve all verified milestones and used hints
-      const allCompletions = await prisma.objectiveCompletion.findMany({
-        where: { runId: run.id },
-      });
+      const allCompletions = existingCompletions;
       const allHints = await prisma.hintUsage.findMany({
         where: { runId: run.id },
         include: { hint: true },
@@ -277,20 +277,6 @@ export async function POST(
         config: scoringConfig,
         objectives: availableObjectives,
       });
-
-      // MODE A: FIRST_FINISH Live Race Atomic Winner Claim
-      if (event && event.mode === "FIRST_FINISH" && !event.winnerTeamId) {
-        await prisma.event.updateMany({
-          where: {
-            id: event.id,
-            winnerTeamId: null,
-          },
-          data: {
-            winnerTeamId: session.teamId,
-            winnerClaimedAt: now,
-          },
-        });
-      }
 
       // ATOMIC CONDITIONAL UPDATE:
       // Prevents concurrent race condition where two finishing commands complete simultaneously.
@@ -322,9 +308,7 @@ export async function POST(
       }
     } else {
       // In-progress update: calculate current verified progress
-      const allCompletions = await prisma.objectiveCompletion.findMany({
-        where: { runId: run.id },
-      });
+      const allCompletions = existingCompletions;
       const allHints = await prisma.hintUsage.findMany({
         where: { runId: run.id },
         include: { hint: true },

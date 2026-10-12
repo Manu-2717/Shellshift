@@ -9,20 +9,20 @@ export async function POST(
   const { runId, hintId } = await params;
   const session = await getSession();
 
-  if (!session || !session.teamId) {
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   const run = await prisma.run.findUnique({
-    where: { id: runId },
+    where: { id: runId }, include: { event: true },
   });
 
   if (!run) {
     return NextResponse.json({ error: "Run not found." }, { status: 404 });
   }
 
-  if (run.teamId !== session.teamId && session.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden: Run belongs to another team." }, { status: 403 });
+  if (run.userId !== session.id && session.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden: Run belongs to another player." }, { status: 403 });
   }
 
   if (run.status !== "IN_PROGRESS") {

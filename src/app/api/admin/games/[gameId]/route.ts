@@ -15,6 +15,6 @@ export async function PATCH(request: Request, context: RouteContext<"/api/admin/
   if (session?.role !== "ADMIN") return Response.json({ error: "Forbidden" }, { status: 403 });
   const { gameId } = await context.params;
   const result = await updateGameDraft(gameId, await request.json(), session.id);
-  return Response.json(result, { status: result.game ? 200 : 400 });
+  return Response.json(result, { status: "game" in result ? 200 : 400 });
 }
 
