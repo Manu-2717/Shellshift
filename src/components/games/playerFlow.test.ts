@@ -1,0 +1,2 @@
+import { readFileSync } from "node:fs"; import { describe,expect,it } from "vitest";
+describe("individual player flow",()=>{it("covers registration waiting live and results actions",()=>{const s=readFileSync("src/components/games/GameAction.tsx","utf8");for(const copy of ["Register now","Registration opens soon","Enter waiting room","Start competing","View results"])expect(s).toContain(copy);expect(readFileSync("src/components/games/StandingsTable.tsx","utf8")).toContain("isViewer")})})
