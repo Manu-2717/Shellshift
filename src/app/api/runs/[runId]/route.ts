@@ -136,6 +136,7 @@ export async function GET(
       finalScore: run.finalScore,
       scoringBreakdown: parsedBreakdown,
       player: run.user,
+      game: run.event,
       challenge: sanitizeChallengeForPlayer(run.challenge),
       nextChallenge: nextChallenge || null,
       objectiveEvaluation: evaluation,

@@ -8,7 +8,6 @@ import {
   Check,
   Loader2,
   Lock,
-  Sparkles,
 } from "lucide-react";
 
 export interface TerminalLine {
@@ -21,7 +20,8 @@ export interface TerminalLine {
 
 interface TerminalProps {
   runId: string;
-  teamName: string;
+  teamName?: string;
+  playerName?: string;
   currentCwd: string;
   onCommandExecuted: (result: any) => void;
   disabled?: boolean;
@@ -29,7 +29,8 @@ interface TerminalProps {
 
 export function Terminal({
   runId,
-  teamName,
+  teamName = "player",
+  playerName,
   currentCwd,
   onCommandExecuted,
   disabled = false,
@@ -38,12 +39,12 @@ export function Terminal({
     {
       id: "init-1",
       type: "system",
-      content: "ShellShift Cipher Shell v2.4 (Simulated Sandbox). Type 'help' for command listing.",
+      content: "ShellShift Cipher Shell v2.5. Type 'help' for commands.",
     },
     {
       id: "init-2",
       type: "system",
-      content: "WARNING: Command tokens may have remapped meanings. Decode cipher clues to discover active operations.",
+      content: "Command tokens may be remapped. Decode the clues before executing.",
     },
   ]);
 
@@ -52,7 +53,6 @@ export function Terminal({
   const [historyIdx, setHistoryIdx] = useState<number>(-1);
   const [isExecuting, setIsExecuting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isFocused, setIsFocused] = useState(true);
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,98 +84,111 @@ export function Terminal({
     }
   };
 
+  const handleHistoryUp = () => {
+    if (history.length === 0) return;
+    const nextIdx = historyIdx === -1 ? history.length - 1 : Math.max(0, historyIdx - 1);
+    setHistoryIdx(nextIdx);
+    setInputVal(history[nextIdx] || "");
+  };
+
+  const handleHistoryDown = () => {
+    if (historyIdx === -1) return;
+    const nextIdx = historyIdx + 1;
+    if (nextIdx >= history.length) {
+      setHistoryIdx(-1);
+      setInputVal("");
+    } else {
+      setHistoryIdx(nextIdx);
+      setInputVal(history[nextIdx] || "");
+    }
+  };
+
+  const executeCommandString = async (cmdText: string) => {
+    if (disabled || isExecuting) return;
+    const cmd = cmdText.trim();
+    if (!cmd) return;
+
+    setHistory((prev) => [...prev, cmd]);
+    setHistoryIdx(-1);
+    setInputVal("");
+
+    const cmdId = "cmd-" + Date.now();
+    setLines((prev) => [
+      ...prev,
+      {
+        id: cmdId,
+        type: "command",
+        content: cmd,
+        cwd: currentCwd,
+      },
+    ]);
+
+    if (cmd.toLowerCase() === "clear") {
+      setLines([]);
+      return;
+    }
+
+    setIsExecuting(true);
+    try {
+      const res = await fetch(`/api/runs/${runId}/commands`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: cmd }),
+      });
+
+      const data = await res.json();
+
+      if (data.clearScreen) {
+        setLines([]);
+      } else if (data.output) {
+        setLines((prev) => [
+          ...prev,
+          {
+            id: "out-" + Date.now(),
+            type: data.exitCode !== 0 ? "error" : "output",
+            content: data.output,
+          },
+        ]);
+      }
+
+      if (data.justCompleted) {
+        setLines((prev) => [
+          ...prev,
+          {
+            id: "win-" + Date.now(),
+            type: "system",
+            content: `[SUCCESS] Objective satisfied! Verified finish time: ${(data.durationMs / 1000).toFixed(2)}s. All conditions met.`,
+          },
+        ]);
+      }
+
+      onCommandExecuted(data);
+    } catch (err) {
+      setLines((prev) => [
+        ...prev,
+        {
+          id: "err-" + Date.now(),
+          type: "error",
+          content: `Network error processing command: ${(err as Error).message}`,
+        },
+      ]);
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
   const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled || isExecuting) return;
 
     if (e.key === "Enter") {
       e.preventDefault();
-      const cmd = inputVal;
-      if (!cmd.trim() && cmd === "") return;
-
-      setHistory((prev) => [...prev, cmd]);
-      setHistoryIdx(-1);
-      setInputVal("");
-
-      const cmdId = "cmd-" + Date.now();
-      setLines((prev) => [
-        ...prev,
-        {
-          id: cmdId,
-          type: "command",
-          content: cmd,
-          cwd: currentCwd,
-        },
-      ]);
-
-      if (cmd.trim().toLowerCase() === "clear") {
-        setLines([]);
-        return;
-      }
-
-      setIsExecuting(true);
-      try {
-        const res = await fetch(`/api/runs/${runId}/commands`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ command: cmd }),
-        });
-
-        const data = await res.json();
-
-        if (data.clearScreen) {
-          setLines([]);
-        } else if (data.output) {
-          setLines((prev) => [
-            ...prev,
-            {
-              id: "out-" + Date.now(),
-              type: data.exitCode !== 0 ? "error" : "output",
-              content: data.output,
-            },
-          ]);
-        }
-
-        if (data.justCompleted) {
-          setLines((prev) => [
-            ...prev,
-            {
-              id: "win-" + Date.now(),
-              type: "system",
-              content: `🏆 OBJECTIVE SATISFIED! Verified finish time: ${(data.durationMs / 1000).toFixed(2)}s. All conditions met!`,
-            },
-          ]);
-        }
-
-        onCommandExecuted(data);
-      } catch (err) {
-        setLines((prev) => [
-          ...prev,
-          {
-            id: "err-" + Date.now(),
-            type: "error",
-            content: `Network error processing command: ${(err as Error).message}`,
-          },
-        ]);
-      } finally {
-        setIsExecuting(false);
-      }
+      executeCommandString(inputVal);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (history.length === 0) return;
-      const nextIdx = historyIdx === -1 ? history.length - 1 : Math.max(0, historyIdx - 1);
-      setHistoryIdx(nextIdx);
-      setInputVal(history[nextIdx] || "");
+      handleHistoryUp();
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (historyIdx === -1) return;
-      const nextIdx = historyIdx + 1;
-      if (nextIdx >= history.length) {
-        setHistoryIdx(-1);
-        setInputVal("");
-      } else {
-        setHistoryIdx(nextIdx);
-        setInputVal(history[nextIdx] || "");
-      }
+      handleHistoryDown();
     } else if (e.key === "l" && e.ctrlKey) {
       e.preventDefault();
       handleClear();
@@ -186,32 +199,32 @@ export function Terminal({
     return cwd.startsWith("/workspace") ? "~" + cwd.slice("/workspace".length) : cwd;
   };
 
-  const safeTeam = (teamName || "player").toLowerCase().replace(/\s+/g, "_");
+  const safePlayer = (playerName || teamName || "player").toLowerCase().replace(/\s+/g, "_");
 
   return (
     <div
       onClick={handleContainerClick}
-      className={`flex flex-col h-full bg-[#08080a] border rounded-lg overflow-hidden font-mono text-xs select-text shadow-2xl transition-colors ${
+      className={`flex flex-col h-full bg-[#09090b] border rounded-lg overflow-hidden font-mono text-xs select-text shadow-2xl transition-colors ${
         disabled
           ? "border-emerald-600/40 opacity-95"
-          : "border-neutral-800 cursor-text"
+          : "border-[#27272a] cursor-text"
       }`}
     >
       {/* Terminal Title Bar */}
-      <div className="bg-[#121216] border-b border-neutral-800 px-3.5 py-2 flex items-center justify-between select-none shrink-0">
+      <div className="bg-[#121215] border-b border-[#27272a] px-3.5 py-2 flex items-center justify-between select-none shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
-            <span className="w-2.5 h-2.5 rounded-full bg-neutral-700" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
           </div>
 
-          <span className="text-neutral-300 font-medium text-[11px] flex items-center gap-1.5 ml-1">
+          <span className="text-[#fafafa] font-medium text-[11px] flex items-center gap-1.5 ml-1">
             <TerminalIcon className="w-3.5 h-3.5 text-cyan-400" />
             terminal — shiftsh
           </span>
 
-          <span className="text-[10px] text-neutral-400 bg-[#09090c] border border-neutral-800 px-2 py-0.5 rounded font-mono">
+          <span className="text-[10px] text-[#a1a1aa] bg-[#18181b] border border-[#27272a] px-2 py-0.5 rounded font-mono">
             cwd: {formatCwd()}
           </span>
         </div>
@@ -219,17 +232,17 @@ export function Terminal({
         <div className="flex items-center gap-2">
           {/* Status Indicator */}
           {disabled ? (
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800">
               <Lock className="w-3 h-3" />
               LOCKED
             </span>
           ) : isExecuting ? (
-            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 animate-pulse">
+            <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800 animate-pulse">
               <Loader2 className="w-3 h-3 animate-spin" />
               EXECUTING
             </span>
           ) : (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-neutral-900 text-neutral-400 border border-neutral-800">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#18181b] text-[#a1a1aa] border border-[#27272a]">
               READY
             </span>
           )}
@@ -237,7 +250,7 @@ export function Terminal({
           <button
             onClick={handleCopyHistory}
             type="button"
-            className="px-2 py-1 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors flex items-center gap-1 text-[10px]"
+            className="px-2 py-1 rounded bg-[#18181b] hover:bg-[#27272a] text-[#a1a1aa] hover:text-white border border-[#27272a] transition-colors flex items-center gap-1 text-[10px]"
             title="Copy terminal session"
           >
             {copied ? (
@@ -251,7 +264,7 @@ export function Terminal({
           <button
             onClick={handleClear}
             type="button"
-            className="p-1 rounded bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors"
+            className="p-1 rounded bg-[#18181b] hover:bg-[#27272a] text-[#a1a1aa] hover:text-white border border-[#27272a] transition-colors"
             title="Clear terminal buffer (Ctrl+L)"
           >
             <Trash2 className="w-3 h-3" />
@@ -266,8 +279,8 @@ export function Terminal({
             {line.type === "command" && (
               <div className="flex items-start gap-2 text-neutral-200">
                 <span className="shrink-0 font-semibold select-none">
-                  <span className="text-cyan-400">{safeTeam}</span>
-                  <span className="text-neutral-500">@shellshift:</span>
+                  <span className="text-cyan-400">{safePlayer}</span>
+                  <span className="text-[#a1a1aa]">@shellshift:</span>
                   <span className="text-emerald-400">{formatCwd(line.cwd)}</span>
                   <span className="text-white font-bold">$ </span>
                 </span>
@@ -275,7 +288,7 @@ export function Terminal({
               </div>
             )}
             {line.type === "output" && (
-              <pre className="text-neutral-200 whitespace-pre-wrap break-all font-mono text-[11.5px] sm:text-[12px] leading-relaxed pl-1">
+              <pre className="text-[#fafafa] whitespace-pre-wrap break-all font-mono text-[11.5px] sm:text-[12px] leading-relaxed pl-1">
                 {line.content}
               </pre>
             )}
@@ -301,10 +314,12 @@ export function Terminal({
             </span>
           </div>
         ) : (
-          <div className="flex items-start sm:items-center gap-2 pt-1.5 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-2 pt-1 text-xs">
             <span className="shrink-0 font-semibold select-none flex items-center">
-              <span className="text-cyan-400">{safeTeam}</span>
-              <span className="text-neutral-500">@shellshift:</span>
+              <span className="hidden sm:inline">
+                <span className="text-cyan-400">{safePlayer}</span>
+                <span className="text-[#a1a1aa]">@shellshift:</span>
+              </span>
               <span className="text-emerald-400">{formatCwd()}</span>
               <span className="text-white font-bold">$ </span>
             </span>
@@ -316,17 +331,15 @@ export function Terminal({
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
                 disabled={isExecuting}
                 autoFocus
                 spellCheck={false}
                 autoComplete="off"
-                className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400 text-xs font-medium placeholder-neutral-600"
+                className="w-full bg-transparent outline-none text-white font-mono caret-cyan-400 text-xs font-medium placeholder-[#52525b]"
                 placeholder={
                   isExecuting
                     ? "Evaluating in sandbox..."
-                    : "Type command (e.g. ls, cat clue.txt)..."
+                    : "Type command (e.g. ls, cat, cd)..."
                 }
               />
             </div>

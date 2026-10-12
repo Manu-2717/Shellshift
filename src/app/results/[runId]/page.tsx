@@ -112,10 +112,10 @@ export default async function ResultsPage({
               }`}
             >
               {isCompleted
-                ? "Server-Verified Completion"
+                ? "Individual Server-Verified Completion"
                 : isAbandoned
-                ? "Mission Expired / Incomplete"
-                : "Mission In Progress"}
+                ? "Individual Mission Expired / Incomplete"
+                : "Individual Mission In Progress"}
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
               {run.challenge.title}
