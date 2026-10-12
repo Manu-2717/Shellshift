@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "node --loader ts-node/esm prisma/seed.ts || npx tsx prisma/seed.ts || node scripts/seed.mjs",
     "simulate": "tsx scripts/simulate-competition.ts",
