@@ -115,14 +115,16 @@ export function GameDangerZone({
         ) : (
           <div className="grid gap-3">
             <p className="text-sm text-zinc-400">
-              Permanent deletion is only available for unused draft games with no
-              registrations or runs. This competition preserves history through
-              archival.
+              Permanent deletion is only available for unused draft games with
+              no registrations or runs. This competition preserves history
+              through archival.
             </p>
             {status !== "ARCHIVED" ? (
               <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-black/40 p-4 sm:flex-row sm:items-center">
                 <div>
-                  <h3 className="font-medium text-white">Archive competition</h3>
+                  <h3 className="font-medium text-white">
+                    Archive competition
+                  </h3>
                   <p className="mt-1 text-sm text-zinc-400">
                     Close the event and remove it from active schedules while
                     retaining all registrations, runs, and scores.
@@ -210,8 +212,8 @@ export function GameDangerZone({
       >
         <div className="grid gap-4">
           <p className="text-sm text-zinc-300">
-            Archiving will mark this competition as archived. Registrations, runs,
-            and scores will remain preserved in history.
+            Archiving will mark this competition as archived. Registrations,
+            runs, and scores will remain preserved in history.
           </p>
 
           {error ? <Notice tone="danger">{error}</Notice> : null}

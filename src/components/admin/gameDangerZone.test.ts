@@ -27,10 +27,7 @@ describe("game lifecycle controls and danger zone UI", () => {
   });
 
   it("is integrated into the game administration page", () => {
-    const page = readFileSync(
-      "src/app/admin/games/[gameId]/page.tsx",
-      "utf8",
-    );
+    const page = readFileSync("src/app/admin/games/[gameId]/page.tsx", "utf8");
     expect(page).toContain("GameDangerZone");
   });
 });

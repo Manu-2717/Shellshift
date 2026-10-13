@@ -21,13 +21,20 @@ const valid = {
 describe("game administration input", () => {
   it("normalizes UTC dates without changing instants", () => {
     const result = normalizeGameInput(valid);
-    expect(result.data?.startTime.toISOString()).toBe("2026-10-12T09:00:00.000Z");
+    expect(result.data?.startTime.toISOString()).toBe(
+      "2026-10-12T09:00:00.000Z",
+    );
     expect(result.data?.timezone).toBe("Asia/Kolkata");
   });
 
   it("rejects invalid IANA zones and invalid schedules", () => {
-    expect(normalizeGameInput({ ...valid, timezone: "Moon/Base" }).fieldErrors).toHaveProperty("timezone");
-    expect(normalizeGameInput({ ...valid, startsAt: "2026-10-09T09:00:00Z" }).fieldErrors).toHaveProperty("startsAt");
+    expect(
+      normalizeGameInput({ ...valid, timezone: "Moon/Base" }).fieldErrors,
+    ).toHaveProperty("timezone");
+    expect(
+      normalizeGameInput({ ...valid, startsAt: "2026-10-09T09:00:00Z" })
+        .fieldErrors,
+    ).toHaveProperty("startsAt");
   });
 
   it("rejects duplicate challenge IDs", () => {

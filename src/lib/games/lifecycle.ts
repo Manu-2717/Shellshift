@@ -25,7 +25,9 @@ export function deriveGamePhase(game: GameSchedule, now: Date): GamePhase {
   return "PUBLISHED";
 }
 
-export function validateGameSchedule(input: GameScheduleInput): ScheduleValidation {
+export function validateGameSchedule(
+  input: GameScheduleInput,
+): ScheduleValidation {
   const errors: ScheduleValidation["errors"] = {};
   const opens = input.registrationOpensAt.getTime();
   const closes = input.registrationClosesAt.getTime();
@@ -33,16 +35,24 @@ export function validateGameSchedule(input: GameScheduleInput): ScheduleValidati
   const ends = input.endsAt.getTime();
 
   if (![opens, closes, starts, ends].every(Number.isFinite)) {
-    return { valid: false, errors: { startsAt: "Enter valid schedule dates." } };
+    return {
+      valid: false,
+      errors: { startsAt: "Enter valid schedule dates." },
+    };
   }
-  if (closes <= opens) errors.registrationClosesAt = "Registration must close after it opens.";
-  else if (starts <= closes) errors.startsAt = "Competition must start after registration closes.";
-  else if (ends <= starts) errors.endsAt = "Competition must end after it starts.";
+  if (closes <= opens)
+    errors.registrationClosesAt = "Registration must close after it opens.";
+  else if (starts <= closes)
+    errors.startsAt = "Competition must start after registration closes.";
+  else if (ends <= starts)
+    errors.endsAt = "Competition must end after it starts.";
 
   return { valid: Object.keys(errors).length === 0, errors };
 }
 
-export function canTransitionGame(from: StoredGameStatus, to: StoredGameStatus): boolean {
+export function canTransitionGame(
+  from: StoredGameStatus,
+  to: StoredGameStatus,
+): boolean {
   return from === to || transitions[from].has(to);
 }
-

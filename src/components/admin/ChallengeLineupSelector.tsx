@@ -109,7 +109,8 @@ export function ChallengeLineupSelector({
                     </span>
                     <span className="ml-2 text-xs text-zinc-500">
                       {challenge.difficulty} ·{" "}
-                      {Math.round((challenge.timeLimitSeconds || 1200) / 60)} min
+                      {Math.round((challenge.timeLimitSeconds || 1200) / 60)}{" "}
+                      min
                     </span>
                   </div>
                 </div>

@@ -36,7 +36,8 @@ export function normalizeGameInput(input: GameAdminInput): {
 } {
   const fieldErrors: Record<string, string> = {};
   if (!input.name?.trim()) fieldErrors.name = "Enter a game name.";
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug || "")) fieldErrors.slug = "Use lowercase words separated by hyphens.";
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(input.slug || ""))
+    fieldErrors.slug = "Use lowercase words separated by hyphens.";
   try {
     new Intl.DateTimeFormat("en", { timeZone: input.timezone }).format();
   } catch {
@@ -53,8 +54,12 @@ export function normalizeGameInput(input: GameAdminInput): {
   Object.assign(fieldErrors, scheduleResult.errors);
   if (Object.keys(fieldErrors).length) return { fieldErrors };
 
-  if (input.challengeIds && new Set(input.challengeIds).size !== input.challengeIds.length) {
-    fieldErrors.challengeIds = "Each challenge may only appear once in a lineup.";
+  if (
+    input.challengeIds &&
+    new Set(input.challengeIds).size !== input.challengeIds.length
+  ) {
+    fieldErrors.challengeIds =
+      "Each challenge may only appear once in a lineup.";
   }
 
   return {
@@ -97,7 +102,8 @@ export function validateLineupChallenges(
 
 export function validatePublishableGame(input: GameAdminInput) {
   const fieldErrors: Record<string, string> = {};
-  if (!input.challengeIds?.length) fieldErrors.challengeIds = "Choose at least one published challenge.";
+  if (!input.challengeIds?.length)
+    fieldErrors.challengeIds = "Choose at least one published challenge.";
   return { valid: Object.keys(fieldErrors).length === 0, fieldErrors };
 }
 
@@ -111,21 +117,43 @@ export async function createGameDraft(input: GameAdminInput, actorId: string) {
       select: { id: true },
     });
     if (published.length !== challengeIds.length) {
-      return { fieldErrors: { challengeIds: "Hidden challenges cannot be added to a new lineup." } };
+      return {
+        fieldErrors: {
+          challengeIds: "Hidden challenges cannot be added to a new lineup.",
+        },
+      };
     }
   }
   const game = await prisma.$transaction(async (tx) => {
-    const created = await tx.event.create({ data: { ...data, status: "DRAFT", createdById: actorId } });
+    const created = await tx.event.create({
+      data: { ...data, status: "DRAFT", createdById: actorId },
+    });
     if (challengeIds.length) {
-      await tx.eventChallenge.createMany({ data: challengeIds.map((challengeId, order) => ({ eventId: created.id, challengeId, order })) });
+      await tx.eventChallenge.createMany({
+        data: challengeIds.map((challengeId, order) => ({
+          eventId: created.id,
+          challengeId,
+          order,
+        })),
+      });
     }
-    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_CREATED", details: JSON.stringify({ eventId: created.id }) } });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "GAME_CREATED",
+        details: JSON.stringify({ eventId: created.id }),
+      },
+    });
     return created;
   });
   return { game, fieldErrors: {} };
 }
 
-export async function updateGameDraft(gameId: string, input: GameAdminInput, actorId: string) {
+export async function updateGameDraft(
+  gameId: string,
+  input: GameAdminInput,
+  actorId: string,
+) {
   const normalized = normalizeGameInput(input);
   if (!normalized.data) return normalized;
   const { challengeIds, ...data } = normalized.data;
@@ -142,42 +170,93 @@ export async function updateGameDraft(gameId: string, input: GameAdminInput, act
         select: { id: true },
       });
       if (published.length !== newlyAdded.length) {
-        return { fieldErrors: { challengeIds: "Hidden challenges cannot be added to a new lineup." } };
+        return {
+          fieldErrors: {
+            challengeIds: "Hidden challenges cannot be added to a new lineup.",
+          },
+        };
       }
     }
   }
   const game = await prisma.$transaction(async (tx) => {
     const updated = await tx.event.update({ where: { id: gameId }, data });
     await tx.eventChallenge.deleteMany({ where: { eventId: gameId } });
-    if (challengeIds.length) await tx.eventChallenge.createMany({ data: challengeIds.map((challengeId, order) => ({ eventId: gameId, challengeId, order })) });
-    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_UPDATED", details: JSON.stringify({ eventId: gameId }) } });
+    if (challengeIds.length)
+      await tx.eventChallenge.createMany({
+        data: challengeIds.map((challengeId, order) => ({
+          eventId: gameId,
+          challengeId,
+          order,
+        })),
+      });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "GAME_UPDATED",
+        details: JSON.stringify({ eventId: gameId }),
+      },
+    });
     return updated;
   });
   return { game, fieldErrors: {} };
 }
 
 export async function publishGame(gameId: string, actorId: string) {
-  const game = await prisma.event.findUnique({ where: { id: gameId }, include: { challenges: { include: { challenge: true } } } });
+  const game = await prisma.event.findUnique({
+    where: { id: gameId },
+    include: { challenges: { include: { challenge: true } } },
+  });
   if (!game) return { error: "Game not found." };
   const fieldErrors: Record<string, string> = {};
-  if (!game.challenges.some((item) => item.challenge.isPublished)) fieldErrors.challengeIds = "Choose at least one published challenge.";
-  if (!game.registrationOpensAt || !game.registrationClosesAt || !game.startTime || !game.endTime) fieldErrors.schedule = "Complete the game schedule.";
-  if (Object.keys(fieldErrors).length) return { error: "Game is not ready to publish.", fieldErrors };
+  if (!game.challenges.some((item) => item.challenge.isPublished))
+    fieldErrors.challengeIds = "Choose at least one published challenge.";
+  if (
+    !game.registrationOpensAt ||
+    !game.registrationClosesAt ||
+    !game.startTime ||
+    !game.endTime
+  )
+    fieldErrors.schedule = "Complete the game schedule.";
+  if (Object.keys(fieldErrors).length)
+    return { error: "Game is not ready to publish.", fieldErrors };
   const updated = await prisma.$transaction(async (tx) => {
-    const result = await tx.event.update({ where: { id: gameId }, data: { status: "PUBLISHED" } });
-    await tx.auditLog.create({ data: { userId: actorId, action: "GAME_PUBLISHED", details: JSON.stringify({ eventId: gameId }) } });
+    const result = await tx.event.update({
+      where: { id: gameId },
+      data: { status: "PUBLISHED" },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "GAME_PUBLISHED",
+        details: JSON.stringify({ eventId: gameId }),
+      },
+    });
     return result;
   });
   return { game: updated };
 }
 
-export async function transitionGameStatus(gameId: string, status: StoredGameStatus, actorId: string) {
+export async function transitionGameStatus(
+  gameId: string,
+  status: StoredGameStatus,
+  actorId: string,
+) {
   const current = await prisma.event.findUnique({ where: { id: gameId } });
   if (!current) return { error: "Game not found." };
-  if (!canTransitionGame(current.status as StoredGameStatus, status)) return { error: `Cannot move ${current.status} to ${status}.` };
+  if (!canTransitionGame(current.status as StoredGameStatus, status))
+    return { error: `Cannot move ${current.status} to ${status}.` };
   const game = await prisma.$transaction(async (tx) => {
-    const updated = await tx.event.update({ where: { id: gameId }, data: { status } });
-    await tx.auditLog.create({ data: { userId: actorId, action: `GAME_${status}`, details: JSON.stringify({ eventId: gameId }) } });
+    const updated = await tx.event.update({
+      where: { id: gameId },
+      data: { status },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: `GAME_${status}`,
+        details: JSON.stringify({ eventId: gameId }),
+      },
+    });
     return updated;
   });
   return { game };
@@ -284,4 +363,3 @@ export async function archiveGame(gameId: string, actorId: string) {
   });
   return { game: updated, status: 200 as const };
 }
-

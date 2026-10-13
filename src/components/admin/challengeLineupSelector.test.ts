@@ -24,7 +24,10 @@ describe("challenge lineup selector component", () => {
   });
 
   it("is integrated into the game builder", () => {
-    const builder = readFileSync("src/components/admin/GameBuilder.tsx", "utf8");
+    const builder = readFileSync(
+      "src/components/admin/GameBuilder.tsx",
+      "utf8",
+    );
     expect(builder).toContain("ChallengeLineupSelector");
   });
 });
