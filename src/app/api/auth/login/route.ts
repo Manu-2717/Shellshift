@@ -9,6 +9,7 @@ import {
   getOidcConfig,
   isMockAuthAllowed,
   isMockAdminAllowed,
+  resolvePostLoginDestination,
   validateOidcConfig,
 } from "@/lib/auth/oidc";
 import { SessionUser, setSessionCookie } from "@/lib/auth/session";
@@ -100,7 +101,11 @@ export async function GET(request: Request) {
 
     await setSessionCookie(sessionUser);
 
-    const destination = !sessionUser.teamId ? "/register" : redirectTarget;
+    const destination = resolvePostLoginDestination(
+      sessionUser.role,
+      sessionUser.teamId,
+      redirectTarget
+    );
     return NextResponse.redirect(new URL(destination, request.url));
   }
 
