@@ -1,12 +1,19 @@
 import { getSession } from "@/lib/auth/session";
-import { transitionGameStatus } from "@/lib/games/service";
+import { archiveGame, transitionGameStatus } from "@/lib/games/service";
 
-export async function PATCH(request: Request, context: RouteContext<"/api/admin/games/[gameId]/status">) {
+export async function PATCH(
+  request: Request,
+  context: RouteContext<"/api/admin/games/[gameId]/status">,
+) {
   const session = await getSession();
-  if (session?.role !== "ADMIN") return Response.json({ error: "Forbidden" }, { status: 403 });
+  if (session?.role !== "ADMIN")
+    return Response.json({ error: "Forbidden" }, { status: 403 });
   const { gameId } = await context.params;
   const { status } = await request.json();
+  if (status === "ARCHIVED") {
+    const result = await archiveGame(gameId, session.id);
+    return Response.json(result, { status: result.status });
+  }
   const result = await transitionGameStatus(gameId, status, session.id);
   return Response.json(result, { status: result.game ? 200 : 400 });
 }
-
