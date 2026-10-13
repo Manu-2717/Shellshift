@@ -15,6 +15,8 @@ import {
   isMockAuthAllowed,
   OidcConfig,
   OidcDiscoveryMetadata,
+  resolvePostLoginDestination,
+  resolveShellShiftRole,
   validateOidcConfig,
   verifyIdToken,
 } from "./oidc";
@@ -429,29 +431,37 @@ describe("USAR FOSS OpenID Connect (OIDC) Integration Suite", () => {
   });
 
   // --------------------------------------------------------------------------
-  // 12. A club member does not automatically become a ShellShift administrator
+  // 12. Main website administrators become ShellShift administrators
   // --------------------------------------------------------------------------
-  it("12. verifies club membership does NOT grant ShellShift administrator privileges", () => {
-    // Normal club member with member: true and provider role: "admin"
-    const memberClaims = {
-      member: true,
-      role: "admin",
-      preferred_username: "club_leader",
-    };
+  it("12. grants admin only from a verified member ADMIN role or an explicit ShellShift grant", () => {
+    const originalAdminEmails = process.env.ADMIN_EMAILS;
+    process.env.ADMIN_EMAILS = "admin@shellshift.io";
 
-    const regularEmail = "member@fossclub.tech";
-    const isAdmin = checkIsAdmin(regularEmail, memberClaims);
-    expect(isAdmin).toBe(false);
+    try {
+      expect(checkIsAdmin("website-admin@fossclub.tech", { member: true, role: "ADMIN" })).toBe(true);
+      expect(checkIsAdmin("maintainer@fossclub.tech", { member: true, role: "MAINTAINER" })).toBe(false);
+      expect(checkIsAdmin("outsider@example.com", { member: false, role: "ADMIN" })).toBe(false);
+      expect(checkIsAdmin("member@fossclub.tech", { member: true, role: "admin" })).toBe(false);
+      expect(checkIsAdmin("admin@shellshift.io", { member: false, role: null })).toBe(true);
+      expect(
+        checkIsAdmin("anyone@fossclub.tech", {
+          "https://shellshift.io/roles": ["ADMIN"],
+        })
+      ).toBe(true);
+    } finally {
+      process.env.ADMIN_EMAILS = originalAdminEmails;
+    }
+  });
 
-    // ShellShift server ADMIN_EMAILS allowlist
-    const adminEmail = "admin@shellshift.io";
-    expect(checkIsAdmin(adminEmail, memberClaims)).toBe(true);
+  it("12b. synchronizes stored access when an administrator is promoted or demoted", () => {
+    expect(resolveShellShiftRole(true)).toBe("ADMIN");
+    expect(resolveShellShiftRole(false)).toBe("USER");
+  });
 
-    // Explicit ShellShift custom role claim
-    const customAdminClaim = {
-      "https://shellshift.io/roles": ["ADMIN"],
-    };
-    expect(checkIsAdmin("anyone@fossclub.tech", customAdminClaim)).toBe(true);
+  it("12c. sends administrators to their requested page without requiring competitor registration", () => {
+    expect(resolvePostLoginDestination("ADMIN", null, "/admin")).toBe("/admin");
+    expect(resolvePostLoginDestination("USER", null, "/lobby")).toBe("/register");
+    expect(resolvePostLoginDestination("USER", "team-1", "/lobby")).toBe("/lobby");
   });
 
   // --------------------------------------------------------------------------

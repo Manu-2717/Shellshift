@@ -433,8 +433,8 @@ export function isMockAdminAllowed(): boolean {
  *
  * Security rules:
  * 1. Matches against server-side ADMIN_EMAILS allowlist.
- * 2. Matches against explicitly configured, ShellShift-scoped role claims.
- * 3. Never grants ADMIN merely because provider returns member=true or generic role claims.
+ * 2. Trusts the verified USAR FOSS club role only for active members whose role is exactly ADMIN.
+ * 3. Matches against explicitly configured, ShellShift-scoped role claims.
  */
 export function checkIsAdmin(email?: string | null, claims?: Record<string, unknown>): boolean {
   // 1. Verify against server-side ADMIN_EMAILS allowlist
@@ -450,6 +450,10 @@ export function checkIsAdmin(email?: string | null, claims?: Record<string, unkn
 
   // 2. Verify against explicitly trusted ShellShift-scoped claims
   if (claims) {
+    if (claims.member === true && claims.role === "ADMIN") {
+      return true;
+    }
+
     const shellShiftRoles =
       claims["https://shellshift.io/roles"] ||
       claims["shellshift_roles"];
@@ -459,4 +463,20 @@ export function checkIsAdmin(email?: string | null, claims?: Record<string, unkn
   }
 
   return false;
+}
+
+/** Returns the persisted ShellShift role for the latest verified identity. */
+export function resolveShellShiftRole(
+  isAdmin: boolean
+): "USER" | "ADMIN" {
+  return isAdmin ? "ADMIN" : "USER";
+}
+
+/** Keeps competitor registration out of the administrator sign-in path. */
+export function resolvePostLoginDestination(
+  role: "USER" | "ADMIN",
+  teamId: string | null | undefined,
+  redirectTarget: string
+): string {
+  return role === "ADMIN" || teamId ? redirectTarget : "/register";
 }

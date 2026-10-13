@@ -7,6 +7,8 @@ import {
   exchangeAuthorizationCode,
   fetchUserInfo,
   getOidcConfig,
+  resolvePostLoginDestination,
+  resolveShellShiftRole,
   verifyIdToken,
 } from "@/lib/auth/oidc";
 import { SessionUser, setSessionCookie } from "@/lib/auth/session";
@@ -166,16 +168,17 @@ export async function GET(request: Request) {
         },
       });
     } else {
-      // User exists - preserve existing team memberships, progress, and history.
-      // Update email/name if changed, and promote to ADMIN if administrator allowlist applies.
+      // User exists - preserve memberships, progress, and history while synchronizing
+      // access with the latest verified website role or local administrator allowlist.
       const updateData: { email?: string | null; name?: string; role?: string } = {};
 
       if (email && email !== user.email) {
         updateData.email = email;
       }
 
-      if (isAdmin && user.role !== "ADMIN") {
-        updateData.role = "ADMIN";
+      const resolvedRole = resolveShellShiftRole(isAdmin);
+      if (user.role !== resolvedRole) {
+        updateData.role = resolvedRole;
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -209,7 +212,11 @@ export async function GET(request: Request) {
     await setSessionCookie(sessionUser);
 
     // 9. Redirect to contestant registration if no team yet, else destination
-    const destination = !sessionUser.teamId ? "/register" : redirectTarget;
+    const destination = resolvePostLoginDestination(
+      sessionUser.role,
+      sessionUser.teamId,
+      redirectTarget
+    );
     return NextResponse.redirect(new URL(destination, request.url));
   } catch (err) {
     console.error("OIDC callback exception:", err);
