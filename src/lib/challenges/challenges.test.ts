@@ -74,6 +74,22 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     expect(c3?.difficulty).toBe("HARD");
   });
 
+  it("uses concise beginner-friendly player instructions", () => {
+    const unexplainedJargon = /\b(?:infiltration|provisioning|enclave|sanitization|dispatch|breach)\b/i;
+
+    for (const challenge of SEED_CHALLENGES) {
+      expect(challenge.title.length, `${challenge.slug} needs a short title`).toBeGreaterThan(0);
+      expect(challenge.title.length, `${challenge.slug} title is too long`).toBeLessThanOrEqual(48);
+      expect(challenge.title, `${challenge.slug} title uses unexplained jargon`).not.toMatch(unexplainedJargon);
+      expect(challenge.description?.trim(), `${challenge.slug} needs a description`).toBeTruthy();
+      expect(challenge.description!.length, `${challenge.slug} description is too long`).toBeLessThanOrEqual(180);
+      expect(challenge.timeLimitSeconds, `${challenge.slug} time limit is too short`).toBeGreaterThanOrEqual(300);
+      expect(challenge.timeLimitSeconds, `${challenge.slug} time limit is too long`).toBeLessThanOrEqual(1800);
+      expect(challenge.hints.length, `${challenge.slug} needs two progressive hints`).toBeGreaterThanOrEqual(2);
+      expect(challenge.objectiveConfig.description.trim(), `${challenge.slug} needs an objective`).toBeTruthy();
+    }
+  });
+
   it("passes server-side configuration validation for every single challenge", () => {
     for (const challenge of SEED_CHALLENGES) {
       const res = validateChallengeDefinition(challenge);

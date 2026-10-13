@@ -18,8 +18,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "operation-inversion",
-    title: "Inverted Directory Breach",
-    description: "",
+    title: "Swapped Commands",
+    description: "Learn how a changed command can behave differently. Decode the clue, create the requested folder, and inspect the signal file.",
     difficulty: "EASY",
     order: 1,
     estimatedDuration: "2-4 min",
@@ -104,8 +104,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "pathfinder-basics",
-    title: "Project Folder Creation",
-    description: "",
+    title: "Make a Project Folder",
+    description: "Practice creating a folder when two familiar commands have swapped jobs.",
     difficulty: "EASY",
     order: 2,
     estimatedDuration: "2-4 min",
@@ -179,8 +179,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "morse-mail",
-    title: "Note Inspection & Receipt",
-    description: "",
+    title: "Read the Morse Note",
+    description: "Decode a short Morse message, create the requested note, and read the matching file.",
     difficulty: "EASY",
     order: 3,
     estimatedDuration: "2-4 min",
@@ -255,8 +255,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "binary-breadcrumbs",
-    title: "Hidden Vault Provisioning",
-    description: "",
+    title: "Follow the Binary Clue",
+    description: "Decode the binary clue and use the changed command to create the secret folder.",
     difficulty: "EASY",
     order: 4,
     estimatedDuration: "2-4 min",
@@ -327,8 +327,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "hex-in-plain-sight",
-    title: "Temporary File Cleanup",
-    description: "",
+    title: "Remove the Temporary File",
+    description: "Decode the hex clue and remove one temporary file using the command mapping.",
     difficulty: "EASY",
     order: 5,
     estimatedDuration: "2-4 min",
@@ -411,8 +411,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "directory-flip",
-    title: "Target File Replication",
-    description: "",
+    title: "Copy the Flag File",
+    description: "Work out which command copies files, then make the requested copy of the flag.",
     difficulty: "EASY",
     order: 6,
     estimatedDuration: "2-4 min",
@@ -487,8 +487,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-missing-file",
-    title: "Data Backup Duplication",
-    description: "",
+    title: "Move Data to Backup",
+    description: "Move the data file into the backup folder without leaving the original behind.",
     difficulty: "EASY",
     order: 7,
     estimatedDuration: "2-4 min",
@@ -570,8 +570,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "first-flag",
-    title: "Mission Staging & Briefing Setup",
-    description: "",
+    title: "Prepare the Mission Folder",
+    description: "Create a mission folder and place a copy of the briefing inside it.",
     difficulty: "EASY",
     order: 8,
     estimatedDuration: "2-4 min",
@@ -652,8 +652,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-cryptic-agent",
-    title: "Agent Key Deployment",
-    description: "",
+    title: "Create the Agent Key",
+    description: "Decode the clue, remove the old note, and create the agent key with the changed commands.",
     difficulty: "MEDIUM",
     order: 9,
     estimatedDuration: "4-7 min",
@@ -739,8 +739,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "dead-letter",
-    title: "Dual Directory Setup",
-    description: "",
+    title: "Create Two Folders",
+    description: "Use the swapped command to create both named folders in the workspace.",
     difficulty: "MEDIUM",
     order: 10,
     estimatedDuration: "4-7 min",
@@ -819,8 +819,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "log-diver",
-    title: "Nested File Search & Recovery",
-    description: "",
+    title: "Find the Hidden File",
+    description: "Search through nested folders for the secret file, then copy it to the workspace.",
     difficulty: "MEDIUM",
     order: 11,
     estimatedDuration: "4-7 min",
@@ -901,8 +901,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-relocation-protocol",
-    title: "Archive Document Relocation",
-    description: "",
+    title: "Move the Report",
+    description: "Move the report into the archive folder and confirm it is no longer in its old place.",
     difficulty: "MEDIUM",
     order: 12,
     estimatedDuration: "4-7 min",
@@ -975,8 +975,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "needle-in-the-archive",
-    title: "Server Log Audit & Alert Dispatch",
-    description: "",
+    title: "Check the Server Log",
+    description: "Find the error in the server log, then create the requested alert file.",
     difficulty: "MEDIUM",
     order: 13,
     estimatedDuration: "4-7 min",
@@ -1060,8 +1060,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "ghost-signal",
-    title: "Quarantine Creation & Junk Purge",
-    description: "",
+    title: "Clean Up the Workspace",
+    description: "Create the safe folder and remove the junk item by following the command clues.",
     difficulty: "MEDIUM",
     order: 14,
     estimatedDuration: "4-7 min",
@@ -1142,8 +1142,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "three-keys",
-    title: "Project Asset Reorganization",
-    description: "",
+    title: "Organize Project Files",
+    description: "Copy the code and style files into their correct project folders.",
     difficulty: "MEDIUM",
     order: 15,
     estimatedDuration: "4-7 min",
@@ -1228,8 +1228,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "decoy-protocol",
-    title: "Target Verification & Receipt",
-    description: "",
+    title: "Find the Real Target",
+    description: "Ignore the decoys, locate the correct target, and create a confirmation file.",
     difficulty: "MEDIUM",
     order: 16,
     estimatedDuration: "4-7 min",
@@ -1321,8 +1321,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "broken-chain",
-    title: "Vault Setup & Binary Staging",
-    description: "",
+    title: "Store Data in the Vault",
+    description: "Create the vault folder and copy the data file into it using the changed commands.",
     difficulty: "MEDIUM",
     order: 17,
     estimatedDuration: "4-7 min",
@@ -1405,8 +1405,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "deep-breach-babel",
-    title: "Deep Core Infiltration & Sanitization",
-    description: "",
+    title: "Repair the Core Vault",
+    description: "Create the nested vault path, move the key into it, and remove the temporary file.",
     difficulty: "HARD",
     order: 18,
     estimatedDuration: "8-10 min",
@@ -1509,8 +1509,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "recursive-vault",
-    title: "Enclave Vault & Key Storage",
-    description: "",
+    title: "Secure the Key File",
+    description: "Create the secure folder and place a copy of the key file inside it.",
     difficulty: "HARD",
     order: 19,
     estimatedDuration: "8-10 min",
@@ -1603,8 +1603,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "final-convergence",
-    title: "Production Release & Cache Wipe",
-    description: "",
+    title: "Prepare the Release",
+    description: "Build the production folder, copy in the release file, and remove the old cache.",
     difficulty: "HARD",
     order: 20,
     estimatedDuration: "8-10 min",
