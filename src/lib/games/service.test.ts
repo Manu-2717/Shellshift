@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { normalizeGameInput, validatePublishableGame } from "./service";
+import {
+  normalizeGameInput,
+  validateLineupChallenges,
+  validatePublishableGame,
+} from "./service";
 
 const valid = {
   name: "Autumn Cipher Sprint",
@@ -25,10 +29,65 @@ describe("game administration input", () => {
     expect(normalizeGameInput({ ...valid, startsAt: "2026-10-09T09:00:00Z" }).fieldErrors).toHaveProperty("startsAt");
   });
 
+  it("rejects duplicate challenge IDs", () => {
+    const result = normalizeGameInput({
+      ...valid,
+      challengeIds: ["challenge-1", "challenge-1"],
+    });
+    expect(result.fieldErrors).toHaveProperty("challengeIds");
+    expect(result.fieldErrors.challengeIds).toContain("once");
+  });
+
+  it("preserves submitted challenge order", () => {
+    const result = normalizeGameInput({
+      ...valid,
+      challengeIds: ["challenge-3", "challenge-1", "challenge-2"],
+    });
+    expect(result.data?.challengeIds).toEqual([
+      "challenge-3",
+      "challenge-1",
+      "challenge-2",
+    ]);
+  });
+
   it("rejects publishing without a lineup", () => {
     expect(validatePublishableGame({ ...valid, challengeIds: [] })).toEqual({
       valid: false,
       fieldErrors: { challengeIds: "Choose at least one published challenge." },
     });
+  });
+
+  it("validates that new lineups exclude hidden challenges while edits can retain existing hidden challenges", () => {
+    const catalog = [
+      { id: "c-published-1", isPublished: true },
+      { id: "c-published-2", isPublished: true },
+      { id: "c-hidden-1", isPublished: false },
+    ];
+
+    // New game: cannot include hidden challenge
+    const newGameCheck = validateLineupChallenges(
+      ["c-published-1", "c-hidden-1"],
+      catalog,
+      [],
+    );
+    expect(newGameCheck.valid).toBe(false);
+    expect(newGameCheck.error).toContain("Hidden");
+
+    // Existing game edit: retaining existing hidden challenge is permitted
+    const editRetainedCheck = validateLineupChallenges(
+      ["c-published-1", "c-hidden-1"],
+      catalog,
+      ["c-hidden-1"], // was already in the game
+    );
+    expect(editRetainedCheck.valid).toBe(true);
+
+    // Existing game edit: adding a NEW hidden challenge is rejected
+    const editNewHiddenCheck = validateLineupChallenges(
+      ["c-published-1", "c-hidden-1"],
+      catalog,
+      ["c-published-1"], // only published was previously in game
+    );
+    expect(editNewHiddenCheck.valid).toBe(false);
+    expect(editNewHiddenCheck.error).toContain("Hidden");
   });
 });

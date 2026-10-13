@@ -53,6 +53,10 @@ export function normalizeGameInput(input: GameAdminInput): {
   Object.assign(fieldErrors, scheduleResult.errors);
   if (Object.keys(fieldErrors).length) return { fieldErrors };
 
+  if (input.challengeIds && new Set(input.challengeIds).size !== input.challengeIds.length) {
+    fieldErrors.challengeIds = "Each challenge may only appear once in a lineup.";
+  }
+
   return {
     fieldErrors,
     data: {
@@ -71,6 +75,26 @@ export function normalizeGameInput(input: GameAdminInput): {
   };
 }
 
+export function validateLineupChallenges(
+  selectedIds: string[],
+  catalog: Array<{ id: string; isPublished: boolean }>,
+  existingIds: string[] = [],
+): { valid: boolean; error?: string } {
+  const existingSet = new Set(existingIds);
+  const newlyAdded = selectedIds.filter((id) => !existingSet.has(id));
+  const catalogMap = new Map(catalog.map((c) => [c.id, c]));
+  for (const id of newlyAdded) {
+    const item = catalogMap.get(id);
+    if (!item || !item.isPublished) {
+      return {
+        valid: false,
+        error: "Hidden challenges cannot be added to a new lineup.",
+      };
+    }
+  }
+  return { valid: true };
+}
+
 export function validatePublishableGame(input: GameAdminInput) {
   const fieldErrors: Record<string, string> = {};
   if (!input.challengeIds?.length) fieldErrors.challengeIds = "Choose at least one published challenge.";
@@ -81,6 +105,15 @@ export async function createGameDraft(input: GameAdminInput, actorId: string) {
   const normalized = normalizeGameInput(input);
   if (!normalized.data) return normalized;
   const { challengeIds, ...data } = normalized.data;
+  if (challengeIds.length) {
+    const published = await prisma.challenge.findMany({
+      where: { id: { in: challengeIds }, isPublished: true },
+      select: { id: true },
+    });
+    if (published.length !== challengeIds.length) {
+      return { fieldErrors: { challengeIds: "Hidden challenges cannot be added to a new lineup." } };
+    }
+  }
   const game = await prisma.$transaction(async (tx) => {
     const created = await tx.event.create({ data: { ...data, status: "DRAFT", createdById: actorId } });
     if (challengeIds.length) {
@@ -96,6 +129,23 @@ export async function updateGameDraft(gameId: string, input: GameAdminInput, act
   const normalized = normalizeGameInput(input);
   if (!normalized.data) return normalized;
   const { challengeIds, ...data } = normalized.data;
+  if (challengeIds.length) {
+    const existing = await prisma.eventChallenge.findMany({
+      where: { eventId: gameId },
+      select: { challengeId: true },
+    });
+    const existingIds = new Set(existing.map((e) => e.challengeId));
+    const newlyAdded = challengeIds.filter((id) => !existingIds.has(id));
+    if (newlyAdded.length > 0) {
+      const published = await prisma.challenge.findMany({
+        where: { id: { in: newlyAdded }, isPublished: true },
+        select: { id: true },
+      });
+      if (published.length !== newlyAdded.length) {
+        return { fieldErrors: { challengeIds: "Hidden challenges cannot be added to a new lineup." } };
+      }
+    }
+  }
   const game = await prisma.$transaction(async (tx) => {
     const updated = await tx.event.update({ where: { id: gameId }, data });
     await tx.eventChallenge.deleteMany({ where: { eventId: gameId } });
