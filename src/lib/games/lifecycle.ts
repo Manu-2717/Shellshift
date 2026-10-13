@@ -8,8 +8,8 @@ import type {
 
 const transitions: Record<StoredGameStatus, ReadonlySet<StoredGameStatus>> = {
   DRAFT: new Set(["PUBLISHED", "ARCHIVED"]),
-  PUBLISHED: new Set(["DRAFT", "PAUSED", "ENDED"]),
-  PAUSED: new Set(["PUBLISHED", "ENDED"]),
+  PUBLISHED: new Set(["DRAFT", "PAUSED", "ENDED", "ARCHIVED"]),
+  PAUSED: new Set(["PUBLISHED", "ENDED", "ARCHIVED"]),
   ENDED: new Set(["ARCHIVED"]),
   ARCHIVED: new Set(),
 };

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  checkGameDeletionEligibility,
   normalizeGameInput,
   validateLineupChallenges,
   validatePublishableGame,
@@ -89,5 +90,51 @@ describe("game administration input", () => {
     );
     expect(editNewHiddenCheck.valid).toBe(false);
     expect(editNewHiddenCheck.error).toContain("Hidden");
+  });
+});
+
+describe("game lifecycle and protected deletion", () => {
+  const unusedDraft = {
+    name: "Draft Cup",
+    status: "DRAFT",
+    registrationCount: 0,
+    runCount: 0,
+  };
+
+  it("allows deletion for eligible unused draft with matching confirmation", () => {
+    const result = checkGameDeletionEligibility(unusedDraft, "Draft Cup");
+    expect(result.eligible).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("rejects deletion when name confirmation does not match", () => {
+    const result = checkGameDeletionEligibility(unusedDraft, "Wrong Name");
+    expect(result.eligible).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toContain("match");
+  });
+
+  it("rejects deletion when game is not in DRAFT status", () => {
+    const publishedGame = { ...unusedDraft, status: "PUBLISHED" };
+    const result = checkGameDeletionEligibility(publishedGame, "Draft Cup");
+    expect(result.eligible).toBe(false);
+    expect(result.status).toBe(409);
+    expect(result.error).toContain("draft");
+  });
+
+  it("rejects deletion when game has registrations", () => {
+    const registeredGame = { ...unusedDraft, registrationCount: 3 };
+    const result = checkGameDeletionEligibility(registeredGame, "Draft Cup");
+    expect(result.eligible).toBe(false);
+    expect(result.status).toBe(409);
+    expect(result.error).toContain("registrations");
+  });
+
+  it("rejects deletion when game has runs", () => {
+    const playedGame = { ...unusedDraft, runCount: 1 };
+    const result = checkGameDeletionEligibility(playedGame, "Draft Cup");
+    expect(result.eligible).toBe(false);
+    expect(result.status).toBe(409);
+    expect(result.error).toContain("runs");
   });
 });

@@ -183,3 +183,105 @@ export async function transitionGameStatus(gameId: string, status: StoredGameSta
   return { game };
 }
 
+export function checkGameDeletionEligibility(
+  game: {
+    name: string;
+    status: string;
+    registrationCount: number;
+    runCount: number;
+  },
+  confirmation: string,
+): { eligible: boolean; error?: string; status?: 400 | 409 } {
+  if (game.name.trim() !== confirmation?.trim()) {
+    return {
+      eligible: false,
+      error: "Game name confirmation does not match.",
+      status: 400,
+    };
+  }
+  if (
+    game.status !== "DRAFT" ||
+    game.registrationCount > 0 ||
+    game.runCount > 0
+  ) {
+    return {
+      eligible: false,
+      error:
+        "Only unused draft games with no registrations or runs can be deleted.",
+      status: 409,
+    };
+  }
+  return { eligible: true };
+}
+
+export async function deleteUnusedDraft(
+  gameId: string,
+  confirmation: string,
+  actorId: string,
+) {
+  return await prisma.$transaction(async (tx) => {
+    const game = await tx.event.findUnique({
+      where: { id: gameId },
+      include: {
+        _count: {
+          select: { registrations: true, runs: true },
+        },
+      },
+    });
+    if (!game) {
+      return { error: "Game not found.", status: 404 as const };
+    }
+    const check = checkGameDeletionEligibility(
+      {
+        name: game.name,
+        status: game.status,
+        registrationCount: game._count.registrations,
+        runCount: game._count.runs,
+      },
+      confirmation,
+    );
+    if (!check.eligible) {
+      return { error: check.error, status: check.status! };
+    }
+    await tx.eventChallenge.deleteMany({ where: { eventId: gameId } });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "GAME_DELETED",
+        details: JSON.stringify({
+          gameId,
+          name: game.name,
+          slug: game.slug,
+        }),
+      },
+    });
+    await tx.event.delete({ where: { id: gameId } });
+    return { success: true, status: 200 as const };
+  });
+}
+
+export async function archiveGame(gameId: string, actorId: string) {
+  const game = await prisma.event.findUnique({ where: { id: gameId } });
+  if (!game) {
+    return { error: "Game not found.", status: 404 as const };
+  }
+  if (game.status === "ARCHIVED") {
+    return { error: "Game is already archived.", status: 400 as const };
+  }
+  const updated = await prisma.$transaction(async (tx) => {
+    const res = await tx.event.update({
+      where: { id: gameId },
+      data: { status: "ARCHIVED" },
+    });
+    await tx.auditLog.create({
+      data: {
+        userId: actorId,
+        action: "GAME_ARCHIVED",
+        details: JSON.stringify({ gameId, name: game.name }),
+      },
+    });
+    return res;
+  });
+  return { game: updated, status: 200 as const };
+}
+
