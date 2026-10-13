@@ -42,8 +42,8 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     ).toThrow("Missing solution for challenge: operation-inversion");
   });
 
-  it("contains exactly 20 challenges with exact difficulty distribution", () => {
-    expect(SEED_CHALLENGES).toHaveLength(20);
+  it("contains exactly 50 challenges with exact difficulty distribution", () => {
+    expect(SEED_CHALLENGES).toHaveLength(50);
 
     const counts = { EASY: 0, MEDIUM: 0, HARD: 0 };
     for (const c of SEED_CHALLENGES) {
@@ -51,9 +51,12 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       counts[c.difficulty]++;
     }
 
-    expect(counts.EASY).toBe(8);
-    expect(counts.MEDIUM).toBe(9);
-    expect(counts.HARD).toBe(3);
+    expect(counts.EASY).toBe(20);
+    expect(counts.MEDIUM).toBe(20);
+    expect(counts.HARD).toBe(10);
+    expect(SEED_CHALLENGES.map((challenge) => challenge.order)).toEqual(
+      Array.from({ length: 50 }, (_, index) => index + 1),
+    );
   });
 
   it("preserves stable IDs and details for the original 3 challenges", () => {
@@ -75,18 +78,46 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
   });
 
   it("uses concise beginner-friendly player instructions", () => {
-    const unexplainedJargon = /\b(?:infiltration|provisioning|enclave|sanitization|dispatch|breach)\b/i;
+    const unexplainedJargon =
+      /\b(?:infiltration|provisioning|enclave|sanitization|dispatch|breach)\b/i;
 
     for (const challenge of SEED_CHALLENGES) {
-      expect(challenge.title.length, `${challenge.slug} needs a short title`).toBeGreaterThan(0);
-      expect(challenge.title.length, `${challenge.slug} title is too long`).toBeLessThanOrEqual(48);
-      expect(challenge.title, `${challenge.slug} title uses unexplained jargon`).not.toMatch(unexplainedJargon);
-      expect(challenge.description?.trim(), `${challenge.slug} needs a description`).toBeTruthy();
-      expect(challenge.description!.length, `${challenge.slug} description is too long`).toBeLessThanOrEqual(180);
-      expect(challenge.timeLimitSeconds, `${challenge.slug} time limit is too short`).toBeGreaterThanOrEqual(300);
-      expect(challenge.timeLimitSeconds, `${challenge.slug} time limit is too long`).toBeLessThanOrEqual(1800);
-      expect(challenge.hints.length, `${challenge.slug} needs two progressive hints`).toBeGreaterThanOrEqual(2);
-      expect(challenge.objectiveConfig.description.trim(), `${challenge.slug} needs an objective`).toBeTruthy();
+      expect(
+        challenge.title.length,
+        `${challenge.slug} needs a short title`,
+      ).toBeGreaterThan(0);
+      expect(
+        challenge.title.length,
+        `${challenge.slug} title is too long`,
+      ).toBeLessThanOrEqual(48);
+      expect(
+        challenge.title,
+        `${challenge.slug} title uses unexplained jargon`,
+      ).not.toMatch(unexplainedJargon);
+      expect(
+        challenge.description?.trim(),
+        `${challenge.slug} needs a description`,
+      ).toBeTruthy();
+      expect(
+        challenge.description!.length,
+        `${challenge.slug} description is too long`,
+      ).toBeLessThanOrEqual(180);
+      expect(
+        challenge.timeLimitSeconds,
+        `${challenge.slug} time limit is too short`,
+      ).toBeGreaterThanOrEqual(300);
+      expect(
+        challenge.timeLimitSeconds,
+        `${challenge.slug} time limit is too long`,
+      ).toBeLessThanOrEqual(1800);
+      expect(
+        challenge.hints.length,
+        `${challenge.slug} needs two progressive hints`,
+      ).toBeGreaterThanOrEqual(2);
+      expect(
+        challenge.objectiveConfig.description.trim(),
+        `${challenge.slug} needs an objective`,
+      ).toBeTruthy();
     }
   });
 

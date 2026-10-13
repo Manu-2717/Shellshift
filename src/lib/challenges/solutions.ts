@@ -1,4 +1,5 @@
 import type { SeedChallengeDef } from "./catalogTypes";
+import { ADDITIONAL_SOLUTIONS } from "./additionalSeedData";
 
 export interface ChallengeSolution {
   negativeCmd: string;
@@ -109,6 +110,7 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
       "mv /workspace/old_cache.tmp",
     ],
   },
+  ...ADDITIONAL_SOLUTIONS,
 };
 
 export function validateCatalogIntegrity(
