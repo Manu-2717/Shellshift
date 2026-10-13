@@ -34,7 +34,7 @@ async function main() {
       where: { slug: challengeDef.slug },
     });
 
-    const challengeData = {
+    const createData = {
       slug: challengeDef.slug,
       title: challengeDef.title,
       description: challengeDef.description || "",
@@ -49,36 +49,42 @@ async function main() {
       isPublished: true,
     };
 
+    const protectedMechanics = {
+      order: challengeDef.order,
+      scoringConfig: JSON.stringify(challengeDef.scoringConfig),
+      commandMappings: JSON.stringify(challengeDef.commandMappings),
+      clues: JSON.stringify(challengeDef.clues),
+      initialFilesystem: JSON.stringify(challengeDef.initialFilesystem),
+      objectiveConfig: JSON.stringify(challengeDef.objectiveConfig),
+    };
+
     let challenge;
     if (existing) {
       challenge = await prisma.challenge.update({
         where: { slug: challengeDef.slug },
-        data: challengeData,
+        data: protectedMechanics,
       });
       console.log(`Updated challenge: ${challengeDef.slug}`);
     } else {
       challenge = await prisma.challenge.create({
-        data: challengeData,
+        data: createData,
       });
       console.log(`Created challenge: ${challengeDef.slug}`);
     }
 
-    // Delete existing hints and recreate to keep in sync
-    await prisma.hint.deleteMany({
-      where: { challengeId: challenge.id },
-    });
-
-    for (const h of challengeDef.hints) {
-      await prisma.hint.create({
-        data: {
-          challengeId: challenge.id,
-          title: h.title,
-          content: h.content,
-          penaltySeconds: h.penaltySeconds,
-          pointPenalty: h.pointPenalty,
-          order: h.order,
-        },
-      });
+    if (!existing) {
+      for (const h of challengeDef.hints) {
+        await prisma.hint.create({
+          data: {
+            challengeId: challenge.id,
+            title: h.title,
+            content: h.content,
+            penaltySeconds: h.penaltySeconds,
+            pointPenalty: h.pointPenalty,
+            order: h.order,
+          },
+        });
+      }
     }
   }
 
