@@ -7,12 +7,41 @@ import { createInitialVfs } from "../vfs/vfs";
 import { VfsState } from "../vfs/types";
 import { calculateRunScore } from "../scoring/scoringEngine";
 import { decodeCipher } from "../ciphers/ciphers";
+import { CHALLENGE_SOLUTIONS, validateCatalogIntegrity } from "./solutions";
 
 function setupInitialVfs(challenge: SeedChallengeDef): VfsState {
   return createInitialVfs(challenge.initialFilesystem);
 }
 
 describe("Challenge Catalog & Solvability Engine Verification", () => {
+  it("requires one solution for every unique challenge slug and order", () => {
+    expect(() =>
+      validateCatalogIntegrity(SEED_CHALLENGES, CHALLENGE_SOLUTIONS),
+    ).not.toThrow();
+
+    const duplicateSlug = [
+      { ...SEED_CHALLENGES[0], order: 999 },
+      ...SEED_CHALLENGES,
+    ];
+    expect(() =>
+      validateCatalogIntegrity(duplicateSlug, CHALLENGE_SOLUTIONS),
+    ).toThrow("Duplicate challenge slug: operation-inversion");
+
+    const duplicateOrder = [
+      ...SEED_CHALLENGES,
+      { ...SEED_CHALLENGES[0], slug: "duplicate-order" },
+    ];
+    expect(() =>
+      validateCatalogIntegrity(duplicateOrder, CHALLENGE_SOLUTIONS),
+    ).toThrow("Duplicate challenge order 1: duplicate-order");
+
+    const missingSolution = { ...CHALLENGE_SOLUTIONS };
+    delete missingSolution["operation-inversion"];
+    expect(() =>
+      validateCatalogIntegrity(SEED_CHALLENGES, missingSolution),
+    ).toThrow("Missing solution for challenge: operation-inversion");
+  });
+
   it("contains exactly 20 challenges with exact difficulty distribution", () => {
     expect(SEED_CHALLENGES).toHaveLength(20);
 
@@ -48,7 +77,10 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
   it("passes server-side configuration validation for every single challenge", () => {
     for (const challenge of SEED_CHALLENGES) {
       const res = validateChallengeDefinition(challenge);
-      expect(res.valid, `Challenge ${challenge.order} (${challenge.slug}) validation failed: ${res.errors.join(", ")}`).toBe(true);
+      expect(
+        res.valid,
+        `Challenge ${challenge.order} (${challenge.slug}) validation failed: ${res.errors.join(", ")}`,
+      ).toBe(true);
       expect(res.errors).toHaveLength(0);
     }
   });
@@ -61,10 +93,11 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
         expect(clue.plaintextAnswer).toBeDefined();
         expect(clue.plaintextAnswer.length).toBeGreaterThan(0);
         const decoded = decodeCipher(clue.type, clue.encodedContent);
-        const normalize = (value: string) => value.replace(/\s+/g, " ").trim().toUpperCase();
+        const normalize = (value: string) =>
+          value.replace(/\s+/g, " ").trim().toUpperCase();
         expect(
           normalize(decoded),
-          `Challenge ${challenge.order} (${challenge.slug}) clue ${clue.id} does not decode to its configured answer.`
+          `Challenge ${challenge.order} (${challenge.slug}) clue ${clue.id} does not decode to its configured answer.`,
         ).toBe(normalize(clue.plaintextAnswer));
       }
     }
@@ -73,138 +106,32 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
   it("verifies path confinement preventing escape from VFS sandbox", () => {
     for (const challenge of SEED_CHALLENGES) {
       const vfs = setupInitialVfs(challenge);
-      const res = executeCommand(vfs, "ls ../../../../../etc/passwd", challenge.commandMappings);
+      const res = executeCommand(
+        vfs,
+        "ls ../../../../../etc/passwd",
+        challenge.commandMappings,
+      );
       expect(res.newCwd.startsWith("/")).toBe(true);
       expect(res.newCwd.includes("..")).toBe(false);
     }
   });
 
-  // Comprehensive positive & negative solution walkthroughs for all 20 simple challenges
-  const solutions: Record<string, { negativeCmd: string; steps: string[] }> = {
-    "operation-inversion": {
-      negativeCmd: "mkdir /workspace/breach",
-      steps: ["cd /workspace/breach", "ls /workspace/signal.txt"],
-    },
-    "the-cryptic-agent": {
-      negativeCmd: "touch /workspace/agent.key",
-      steps: ["rm /workspace/notes.txt", "pwd /workspace/agent.key"],
-    },
-    "deep-breach-babel": {
-      negativeCmd: "mkdir -p /workspace/vault/core",
-      steps: [
-        "grep -p /workspace/vault/core",
-        "mv /workspace/secret.key /workspace/vault/core/secret.key",
-        "cp /workspace/temp.tmp",
-      ],
-    },
-    "pathfinder-basics": {
-      negativeCmd: "mkdir project",
-      steps: ["cd project"],
-    },
-    "morse-mail": {
-      negativeCmd: "cat /workspace/other.txt",
-      steps: ["touch /workspace/note.txt", "cat /workspace/read.txt"],
-    },
-    "binary-breadcrumbs": {
-      negativeCmd: "mkdir /workspace/secret",
-      steps: ["cd /workspace/secret"],
-    },
-    "hex-in-plain-sight": {
-      negativeCmd: "rm /workspace/temp.txt",
-      steps: ["mkdir /workspace/temp.txt"],
-    },
-    "directory-flip": {
-      negativeCmd: "cp /workspace/flag.txt /workspace/found.txt",
-      steps: ["touch /workspace/flag.txt /workspace/found.txt"],
-    },
-    "the-missing-file": {
-      negativeCmd: "cp /workspace/data.txt /workspace/backup/data.txt",
-      steps: ["mv /workspace/data.txt /workspace/backup/data.txt"],
-    },
-    "first-flag": {
-      negativeCmd: "mkdir /workspace/mission",
-      steps: [
-        "cd /workspace/mission",
-        "cp /workspace/briefing.txt /workspace/mission/briefing.txt",
-      ],
-    },
-    "dead-letter": {
-      negativeCmd: "mkdir /workspace/alpha",
-      steps: ["cd /workspace/alpha", "cd /workspace/beta"],
-    },
-    "log-diver": {
-      negativeCmd: "find /workspace -name secret.txt",
-      steps: [
-        "grep /workspace -name secret.txt",
-        "cp /workspace/sub1/sub2/sub3/secret.txt /workspace/found.txt",
-      ],
-    },
-    "the-relocation-protocol": {
-      negativeCmd: "cp /workspace/report.doc /workspace/archive/report.doc",
-      steps: ["mv /workspace/report.doc /workspace/archive/report.doc"],
-    },
-    "needle-in-the-archive": {
-      negativeCmd: "touch /workspace/alert.txt",
-      steps: [
-        "cat ERROR /workspace/server.log",
-        "ls /workspace/alert.txt",
-      ],
-    },
-    "ghost-signal": {
-      negativeCmd: "mkdir /workspace/safe",
-      steps: [
-        "rm /workspace/safe",
-        "mkdir /workspace/junk.txt",
-      ],
-    },
-    "three-keys": {
-      negativeCmd: "mv /workspace/code.js /workspace/src/code.js",
-      steps: [
-        "cp /workspace/code.js /workspace/src/code.js",
-        "cp /workspace/style.css /workspace/styles/style.css",
-      ],
-    },
-    "decoy-protocol": {
-      negativeCmd: "touch /workspace/confirmation.txt",
-      steps: [
-        "grep /workspace/target_omega.txt",
-        "ls /workspace/confirmation.txt",
-      ],
-    },
-    "broken-chain": {
-      negativeCmd: "mkdir /workspace/vault",
-      steps: [
-        "cd /workspace/vault",
-        "cp /workspace/data.bin /workspace/vault/data.bin",
-      ],
-    },
-    "recursive-vault": {
-      negativeCmd: "mkdir /workspace/secure",
-      steps: [
-        "grep /workspace/secure",
-        "cp /workspace/key.dat /workspace/secure/key.dat",
-      ],
-    },
-    "final-convergence": {
-      negativeCmd: "mkdir /workspace/production",
-      steps: [
-        "cd /workspace/production",
-        "cp /workspace/artifact.dat /workspace/production/artifact.dat",
-        "mv /workspace/old_cache.tmp",
-      ],
-    },
-  };
-
   it("verifies every single challenge has a valid, working walkthrough and rejects negative path", () => {
     for (const challenge of SEED_CHALLENGES) {
-      const sol = solutions[challenge.slug];
-      expect(sol, `Missing solution walkthrough for challenge: ${challenge.slug}`).toBeDefined();
+      const sol = CHALLENGE_SOLUTIONS[challenge.slug];
+      expect(
+        sol,
+        `Missing solution walkthrough for challenge: ${challenge.slug}`,
+      ).toBeDefined();
 
       // Negative Test: Run incorrect command
       const negVfs = setupInitialVfs(challenge);
       executeCommand(negVfs, sol.negativeCmd, challenge.commandMappings);
       const negEval = evaluateObjective(negVfs, challenge.objectiveConfig, 1);
-      expect(negEval.isCompleted, `Challenge ${challenge.slug} accidentally completed on incorrect command: ${sol.negativeCmd}`).toBe(false);
+      expect(
+        negEval.isCompleted,
+        `Challenge ${challenge.slug} accidentally completed on incorrect command: ${sol.negativeCmd}`,
+      ).toBe(false);
 
       // Positive Test: Execute solution walkthrough
       const posVfs = setupInitialVfs(challenge);
@@ -212,13 +139,20 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       for (const step of sol.steps) {
         cmdCount++;
         const res = executeCommand(posVfs, step, challenge.commandMappings);
-        expect(res.exitCode, `Command failed in ${challenge.slug}: ${step} (output: ${res.output})`).toBe(0);
+        expect(
+          res.exitCode,
+          `Command failed in ${challenge.slug}: ${step} (output: ${res.output})`,
+        ).toBe(0);
       }
 
-      const posEval = evaluateObjective(posVfs, challenge.objectiveConfig, cmdCount);
+      const posEval = evaluateObjective(
+        posVfs,
+        challenge.objectiveConfig,
+        cmdCount,
+      );
       expect(
         posEval.isCompleted,
-        `Challenge ${challenge.slug} failed to complete. Passed ${posEval.completedRules}/${posEval.totalRules} rules.`
+        `Challenge ${challenge.slug} failed to complete. Passed ${posEval.completedRules}/${posEval.totalRules} rules.`,
       ).toBe(true);
 
       // Scoring Engine Verification
@@ -240,7 +174,9 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       expect(scoreRes.isCompleted).toBe(true);
       expect(scoreRes.finalScore).toBeGreaterThan(0);
       expect(scoreRes.speedBonus).toBeGreaterThan(0);
-      expect(scoreRes.completionBonus).toBe(challenge.scoringConfig.completionBonus);
+      expect(scoreRes.completionBonus).toBe(
+        challenge.scoringConfig.completionBonus,
+      );
     }
   });
 });
