@@ -338,7 +338,7 @@ export default async function ResultsPage({
           )}
 
           <Link
-            href="/leaderboard"
+            href={run.eventId ? `/leaderboard?gameId=${run.eventId}` : "/leaderboard"}
             className="px-5 py-2.5 rounded-lg btn-secondary text-xs font-bold transition-colors flex items-center gap-2"
           >
             <Trophy className="w-4 h-4 text-amber-400" />
