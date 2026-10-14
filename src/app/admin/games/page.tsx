@@ -1,2 +1,70 @@
-import Link from "next/link"; import { Plus } from "lucide-react"; import { prisma } from "@/lib/prisma"; import { StatusBadge } from "@/components/ui/StatusBadge";
-export const dynamic="force-dynamic"; export default async function Games(){const games=await prisma.event.findMany({orderBy:{createdAt:"desc"},include:{_count:{select:{registrations:true}},challenges:true}});return <div className="mx-auto max-w-6xl"><header className="flex items-end justify-between"><div><h1 className="text-3xl font-semibold">Games</h1><p className="mt-2 text-sm text-zinc-500">Draft, schedule, and operate individual competitions.</p></div><Link className="btn-primary" href="/admin/games/new"><Plus className="size-4"/>Create game</Link></header><div className="mt-8 overflow-hidden rounded-2xl border border-zinc-800 bg-[#0e1016]">{games.map(g=><Link key={g.id} href={`/admin/games/${g.id}`} className="grid grid-cols-[1fr_auto] gap-4 border-b border-zinc-800 p-5 last:border-0 hover:bg-zinc-900/50"><div><div className="flex items-center gap-2"><h2 className="font-medium">{g.name}</h2><StatusBadge>{g.status}</StatusBadge></div><p className="mt-2 text-xs text-zinc-500">{g.challenges.length} challenges · {g._count.registrations} registered</p></div><span className="text-sm text-cyan-300">Manage →</span></Link>)}</div></div>}
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StartLiveGameModal } from "@/components/admin/StartLiveGameModal";
+
+export const dynamic = "force-dynamic";
+
+export default async function Games() {
+  const [games, publishedChallenges] = await Promise.all([
+    prisma.event.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { registrations: true } },
+        challenges: true,
+      },
+    }),
+    prisma.challenge.findMany({
+      where: { isPublished: true },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        title: true,
+        difficulty: true,
+        timeLimitSeconds: true,
+      },
+    }),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold">Games</h1>
+          <p className="mt-2 text-sm text-zinc-500">
+            Draft, schedule, and operate individual competitions.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <StartLiveGameModal challenges={publishedChallenges} />
+          <Link className="btn-secondary" href="/admin/games/new">
+            <Plus className="size-4" />
+            Schedule game
+          </Link>
+        </div>
+      </header>
+
+      <div className="mt-8 overflow-hidden rounded-2xl border border-zinc-800 bg-[#0e1016]">
+        {games.map((g) => (
+          <Link
+            key={g.id}
+            href={`/admin/games/${g.id}`}
+            className="grid grid-cols-[1fr_auto] gap-4 border-b border-zinc-800 p-5 last:border-0 hover:bg-zinc-900/50"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-medium">{g.name}</h2>
+                <StatusBadge>{g.status}</StatusBadge>
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                {g.challenges.length} challenges · {g._count.registrations} registered
+              </p>
+            </div>
+            <span className="text-sm text-cyan-300">Manage →</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}

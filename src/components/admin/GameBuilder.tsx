@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Flame, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Notice } from "@/components/ui/Notice";
@@ -46,6 +46,17 @@ export function GameBuilder({
 
   const update = (key: string, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
+
+  const applyLivePreset = (minutes: number) => {
+    const now = Date.now();
+    setForm((current) => ({
+      ...current,
+      registrationOpensAt: new Date(now - 2 * 60 * 1000).toISOString().slice(0, 16),
+      registrationClosesAt: new Date(now - 15 * 1000).toISOString().slice(0, 16),
+      startsAt: new Date(now).toISOString().slice(0, 16),
+      endsAt: new Date(now + minutes * 60 * 1000).toISOString().slice(0, 16),
+    }));
+  };
 
   const submit = async () => {
     setSaving(true);
@@ -128,6 +139,37 @@ export function GameBuilder({
             <h2 className="col-span-full text-xl font-semibold">
               Set the event window
             </h2>
+
+            {/* Quick Live Game Presets */}
+            <div className="col-span-full rounded-xl border border-amber-500/20 bg-amber-950/15 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400 mb-1.5">
+                <Flame className="size-3.5 fill-amber-400" />
+                <span>Instant Live Duration Presets</span>
+              </div>
+              <p className="text-xs text-zinc-400 mb-3">
+                Click a preset to configure this competition to begin immediately:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: "15m Blitz", mins: 15 },
+                  { label: "30m Sprint", mins: 30 },
+                  { label: "45m Fast", mins: 45 },
+                  { label: "60m (1 Hour)", mins: 60 },
+                  { label: "90m", mins: 90 },
+                  { label: "2 Hours", mins: 120 },
+                ].map((preset) => (
+                  <button
+                    key={preset.mins}
+                    type="button"
+                    onClick={() => applyLivePreset(preset.mins)}
+                    className="rounded-lg border border-amber-500/30 bg-black/40 px-3 py-1.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition cursor-pointer"
+                  >
+                    ⚡ {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Field
               label="Registration opens"
               type="datetime-local"
@@ -196,7 +238,7 @@ export function GameBuilder({
           <Button
             variant="ghost"
             disabled={step === 0}
-            onClick={() => setStep((s) => s-1)}
+            onClick={() => setStep((s) => s - 1)}
           >
             <ArrowLeft className="size-4" />
             Back

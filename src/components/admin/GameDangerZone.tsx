@@ -84,15 +84,22 @@ export function GameDangerZone({
   };
 
   return (
-    <section className="rounded-2xl border border-red-950/60 bg-red-950/10 p-6">
+    <section className="rounded-2xl border border-rose-950/60 bg-gradient-to-b from-rose-950/20 via-[#0e1016] to-[#0e1016] p-6 shadow-xl">
       <div className="flex items-center gap-3">
-        <AlertTriangle className="size-5 text-red-400" />
-        <h2 className="text-lg font-semibold text-white">Danger zone</h2>
+        <div className="grid size-8 place-items-center rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400">
+          <AlertTriangle className="size-4" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-white">Danger zone</h2>
+          <p className="text-xs text-zinc-500">
+            Irreversible actions and competition lifecycle termination.
+          </p>
+        </div>
       </div>
 
-      <div className="mt-4 grid gap-4">
+      <div className="mt-5 grid gap-4">
         {isEligibleForDeletion ? (
-          <div className="flex flex-col justify-between gap-4 rounded-xl border border-red-900/40 bg-black/40 p-4 sm:flex-row sm:items-center">
+          <div className="flex flex-col justify-between gap-4 rounded-xl border border-rose-900/40 bg-black/40 p-5 sm:flex-row sm:items-center">
             <div>
               <h3 className="font-medium text-white">Delete unused draft</h3>
               <p className="mt-1 text-sm text-zinc-400">
@@ -101,7 +108,7 @@ export function GameDangerZone({
             </div>
             <Button
               variant="danger"
-              className="w-fit"
+              className="w-fit shrink-0 shadow-lg shadow-rose-950/50"
               onClick={() => {
                 setConfirmation("");
                 setError("");
@@ -120,7 +127,7 @@ export function GameDangerZone({
               through archival.
             </p>
             {status !== "ARCHIVED" ? (
-              <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-black/40 p-4 sm:flex-row sm:items-center">
+              <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-black/40 p-5 sm:flex-row sm:items-center">
                 <div>
                   <h3 className="font-medium text-white">
                     Archive competition
@@ -132,7 +139,7 @@ export function GameDangerZone({
                 </div>
                 <Button
                   variant="secondary"
-                  className="w-fit"
+                  className="w-fit shrink-0"
                   onClick={() => {
                     setError("");
                     setIsArchiveDialogOpen(true);
@@ -162,7 +169,7 @@ export function GameDangerZone({
             This action cannot be undone. To permanently remove this draft,
             please type the exact game name to confirm:
           </p>
-          <p className="rounded-lg border border-zinc-800 bg-black/60 p-2.5 font-mono text-sm text-red-300">
+          <p className="rounded-lg border border-rose-950 bg-black/70 p-3 font-mono text-sm font-semibold text-rose-300">
             {name}
           </p>
 
@@ -175,13 +182,13 @@ export function GameDangerZone({
               onChange={(e) => setConfirmation(e.target.value)}
               placeholder={name}
               disabled={pending}
-              className="rounded-lg border border-zinc-700 bg-black/40 p-2.5 text-sm text-white focus:border-red-500 focus:outline-none"
+              className="rounded-lg border border-zinc-700 bg-black/50 p-2.5 text-sm text-white focus:border-rose-500 focus:outline-none"
             />
           </label>
 
           {error ? <Notice tone="danger">{error}</Notice> : null}
 
-          <div className="mt-2 flex justify-end gap-3">
+          <div className="mt-3 flex justify-end gap-3">
             <Button
               variant="ghost"
               disabled={pending}
@@ -218,7 +225,7 @@ export function GameDangerZone({
 
           {error ? <Notice tone="danger">{error}</Notice> : null}
 
-          <div className="mt-2 flex justify-end gap-3">
+          <div className="mt-3 flex justify-end gap-3">
             <Button
               variant="ghost"
               disabled={pending}

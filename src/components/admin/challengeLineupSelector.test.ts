@@ -21,6 +21,10 @@ describe("challenge lineup selector component", () => {
     expect(source).toContain("Move up");
     expect(source).toContain("Move down");
     expect(source).toContain("Remove");
+
+    // Bulk selection controls
+    expect(source).toContain("Add all");
+    expect(source).toContain("Clear all");
   });
 
   it("is integrated into the game builder", () => {

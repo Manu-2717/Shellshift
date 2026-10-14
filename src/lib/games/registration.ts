@@ -1,13 +1,28 @@
 import { prisma } from "@/lib/prisma";
 
-interface RegistrationWindow {
+export interface RegistrationWindow {
   status: string;
   registrationOpensAt: Date | null;
   registrationClosesAt: Date | null;
+  startTime?: Date | null;
+  endTime?: Date | null;
 }
 
 export function canRegisterForGame(game: RegistrationWindow, now = new Date()) {
-  return game.status === "PUBLISHED" && !!game.registrationOpensAt && !!game.registrationClosesAt && now >= game.registrationOpensAt && now < game.registrationClosesAt;
+  if (game.status !== "PUBLISHED") return false;
+
+  // Allow registration during an active live competition
+  if (game.startTime && game.endTime && now >= game.startTime && now < game.endTime) {
+    return true;
+  }
+
+  // Allow registration during the pre-event registration window
+  return (
+    !!game.registrationOpensAt &&
+    !!game.registrationClosesAt &&
+    now >= game.registrationOpensAt &&
+    now < game.registrationClosesAt
+  );
 }
 
 export async function registerUserForGame(eventId: string, userId: string, now = new Date()) {
@@ -21,4 +36,3 @@ export async function registerUserForGame(eventId: string, userId: string, now =
   });
   return { registration, status: 200 };
 }
-

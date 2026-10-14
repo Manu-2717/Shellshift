@@ -190,6 +190,33 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; opacity:
   border-color: #3f3f46;
 }
 
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  background-color: #e11d48;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+  white-space: nowrap;
+}
+
+.btn-danger:hover {
+  background-color: #f43f5e;
+  border-color: #f43f5e;
+}
+
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;

@@ -91,7 +91,7 @@ export function LiveTimer({
           <span className="text-[10px] text-[#a1a1aa] font-sans tracking-wide uppercase">
             {isCompleted ? "Time" : isExpired ? "Expired" : "Timer"}
           </span>
-          <span className="text-sm font-bold tracking-wider tabular-nums">
+          <span className="text-sm font-bold tracking-wider tabular-nums" suppressHydrationWarning>
             {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
             <span className="text-xs text-[#a1a1aa]">{tenths}</span>
           </span>
@@ -107,7 +107,7 @@ export function LiveTimer({
           }`}
         >
           <span className="text-[10px] text-[#a1a1aa] uppercase font-sans">Remaining:</span>
-          <span>
+          <span suppressHydrationWarning>
             {remMinutes?.toString().padStart(2, "0")}:{remSecs?.toString().padStart(2, "0")}
           </span>
         </div>

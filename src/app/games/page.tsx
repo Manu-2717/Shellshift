@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { formatScheduleTime } from "@/lib/games/display";
 
 export const dynamic = "force-dynamic";
 
@@ -55,11 +56,9 @@ export default async function Games() {
                   <p className="mt-2 text-sm text-zinc-500">{g.description}</p>
                   <p className="mt-4 flex items-center gap-2 text-xs text-zinc-500">
                     <CalendarDays className="size-4" />
-                    {g.startTime?.toLocaleString("en-IN", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                      timeZone: g.timezone,
-                    }) || "Schedule pending"}{" "}
+                    <span suppressHydrationWarning>
+                      {g.startTime ? formatScheduleTime(g.startTime, g.timezone) : "Schedule pending"}
+                    </span>{" "}
                     · {g.challenges.length} challenges ·{" "}
                     {g._count.registrations} registered
                   </p>

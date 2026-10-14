@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { AdminShell } from "@/components/admin/AdminShell";
 import { LiveOperations } from "@/components/admin/LiveOperations";
 import { getGameStandings } from "@/lib/games/standings";
 
@@ -73,9 +72,5 @@ export default async function AdminGameLivePage({
     standings: standingsResult.standings || [],
   };
 
-  return (
-    <AdminShell>
-      <LiveOperations game={game} initialData={initialData} />
-    </AdminShell>
-  );
+  return <LiveOperations game={game} initialData={initialData} />;
 }

@@ -1,2 +1,49 @@
-import{notFound}from"next/navigation";import{Navbar}from"@/components/Navbar";import{StandingsTable}from"@/components/games/StandingsTable";import{getSession}from"@/lib/auth/session";import{getGameStandings}from"@/lib/games/standings";import{prisma}from"@/lib/prisma";
-export const dynamic="force-dynamic";export default async function Standings({params}:{params:Promise<{gameId:string}>}){const{gameId}=await params;const user=await getSession();const game=await prisma.event.findUnique({where:{id:gameId}});if(!game)notFound();const result=await getGameStandings(gameId,user?.id);return <div className="min-h-screen bg-[#07080b] text-white"><Navbar user={user}/><main className="mx-auto max-w-5xl px-5 py-12"><p className="text-sm text-cyan-400">Individual standings</p><h1 className="mt-2 text-4xl font-semibold">{game.name}</h1><p className="mt-3 mb-8 text-zinc-500">Best verified score per challenge. Ties break by completions, then aggregate time.</p>{result.error?<div className="rounded-xl border border-zinc-800 p-6 text-zinc-400">{result.error}</div>:<StandingsTable rows={result.standings}/>}</main></div>}
+import { notFound } from "next/navigation";
+import { Navbar } from "@/components/Navbar";
+import { StandingsTable } from "@/components/games/StandingsTable";
+import { getSession } from "@/lib/auth/session";
+import { getGameStandings } from "@/lib/games/standings";
+import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+
+export default async function Standings({
+  params,
+}: {
+  params: Promise<{ gameId: string }>;
+}) {
+  const { gameId } = await params;
+  const user = await getSession();
+
+  const game = await prisma.event.findFirst({
+    where: {
+      OR: [{ id: gameId }, { slug: gameId }],
+    },
+  });
+
+  if (!game) {
+    notFound();
+  }
+
+  const result = await getGameStandings(game.id, user?.id);
+
+  return (
+    <div className="min-h-screen bg-[#07080b] text-white">
+      <Navbar user={user} />
+      <main className="mx-auto max-w-5xl px-5 py-12">
+        <p className="text-sm text-cyan-400">Individual standings</p>
+        <h1 className="mt-2 text-4xl font-semibold">{game.name}</h1>
+        <p className="mt-3 mb-8 text-zinc-500">
+          Best verified score per challenge. Ties break by completions, then aggregate time.
+        </p>
+        {result.error ? (
+          <div className="rounded-xl border border-zinc-800 p-6 text-zinc-400">
+            {result.error}
+          </div>
+        ) : (
+          <StandingsTable rows={result.standings} />
+        )}
+      </main>
+    </div>
+  );
+}

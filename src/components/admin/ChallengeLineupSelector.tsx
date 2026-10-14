@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Search, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, CheckCheck, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export interface CatalogChallenge {
@@ -44,12 +44,31 @@ export function ChallengeLineupSelector({
       .filter((c): c is CatalogChallenge => Boolean(c));
   }, [selectedIds, catalogMap]);
 
+  const unselectedFiltered = useMemo(() => {
+    return filteredCatalog.filter((c) => !selectedIds.includes(c.id));
+  }, [filteredCatalog, selectedIds]);
+
+  const unselectedTotal = useMemo(() => {
+    return catalog.filter((c) => !selectedIds.includes(c.id));
+  }, [catalog, selectedIds]);
+
   const toggleChallenge = (id: string) => {
     if (selectedIds.includes(id)) {
       onChange(selectedIds.filter((item) => item !== id));
     } else {
       onChange([...selectedIds, id]);
     }
+  };
+
+  const addAll = () => {
+    const toAdd = unselectedFiltered.length > 0 ? unselectedFiltered : unselectedTotal;
+    if (toAdd.length === 0) return;
+    const newIds = [...selectedIds, ...toAdd.map((c) => c.id)];
+    onChange(newIds);
+  };
+
+  const clearAll = () => {
+    onChange([]);
   };
 
   const moveUp = (index: number) => {
@@ -83,16 +102,37 @@ export function ChallengeLineupSelector({
             Select and order challenges. Players will solve them in this order.
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-1.5 text-sm font-medium text-cyan-400">
-          <span>{selectedIds.length} challenges selected</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={addAll}
+            disabled={unselectedTotal.length === 0}
+            className="flex items-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/40 px-3.5 py-2 text-xs font-semibold text-cyan-300 transition hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <CheckCheck className="size-4" />
+            <span>Add all</span>
+          </button>
+          <div className="rounded-xl border border-zinc-800 bg-black/40 px-3 py-2 text-sm font-medium text-cyan-400">
+            <span>{selectedIds.length} challenges selected</span>
+          </div>
         </div>
       </div>
 
       {selectedIds.length > 0 ? (
         <section className="rounded-2xl border border-cyan-900/40 bg-cyan-950/10 p-5">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-cyan-400">
-            Selected Lineup Order ({selectedIds.length})
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-cyan-400">
+              Selected Lineup Order ({selectedIds.length})
+            </h3>
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-rose-300 transition cursor-pointer"
+            >
+              <RotateCcw className="size-3" />
+              <span>Clear selection</span>
+            </button>
+          </div>
           <ol className="mt-3 divide-y divide-zinc-800">
             {selectedChallenges.map((challenge, index) => (
               <li
@@ -172,6 +212,37 @@ export function ChallengeLineupSelector({
           <option value="MEDIUM">MEDIUM (Medium)</option>
           <option value="HARD">HARD (Hard)</option>
         </select>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-400">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={addAll}
+            disabled={unselectedTotal.length === 0}
+            className="flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/30 px-3 py-1.5 font-semibold text-cyan-300 hover:bg-cyan-900/50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          >
+            <CheckCheck className="size-3.5" />
+            <span>
+              {unselectedTotal.length === 0
+                ? "All challenges added"
+                : `Add all ${unselectedFiltered.length > 0 ? `(${unselectedFiltered.length})` : ""}`}
+            </span>
+          </button>
+          {selectedIds.length > 0 && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-zinc-400 hover:bg-zinc-800 hover:text-white transition cursor-pointer"
+            >
+              <RotateCcw className="size-3.5" />
+              <span>Clear all</span>
+            </button>
+          )}
+        </div>
+        <span className="text-zinc-500 font-mono">
+          Showing {filteredCatalog.length} of {catalog.length} challenges
+        </span>
       </div>
 
       <div className="grid gap-2">
