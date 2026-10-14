@@ -313,7 +313,7 @@ export function generateAsciiTree(dir: VfsDirectory, prefix: string = ""): strin
   return lines;
 }
 
-export function createInitialVfs(seed?: Record<string, string>): VfsState {
+export function createInitialVfs(seed?: Record<string, string>, initialCwd: string = "/workspace"): VfsState {
   const root: VfsDirectory = {
     type: "dir",
     name: "",
@@ -381,7 +381,7 @@ export function createInitialVfs(seed?: Record<string, string>): VfsState {
 
   return {
     root,
-    cwd: "/workspace",
+    cwd: initialCwd,
     env: {
       USER: "player",
       HOME: "/workspace",

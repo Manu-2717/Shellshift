@@ -41,8 +41,6 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {
       cd: "mkdir",
       mkdir: "cd",
-      ls: "cat",
-      cat: "ls",
     },
     clues: [
       {
@@ -50,9 +48,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Transmission: Command Swaps",
         type: "base64",
         plaintextAnswer:
-          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat). Standard mkdir and cat are redirected.",
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). Standard mkdir is redirected.",
         encodedContent: encodeBase64(
-          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). 'ls' displays file contents (acting as cat). Standard mkdir and cat are redirected.",
+          "TERMINAL ALERT: 'cd' creates directories (acting as mkdir). Standard mkdir is redirected.",
         ),
         hintNote: "",
       },
@@ -93,7 +91,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Deploying Recovery",
         content:
-          "Run 'cd /workspace/breach' to create the folder, then 'ls /workspace/signal.txt' to view the file.",
+          "Run 'cd /workspace/breach' to create the folder, then 'cat /workspace/signal.txt' to view the file.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 2,
@@ -178,13 +176,13 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 3: EASY — Read the Note
+  // LEVEL 3: EASY — Morse Message
   // ==========================================
   {
     slug: "morse-mail",
     title: "Read the Morse Note",
     description:
-      "Decode a short Morse message, create the requested note, and read the matching file.",
+      "Decode the Morse code clue, inspect the note with the swapped command, and create the confirmation file.",
     difficulty: "EASY",
     order: 3,
     estimatedDuration: "2-4 min",
@@ -208,14 +206,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-3-1",
-        title: "Inspection Remap",
-        type: "rot13",
+        title: "Morse Code Directive",
+        type: "morse",
         plaintextAnswer:
           "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
-        encodedContent: encodeRot13(
+        encodedContent: encodeMorse(
           "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
         ),
-        hintNote: "",
+        hintNote: "Morse code: dots (.), dashes (-), and slashes (/) for spaces.",
       },
     ],
     initialFilesystem: {
@@ -238,7 +236,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Viewing Files",
         content:
-          "The ROT13 clue reveals that 'touch' reads files and 'cat' creates files.",
+          "The Morse code clue reveals that 'touch' reads files and 'cat' creates files.",
         penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
@@ -255,7 +253,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   },
 
   // ==========================================
-  // LEVEL 4: EASY — Morse Message
+  // LEVEL 4: EASY — Binary Message
   // ==========================================
   {
     slug: "binary-breadcrumbs",
@@ -285,19 +283,23 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-4-1",
-        title: "Morse Code Directive",
-        type: "morse",
-        plaintextAnswer: "SECRET",
-        encodedContent: encodeMorse("SECRET"),
-        hintNote: "",
+        title: "Binary Directive: Swapped Folders",
+        type: "binary",
+        plaintextAnswer:
+          "CLUE: 'cd' creates directories (acting as mkdir). Target folder: 'secret'.",
+        encodedContent: encodeBinary(
+          "CLUE: 'cd' creates directories (acting as mkdir). Target folder: 'secret'.",
+        ),
+        hintNote: "Binary encoding: each character is 8 bits (0s and 1s).",
       },
     ],
     initialFilesystem: {
-      "/workspace/message.txt": "... . -.-. .-. . -",
+      "/workspace/message.txt":
+        "01010011 01000101 01000011 01010010 01000101 01010100",
     },
     objectiveConfig: {
       description:
-        "Create directory /workspace/secret revealed by the Morse message",
+        "Create directory /workspace/secret revealed by the binary clue",
       rules: [
         {
           id: "obj-4-secret-dir",
@@ -310,8 +312,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     hints: [
       {
-        title: "Decoding Morse",
-        content: "'... . -.-. .-. . -' decodes to SECRET in Morse code.",
+        title: "Decoding Binary",
+        content:
+          "The binary clue reveals that 'cd' creates directories (acting as mkdir).",
         penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
@@ -358,14 +361,14 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     clues: [
       {
         id: "clue-5-1",
-        title: "Removal Mapping",
-        type: "base64",
+        title: "Hex Removal Directive",
+        type: "hex",
         plaintextAnswer:
           "CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it.",
-        encodedContent: encodeBase64(
+        encodedContent: encodeHex(
           "CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it.",
         ),
-        hintNote: "",
+        hintNote: "Hexadecimal byte encoding (0-9, a-f).",
       },
     ],
     initialFilesystem: {
@@ -396,7 +399,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Deleting with mkdir",
         content:
-          "The clue explains that 'mkdir' is remapped to remove files in this challenge.",
+          "The hex clue explains that 'mkdir' is remapped to remove files in this challenge.",
         penaltySeconds: 15,
         pointPenalty: 20,
         order: 1,
@@ -438,7 +441,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       touch: "cp",
-      cp: "ls",
+      cp: "touch",
     },
     clues: [
       {
@@ -446,9 +449,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Hex Encoded Target",
         type: "hex",
         plaintextAnswer:
-          "TARGET: flag.txt. Use 'touch /workspace/flag.txt /workspace/found.txt' because touch copies files.",
+          "TARGET: flag.txt. Commands 'touch' and 'cp' have swapped jobs: 'touch' copies files (acting as cp), while 'cp' creates files (acting as touch). Run 'touch /workspace/flag.txt /workspace/found.txt'.",
         encodedContent: encodeHex(
-          "TARGET: flag.txt. Use 'touch /workspace/flag.txt /workspace/found.txt' because touch copies files.",
+          "TARGET: flag.txt. Commands 'touch' and 'cp' have swapped jobs: 'touch' copies files (acting as cp), while 'cp' creates files (acting as touch). Run 'touch /workspace/flag.txt /workspace/found.txt'.",
         ),
         hintNote: "",
       },
@@ -463,9 +466,10 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         {
           id: "obj-6-found",
           points: 500,
-          type: "file_exists",
+          type: "file_contains",
           path: "/workspace/found.txt",
-          description: "Target file /workspace/found.txt deployed",
+          content: "HEX_SUCCESS",
+          description: "Target file /workspace/found.txt deployed with flag data",
         },
       ],
     },
@@ -494,9 +498,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-missing-file",
-    title: "Move Data to Backup",
+    title: "Copy Data to Backup",
     description:
-      "Move the data file into the backup folder without leaving the original behind.",
+      "Copy the data file into the backup folder using the swapped command, keeping the original intact.",
     difficulty: "EASY",
     order: 7,
     estimatedDuration: "2-4 min",
@@ -913,9 +917,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
   // ==========================================
   {
     slug: "the-relocation-protocol",
-    title: "Move the Report",
+    title: "Copy Report to Archive",
     description:
-      "Move the report into the archive folder and confirm it is no longer in its old place.",
+      "Copy the report into the archive folder using the swapped command, keeping the original intact.",
     difficulty: "MEDIUM",
     order: 12,
     estimatedDuration: "4-7 min",
@@ -934,7 +938,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       mv: "cp",
-      cp: "ls",
+      cp: "mv",
     },
     clues: [
       {
@@ -943,6 +947,17 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         type: "hex",
         plaintextAnswer: "report.doc",
         encodedContent: encodeHex("report.doc"),
+        hintNote: "",
+      },
+      {
+        id: "clue-12-2",
+        title: "Transmission: Command Swaps",
+        type: "base64",
+        plaintextAnswer:
+          "CLUE: 'mv' and 'cp' have swapped jobs: 'mv' copies files (acting as cp), while 'cp' moves files (acting as mv). Run 'mv /workspace/report.doc /workspace/archive/report.doc'.",
+        encodedContent: encodeBase64(
+          "CLUE: 'mv' and 'cp' have swapped jobs: 'mv' copies files (acting as cp), while 'cp' moves files (acting as mv). Run 'mv /workspace/report.doc /workspace/archive/report.doc'.",
+        ),
         hintNote: "",
       },
     ],
@@ -955,11 +970,18 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         "Copy /workspace/report.doc to /workspace/archive/report.doc",
       rules: [
         {
+          id: "obj-12-original",
+          points: 250,
+          type: "file_exists",
+          path: "/workspace/report.doc",
+          description: "Original report remains in workspace",
+        },
+        {
           id: "obj-12-archived",
-          points: 500,
+          points: 250,
           type: "file_exists",
           path: "/workspace/archive/report.doc",
-          description: "Report safely placed in /workspace/archive/report.doc",
+          description: "Report safely copied to /workspace/archive/report.doc",
         },
       ],
     },
@@ -967,7 +989,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Decoding Target",
         content:
-          "The hex clue translates to 'report.doc'. 'mv' acts as 'cp', standard 'cp' acts as 'ls'.",
+          "The hex clue translates to 'report.doc'. 'mv' and 'cp' have swapped jobs: use 'mv /workspace/report.doc /workspace/archive/report.doc' to copy the file.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -1010,8 +1032,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {
       cat: "grep",
       grep: "cat",
-      ls: "touch",
-      touch: "ls",
+      pwd: "touch",
+      touch: "pwd",
     },
     clues: [
       {
@@ -1019,9 +1041,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Log Investigation Directive",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'cat' filters logs (acting as grep). 'ls' creates files (acting as touch). Standard grep and touch are redirected. Run 'cat ERROR /workspace/server.log', then 'ls /workspace/alert.txt'.",
+          "CLUE: 'cat' and 'grep' have swapped jobs: 'cat' filters logs (acting as grep). 'pwd' and 'touch' have swapped jobs: 'pwd' creates files (acting as touch). Run 'cat ERROR /workspace/server.log', then 'pwd /workspace/alert.txt'.",
         encodedContent: encodeBase64(
-          "CLUE: 'cat' filters logs (acting as grep). 'ls' creates files (acting as touch). Standard grep and touch are redirected. Run 'cat ERROR /workspace/server.log', then 'ls /workspace/alert.txt'.",
+          "CLUE: 'cat' and 'grep' have swapped jobs: 'cat' filters logs (acting as grep). 'pwd' and 'touch' have swapped jobs: 'pwd' creates files (acting as touch). Run 'cat ERROR /workspace/server.log', then 'pwd /workspace/alert.txt'.",
         ),
         hintNote: "",
       },
@@ -1061,7 +1083,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Logging Alert",
         content:
-          "Run 'ls /workspace/alert.txt' (ls acts as touch) to acknowledge the error.",
+          "Run 'pwd /workspace/alert.txt' (pwd acts as touch) to acknowledge the error.",
         penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
@@ -1159,7 +1181,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "three-keys",
     title: "Organize Project Files",
     description:
-      "Copy the code and style files into their correct project folders.",
+      "Move the code and style files into their matching project folders using the swapped command.",
     difficulty: "MEDIUM",
     order: 15,
     estimatedDuration: "4-7 min",
@@ -1178,7 +1200,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     },
     commandMappings: {
       cp: "mv",
-      mv: "ls",
+      mv: "cp",
     },
     clues: [
       {
@@ -1186,9 +1208,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Sorting Directive",
         type: "base64",
         plaintextAnswer:
-          "'cp' moves files (acting as mv). Standard 'mv' acts as ls. Move code.js to src and style.css to styles.",
+          "CLUE: 'cp' and 'mv' have swapped functions. Typing 'cp' moves files (acting as mv), while typing 'mv' copies files (acting as cp). Move code.js to src and style.css to styles using 'cp'.",
         encodedContent: encodeBase64(
-          "'cp' moves files (acting as mv). Standard 'mv' acts as ls. Move code.js to src and style.css to styles.",
+          "CLUE: 'cp' and 'mv' have swapped functions. Typing 'cp' moves files (acting as mv), while typing 'mv' copies files (acting as cp). Move code.js to src and style.css to styles using 'cp'.",
         ),
         hintNote: "",
       },
@@ -1223,7 +1245,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Moving Files",
         content:
-          "'cp' moves files instead of copying them. Standard 'mv' acts as ls.",
+          "'cp' and 'mv' have swapped functions: 'cp' moves files (acting as mv), while 'mv' copies files (acting as cp).",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -1266,8 +1288,8 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     commandMappings: {
       grep: "cat",
       cat: "grep",
-      ls: "touch",
-      touch: "ls",
+      pwd: "touch",
+      touch: "pwd",
     },
     clues: [
       {
@@ -1283,9 +1305,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Inspection Directive",
         type: "rot13",
         plaintextAnswer:
-          "CLUE: 'grep' inspects files (acting as cat). 'ls' creates files (acting as touch). Standard cat and touch are redirected.",
+          "CLUE: 'grep' and 'cat' have swapped jobs ('grep' inspects files). 'pwd' and 'touch' have swapped jobs ('pwd' creates files). Standard cat and touch are redirected.",
         encodedContent: encodeRot13(
-          "CLUE: 'grep' inspects files (acting as cat). 'ls' creates files (acting as touch). Standard cat and touch are redirected.",
+          "CLUE: 'grep' and 'cat' have swapped jobs ('grep' inspects files). 'pwd' and 'touch' have swapped jobs ('pwd' creates files). Standard cat and touch are redirected.",
         ),
         hintNote: "",
       },
@@ -1317,7 +1339,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Decoding Base64",
         content:
-          "The Base64 clue decodes to 'target_omega.txt'. 'grep' acts as 'cat', and 'ls' acts as 'touch'.",
+          "The Base64 clue decodes to 'target_omega.txt'. 'grep' acts as 'cat', and 'pwd' acts as 'touch'.",
         penaltySeconds: 20,
         pointPenalty: 25,
         order: 1,
@@ -1325,7 +1347,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Inspecting and Confirming",
         content:
-          "Run 'grep /workspace/target_omega.txt' then 'ls /workspace/confirmation.txt'.",
+          "Run 'grep /workspace/target_omega.txt' then 'pwd /workspace/confirmation.txt'.",
         penaltySeconds: 40,
         pointPenalty: 35,
         order: 2,
@@ -1425,7 +1447,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
     slug: "deep-breach-babel",
     title: "Repair the Core Vault",
     description:
-      "Create the nested vault path, move the key into it, and remove the temporary file.",
+      "Create the nested vault path, copy the key into it, and remove the temporary file.",
     difficulty: "HARD",
     order: 18,
     estimatedDuration: "8-10 min",
@@ -1446,8 +1468,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       grep: "mkdir",
       mkdir: "grep",
       mv: "cp",
-      cp: "rm",
-      rm: "mv",
+      cp: "mv",
+      touch: "rm",
+      rm: "touch",
     },
     clues: [
       {
@@ -1455,9 +1478,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Vault Protocol: Creation & Duplication",
         type: "base64",
         plaintextAnswer:
-          "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp).",
+          "VAULT PROTOCOL: 'grep' and 'mkdir' have swapped functions ('grep' creates directories). 'mv' and 'cp' have swapped functions ('mv' copies files).",
         encodedContent: encodeBase64(
-          "VAULT PROTOCOL: 'grep' creates directories (acting as mkdir). 'mv' copies files (acting as cp).",
+          "VAULT PROTOCOL: 'grep' and 'mkdir' have swapped functions ('grep' creates directories). 'mv' and 'cp' have swapped functions ('mv' copies files).",
         ),
         hintNote: "",
       },
@@ -1465,9 +1488,10 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         id: "clue-18-2",
         title: "Cleanup Protocol: File Deletion",
         type: "hex",
-        plaintextAnswer: "CLEANUP PROTOCOL: 'cp' removes files (acting as rm).",
+        plaintextAnswer:
+          "CLEANUP PROTOCOL: 'touch' and 'rm' have swapped functions. Typing 'touch' deletes files (acting as rm), while 'rm' touches files.",
         encodedContent: encodeHex(
-          "CLEANUP PROTOCOL: 'cp' removes files (acting as rm).",
+          "CLEANUP PROTOCOL: 'touch' and 'rm' have swapped functions. Typing 'touch' deletes files (acting as rm), while 'rm' touches files.",
         ),
         hintNote: "",
       },
@@ -1507,7 +1531,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Understanding Mappings",
         content:
-          "Check decoded clues: 'grep' makes directories, 'mv' copies files, and 'cp' removes files.",
+          "Check decoded clues: 'grep' makes directories, 'mv' copies files, and 'touch' removes files.",
         penaltySeconds: 30,
         pointPenalty: 30,
         order: 1,
@@ -1515,7 +1539,7 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
       {
         title: "Executing Babel Recovery",
         content:
-          "Run 'grep -p /workspace/vault/core', 'mv /workspace/secret.key /workspace/vault/core/secret.key', and 'cp /workspace/temp.tmp'.",
+          "Run 'grep -p /workspace/vault/core', 'mv /workspace/secret.key /workspace/vault/core/secret.key', and 'touch /workspace/temp.tmp'.",
         penaltySeconds: 60,
         pointPenalty: 50,
         order: 2,

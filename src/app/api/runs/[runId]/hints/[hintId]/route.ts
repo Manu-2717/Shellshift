@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { roundScore } from "@/lib/scoring/scoringEngine";
 
 export async function POST(
   request: Request,
@@ -14,7 +15,8 @@ export async function POST(
   }
 
   const run = await prisma.run.findUnique({
-    where: { id: runId }, include: { event: true },
+    where: { id: runId },
+    include: { event: true, challenge: true },
   });
 
   if (!run) {
@@ -99,7 +101,17 @@ export async function POST(
     include: { hint: true },
   });
 
-  const penaltyCap = 100; // Capped at 100 base points
+  let penaltyCap = 100;
+  try {
+    if (run.scoringSnapshot) {
+      const snap = JSON.parse(run.scoringSnapshot);
+      if (typeof snap.hintPenaltyCap === "number") penaltyCap = snap.hintPenaltyCap;
+    } else if (run.challenge?.scoringConfig) {
+      const cfg = JSON.parse(run.challenge.scoringConfig);
+      if (typeof cfg.hintPenaltyCap === "number") penaltyCap = cfg.hintPenaltyCap;
+    }
+  } catch {}
+
   const totalRawPenalty = allUsages.reduce(
     (sum, u) => sum + (u.pointPenalty || u.hint.pointPenalty || 25),
     0
@@ -108,7 +120,7 @@ export async function POST(
 
   // Update run's recorded hint penalty
   const updatedBaseScore = Math.max(0, run.objectivePoints - cappedPenalty);
-  const updatedFinalScore = Math.floor(updatedBaseScore * run.difficultyMultiplier);
+  const updatedFinalScore = roundScore(updatedBaseScore * run.difficultyMultiplier);
 
   await prisma.run.update({
     where: { id: run.id },

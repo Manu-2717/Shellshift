@@ -10,6 +10,7 @@ interface LiveTimerProps {
   deadlineAt?: string | Date | null;
   timeLimitSeconds?: number | null;
   isExpired?: boolean;
+  onTimeUp?: () => void;
 }
 
 export function LiveTimer({
@@ -19,6 +20,7 @@ export function LiveTimer({
   deadlineAt,
   timeLimitSeconds,
   isExpired: initialExpired,
+  onTimeUp,
 }: LiveTimerProps) {
   const getInitialMs = () => {
     if (durationMs !== undefined && durationMs !== null) return durationMs;
@@ -30,6 +32,7 @@ export function LiveTimer({
 
   const [elapsedMs, setElapsedMs] = useState<number>(getInitialMs);
   const isCompleted = !!completedAt || (durationMs !== undefined && durationMs !== null);
+  const hasTriggeredRef = React.useRef(false);
 
   useEffect(() => {
     if (durationMs !== undefined && durationMs !== null) return;
@@ -59,11 +62,19 @@ export function LiveTimer({
     remainingSeconds = Math.max(0, Math.floor(remainingMs / 1000));
     if (remainingMs <= 0 && !isCompleted) {
       isExpired = true;
+      if (!hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
+        onTimeUp?.();
+      }
     }
   } else if (timeLimitSeconds) {
     remainingSeconds = Math.max(0, timeLimitSeconds - totalSeconds);
     if (totalSeconds >= timeLimitSeconds && !isCompleted) {
       isExpired = true;
+      if (!hasTriggeredRef.current) {
+        hasTriggeredRef.current = true;
+        onTimeUp?.();
+      }
     }
   }
 
@@ -71,43 +82,38 @@ export function LiveTimer({
   const remSecs = remainingSeconds !== null ? remainingSeconds % 60 : null;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2.5 font-mono">
       <div
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono transition-colors ${
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-mono text-xs transition-colors shadow-[0_0_12px_rgba(6,182,212,0.08)] ${
           isCompleted
-            ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-300"
+            ? "bg-emerald-950/50 border-emerald-500/50 text-emerald-300"
             : isExpired
-            ? "bg-rose-950/40 border-rose-500/50 text-rose-300"
-            : "bg-[#18181b] border-[#27272a] text-cyan-400"
+            ? "bg-rose-950/50 border-rose-500/50 text-rose-300"
+            : "bg-[#121622] border-[#23293a] text-cyan-400"
         }`}
       >
         {isCompleted ? (
-          <Trophy className="w-4 h-4 text-emerald-400" />
+          <Trophy className="size-3.5 text-emerald-400 shrink-0" />
         ) : (
-          <Timer className={`w-4 h-4 ${isExpired ? "text-rose-400" : "text-cyan-400 animate-pulse"}`} />
+          <Timer className={`size-3.5 ${isExpired ? "text-rose-400" : "text-cyan-400 animate-pulse"} shrink-0`} />
         )}
 
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-[10px] text-[#a1a1aa] font-sans tracking-wide uppercase">
-            {isCompleted ? "Time" : isExpired ? "Expired" : "Timer"}
-          </span>
-          <span className="text-sm font-bold tracking-wider tabular-nums" suppressHydrationWarning>
-            {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
-            <span className="text-xs text-[#a1a1aa]">{tenths}</span>
-          </span>
-        </div>
+        <span className="font-bold tracking-wider tabular-nums text-xs sm:text-sm text-cyan-300" suppressHydrationWarning>
+          {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}.
+          <span className="text-xs text-cyan-400/70">{tenths}</span>
+        </span>
       </div>
 
       {!isCompleted && remainingSeconds !== null && (
         <div
-          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-mono tabular-nums ${
+          className={`hidden sm:flex items-center gap-1.5 text-xs font-mono tabular-nums uppercase tracking-wider ${
             isExpired || remainingSeconds <= 120
-              ? "bg-rose-950/40 border-rose-800/80 text-rose-400 font-bold animate-pulse"
-              : "bg-[#18181b] border-[#27272a] text-[#a1a1aa]"
+              ? "text-rose-400 font-bold animate-pulse"
+              : "text-zinc-400"
           }`}
         >
-          <span className="text-[10px] text-[#a1a1aa] uppercase font-sans">Remaining:</span>
-          <span suppressHydrationWarning>
+          <span className="text-[10px] text-zinc-500 uppercase font-sans font-bold">REMAINING</span>
+          <span className="font-bold text-zinc-300" suppressHydrationWarning>
             {remMinutes?.toString().padStart(2, "0")}:{remSecs?.toString().padStart(2, "0")}
           </span>
         </div>

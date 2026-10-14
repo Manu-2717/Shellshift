@@ -21,6 +21,9 @@ export function executeCommand(
     };
   }
 
+  if (!state.history) state.history = [];
+  if (commandLine.trim()) state.history.push(commandLine.trim());
+
   if (!parsed.command) {
     return {
       output: "",

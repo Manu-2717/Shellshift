@@ -208,8 +208,8 @@ describe("ShellShift Scoring Engine Unit Tests", () => {
       });
 
       expect(result.baseScore).toBe(925);
-      // 925 * 1.25 = 1156.25 -> 1156 floor
-      expect(result.finalScore).toBe(1156);
+      // 925 * 1.25 = 1156.25
+      expect(result.finalScore).toBe(1156.25);
       expect(result.maxFinalScore).toBe(1250); // 1000 * 1.25
     });
 
@@ -230,9 +230,81 @@ describe("ShellShift Scoring Engine Unit Tests", () => {
       });
 
       expect(result.baseScore).toBe(925);
-      // 925 * 1.5 = 1387.5 -> 1387 floor
-      expect(result.finalScore).toBe(1387);
+      // 925 * 1.5 = 1387.5
+      expect(result.finalScore).toBe(1387.5);
       expect(result.maxFinalScore).toBe(1500);
+    });
+  });
+
+  describe("Strict Time-Differentiated Scoring (Even 1 Second Changes Score)", () => {
+    const baseStart = new Date("2026-10-10T12:00:00Z");
+
+    it("guarantees no two players finishing at different seconds have the same score", () => {
+      const easyConfig = DEFAULT_SCORING_CONFIG;
+      const seenScores = new Set<number>();
+
+      for (let sec = 0; sec < easyConfig.timeLimitSeconds; sec++) {
+        const completedAt = new Date(baseStart.getTime() + sec * 1000);
+        const result = calculateRunScore({
+          status: "COMPLETED",
+          startedAt: baseStart,
+          completedAt,
+          verifiedObjectiveIds: ["obj_dir", "obj_file"],
+          revealedHintPenalties: [],
+          config: easyConfig,
+          objectives: sampleObjectives,
+        });
+
+        expect(seenScores.has(result.finalScore)).toBe(false);
+        seenScores.add(result.finalScore);
+      }
+    });
+
+    it("ensures score strictly decreases with each passing second", () => {
+      const easyConfig = DEFAULT_SCORING_CONFIG;
+      let prevScore = Infinity;
+
+      for (let sec = 0; sec < easyConfig.timeLimitSeconds; sec++) {
+        const completedAt = new Date(baseStart.getTime() + sec * 1000);
+        const result = calculateRunScore({
+          status: "COMPLETED",
+          startedAt: baseStart,
+          completedAt,
+          verifiedObjectiveIds: ["obj_dir", "obj_file"],
+          revealedHintPenalties: [],
+          config: easyConfig,
+          objectives: sampleObjectives,
+        });
+
+        expect(result.finalScore).toBeLessThan(prevScore);
+        prevScore = result.finalScore;
+      }
+    });
+
+    it("preserves strict 1-second differentiation across Medium (1.25) and Hard (1.50) difficulties", () => {
+      for (const mult of [1.25, 1.5]) {
+        const config: ScoringConfig = {
+          ...DEFAULT_SCORING_CONFIG,
+          difficultyMultiplier: mult,
+        };
+        let prevScore = Infinity;
+
+        for (let sec = 0; sec <= 60; sec++) {
+          const completedAt = new Date(baseStart.getTime() + sec * 1000);
+          const result = calculateRunScore({
+            status: "COMPLETED",
+            startedAt: baseStart,
+            completedAt,
+            verifiedObjectiveIds: ["obj_dir", "obj_file"],
+            revealedHintPenalties: [],
+            config,
+            objectives: sampleObjectives,
+          });
+
+          expect(result.finalScore).toBeLessThan(prevScore);
+          prevScore = result.finalScore;
+        }
+      }
     });
   });
 

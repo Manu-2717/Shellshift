@@ -9,6 +9,17 @@ import { formatScheduleTime } from "@/lib/games/display";
 export const dynamic = "force-dynamic";
 
 export default async function Games() {
+  const now = new Date();
+  await prisma.event
+    .updateMany({
+      where: {
+        status: "PUBLISHED",
+        endTime: { lte: now },
+      },
+      data: { status: "ENDED" },
+    })
+    .catch(() => null);
+
   const [user, games] = await Promise.all([
     getSession().catch(() => null),
     prisma.event

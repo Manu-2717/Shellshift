@@ -99,149 +99,75 @@ export function ContextPanel({
   };
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-zinc-800 bg-[#0e1016] font-mono text-xs shadow-2xl">
-      {/* Header Tabs */}
-      <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 bg-[#07080b] px-3 py-2 select-none">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setTab("clues")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-              tab === "clues"
-                ? "border border-zinc-700 bg-[#161922] text-cyan-300"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            <KeyRound className="size-3.5 text-cyan-400" />
-            <span>Clues ({clues.length})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTab("tree")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-              tab === "tree"
-                ? "border border-zinc-700 bg-[#161922] text-cyan-300"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            <FolderTree className="size-3.5 text-cyan-400" />
-            <span>Filesystem</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTab("reference")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-              tab === "reference"
-                ? "border border-zinc-700 bg-[#161922] text-cyan-300"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            <BookOpen className="size-3.5 text-cyan-400" />
-            <span>Reference</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setTab("scratchpad")}
-            className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-              tab === "scratchpad"
-                ? "border border-zinc-700 bg-[#161922] text-cyan-300"
-                : "text-zinc-400 hover:text-white"
-            }`}
-          >
-            <PenLine className="size-3.5 text-cyan-400" />
-            <span>Scratchpad</span>
-          </button>
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-[#1e2434] bg-[#0d101a] font-mono text-xs shadow-2xl">
+      {/* Header */}
+      <div className="flex shrink-0 items-center justify-between border-b border-[#1e2434] bg-[#090b12] px-3.5 py-2.5 select-none">
+        <div className="flex items-center gap-2">
+          <KeyRound className="size-3.5 text-cyan-400" />
+          <span className="text-xs font-bold text-white tracking-wide">
+            Clues ({clues.length})
+          </span>
         </div>
 
-        <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-zinc-500 sm:inline">
-          Context
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          Intel & Ciphers
         </span>
       </div>
 
       {/* Tab Body */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5">
         {/* CLUES */}
-        {tab === "clues" && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-              <div>
-                <span className="text-xs font-bold text-white">ENCODED CIPHER CLUES</span>
-                <p className="text-[10px] text-zinc-400">
-                  Inspect to discover remapped commands. Decoders are disabled.
-                </p>
-              </div>
-              <span className="rounded border border-cyan-800/60 bg-cyan-950/40 px-2 py-0.5 text-[11px] font-bold text-cyan-300">
-                {clues.length} clues
-              </span>
+        <div className="space-y-3.5">
+          {clues.length === 0 ? (
+            <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-[#1e2434] p-4 text-center text-zinc-500 font-mono text-xs">
+              No cipher transmissions intercepted for this mission.
             </div>
-
-            {clues.map((clue, idx) => {
+          ) : (
+            clues.map((clue, idx) => {
               const meta = CIPHER_METADATA[clue.type] || {
                 name: clue.type,
                 category: "Encoding",
                 description: "",
               };
               const isInvestigated = !!investigatedClues[clue.id];
+              const encLabel = `ENCODED / ${(meta.name || clue.type).toUpperCase()}`;
 
               return (
                 <div
                   key={clue.id}
-                  className={`space-y-2 rounded-xl border p-3 transition ${
+                  className={`space-y-2.5 rounded-xl border p-3.5 transition ${
                     isInvestigated
                       ? "border-emerald-800/40 bg-emerald-950/10"
-                      : "border-zinc-800 bg-[#07080b] hover:border-zinc-700"
+                      : "border-[#1e2434] bg-[#08090f] hover:border-zinc-700"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex size-5 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-900 text-[10px] font-bold text-cyan-400">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded border border-cyan-500/40 bg-cyan-950/60 text-[10px] font-bold text-cyan-400">
                         #{idx + 1}
                       </span>
-                      <span className="truncate text-xs font-semibold text-white">
+                      <span className="truncate text-xs font-bold text-white">
                         {clue.title}
                       </span>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      <span className="rounded border border-zinc-800 bg-zinc-900 px-2 py-0.5 text-[10px] text-zinc-400">
-                        {meta.name}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="rounded border border-[#23293a] bg-[#121622] px-2 py-0.5 text-[10px] font-bold text-zinc-300 tracking-wider">
+                        {encLabel}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleInvestigated(clue.id)}
-                        className={`flex items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-medium transition cursor-pointer ${
-                          isInvestigated
-                            ? "border-emerald-800 bg-emerald-950 text-emerald-300"
-                            : "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white"
-                        }`}
-                      >
-                        {isInvestigated ? (
-                          <>
-                            <CheckCircle2 className="size-3 text-emerald-400" />
-                            <span>Solved</span>
-                          </>
-                        ) : (
-                          <>
-                            <Circle className="size-3" />
-                            <span>Pending</span>
-                          </>
-                        )}
-                      </button>
                     </div>
                   </div>
 
+                  {/* Encoded Content Box with Copy */}
                   <div className="relative group">
-                    <pre className="max-h-36 overflow-y-auto rounded-lg border border-zinc-800 bg-black/60 p-2.5 font-mono text-[11px] whitespace-pre-wrap break-all select-all text-cyan-300">
+                    <pre className="max-h-40 overflow-y-auto rounded-lg border border-[#1e2434] bg-[#05060a] p-3 font-mono text-xs whitespace-pre-wrap break-all select-all text-cyan-400 leading-relaxed">
                       {clue.encodedContent}
                     </pre>
 
                     <button
                       type="button"
                       onClick={() => handleCopy(clue.encodedContent, clue.id)}
-                      className="absolute top-2 right-2 flex items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-[10px] font-medium text-zinc-200 transition hover:bg-zinc-700 cursor-pointer"
+                      className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded border border-[#23293a] bg-[#121622] hover:bg-[#1a2030] px-2.5 py-1 text-[10px] font-medium text-zinc-300 transition cursor-pointer"
                     >
                       {copiedId === clue.id ? (
                         <>
@@ -256,11 +182,15 @@ export function ContextPanel({
                       )}
                     </button>
                   </div>
+
+                  <p className="text-[11px] text-zinc-400 font-mono">
+                    {clue.hintNote || "Inspect to discover remapped commands. Decoders are disabled."}
+                  </p>
                 </div>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
 
         {/* FILESYSTEM TREE */}
         {tab === "tree" && (

@@ -9,7 +9,7 @@ export interface ChallengeSolution {
 export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   "operation-inversion": {
     negativeCmd: "mkdir /workspace/breach",
-    steps: ["cd /workspace/breach", "ls /workspace/signal.txt"],
+    steps: ["cd /workspace/breach", "cat /workspace/signal.txt"],
   },
   "the-cryptic-agent": {
     negativeCmd: "touch /workspace/agent.key",
@@ -20,10 +20,10 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
     steps: [
       "grep -p /workspace/vault/core",
       "mv /workspace/secret.key /workspace/vault/core/secret.key",
-      "cp /workspace/temp.tmp",
+      "touch /workspace/temp.tmp",
     ],
   },
-  "pathfinder-basics": { negativeCmd: "mkdir project", steps: ["cd project"] },
+  "pathfinder-basics": { negativeCmd: "mkdir /workspace/project", steps: ["cd /workspace/project"] },
   "morse-mail": {
     negativeCmd: "cat /workspace/other.txt",
     steps: ["touch /workspace/note.txt", "cat /workspace/read.txt"],
@@ -68,7 +68,7 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   },
   "needle-in-the-archive": {
     negativeCmd: "touch /workspace/alert.txt",
-    steps: ["cat ERROR /workspace/server.log", "ls /workspace/alert.txt"],
+    steps: ["cat ERROR /workspace/server.log", "pwd /workspace/alert.txt"],
   },
   "ghost-signal": {
     negativeCmd: "mkdir /workspace/safe",
@@ -85,7 +85,7 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
     negativeCmd: "touch /workspace/confirmation.txt",
     steps: [
       "grep /workspace/target_omega.txt",
-      "ls /workspace/confirmation.txt",
+      "pwd /workspace/confirmation.txt",
     ],
   },
   "broken-chain": {

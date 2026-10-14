@@ -65,6 +65,23 @@ button:disabled, input:disabled, select:disabled { cursor: not-allowed; opacity:
   outline-offset: 2px;
 }
 
+/* Terminal prompt input reset - remove all borders, outlines, boxes, and default input sizing */
+.terminal-input,
+.terminal-input:focus,
+.terminal-input:focus-visible,
+.terminal-input:active {
+  outline: none !important;
+  outline-offset: 0 !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  min-height: unset !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+}
+
 ::selection {
   background: #06b6d4;
   color: #09090b;

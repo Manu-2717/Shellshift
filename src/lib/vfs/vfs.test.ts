@@ -271,5 +271,85 @@ describe("Familiar read-only shell utilities", () => {
     expect(getNode(vfs.root, "/workspace/empty")).toBeNull();
     expect(executeCommand(vfs, "rmdir full").output).toContain("Directory not empty");
   });
+
+  it("supports cryptographic and checksum utilities (base64, md5sum, sha256sum)", () => {
+    const vfs = createInitialVfs({
+      "/workspace/secret.txt": "hello world\n",
+    });
+    const b64 = executeCommand(vfs, "base64 secret.txt");
+    expect(b64.exitCode).toBe(0);
+    expect(b64.output).toBe(Buffer.from("hello world\n").toString("base64"));
+
+    const md5 = executeCommand(vfs, "md5sum secret.txt");
+    expect(md5.exitCode).toBe(0);
+    expect(md5.output).toMatch(/^[a-f0-9]{32}\s+secret\.txt$/);
+
+    const sha = executeCommand(vfs, "sha256sum secret.txt");
+    expect(sha.exitCode).toBe(0);
+    expect(sha.output).toMatch(/^[a-f0-9]{64}\s+secret\.txt$/);
+  });
+
+  it("supports hex dump, strings, and stream editing (xxd, strings, sed, tr, awk)", () => {
+    const vfs = createInitialVfs({
+      "/workspace/msg.txt": "apple banana cherry",
+      "/workspace/table.txt": "col1:col2:col3",
+    });
+    const stringsRes = executeCommand(vfs, "strings msg.txt");
+    expect(stringsRes.output).toContain("apple banana cherry");
+
+    const xxdRes = executeCommand(vfs, "xxd msg.txt");
+    expect(xxdRes.output).toContain("6170 706c");
+
+    const sedRes = executeCommand(vfs, "sed s/banana/orange/g msg.txt");
+    expect(sedRes.output).toBe("apple orange cherry");
+
+    const trRes = executeCommand(vfs, "tr a-z A-Z msg.txt");
+    expect(trRes.output).toBe("APPLE BANANA CHERRY");
+
+    const awkRes = executeCommand(vfs, "awk -F : {print $2} table.txt");
+    expect(awkRes.output).toBe("col2");
+  });
+
+  it("supports file comparison with diff", () => {
+    const vfs = createInitialVfs({
+      "/workspace/f1.txt": "line1\nline2\nline3",
+      "/workspace/f2.txt": "line1\nchanged\nline3",
+    });
+    const diffRes = executeCommand(vfs, "diff -u f1.txt f2.txt");
+    expect(diffRes.output).toContain("-line2");
+    expect(diffRes.output).toContain("+changed");
+  });
+
+  it("supports shell builtins: cd -, test, expr, history, and alias", () => {
+    const vfs = createInitialVfs({
+      "/workspace/sub/test.txt": "content",
+    });
+    executeCommand(vfs, "cd sub");
+    expect(vfs.cwd).toBe("/workspace/sub");
+    executeCommand(vfs, "cd -");
+    expect(vfs.cwd).toBe("/workspace");
+
+    expect(executeCommand(vfs, "test -f sub/test.txt").exitCode).toBe(0);
+    expect(executeCommand(vfs, "[ -d sub ]").exitCode).toBe(0);
+    expect(executeCommand(vfs, "[ -f non_existent ]").exitCode).toBe(1);
+
+    expect(executeCommand(vfs, "expr 5 + 3").output).toBe("8");
+
+    const histRes = executeCommand(vfs, "history");
+    expect(histRes.output).toContain("history");
+
+    executeCommand(vfs, "alias ll=ls -la");
+    expect(executeCommand(vfs, "alias").output).toContain("ll='ls -la'");
+  });
+
+  it("handles offline sandbox network queries gracefully", () => {
+    const vfs = createInitialVfs();
+    const loopbackRes = executeCommand(vfs, "ping 127.0.0.1");
+    expect(loopbackRes.output).toContain("64 bytes from 127.0.0.1");
+
+    const remoteRes = executeCommand(vfs, "ping 8.8.8.8");
+    expect(remoteRes.output).toContain("Network is unreachable (sandbox network isolation active)");
+  });
 });
+
 

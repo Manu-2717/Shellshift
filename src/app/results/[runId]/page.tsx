@@ -133,7 +133,7 @@ export default async function ResultsPage({
               Final Score
             </span>
             <div className="text-2xl sm:text-3xl font-extrabold text-cyan-400 tabular-nums">
-              {run.finalScore}
+              {run.finalScore % 1 === 0 ? run.finalScore : run.finalScore.toFixed(2)}
             </div>
             <span className="text-[10px] text-[#a1a1aa]">
               {run.difficultyMultiplier}x Multiplier
@@ -206,14 +206,14 @@ export default async function ResultsPage({
 
             <div className="p-3 rounded-lg bg-[#18181b] border border-[#27272a] space-y-1">
               <span className="text-[10px] text-[#a1a1aa] uppercase">Speed Bonus</span>
-              <div className="text-lg font-bold text-cyan-400 tabular-nums">+{run.speedBonus}</div>
+              <div className="text-lg font-bold text-cyan-400 tabular-nums">+{run.speedBonus % 1 === 0 ? run.speedBonus : run.speedBonus.toFixed(2)}</div>
               <span className="text-[9px] text-[#a1a1aa]">Time Remaining</span>
             </div>
 
             <div className="col-span-2 sm:col-span-1 p-3 rounded-lg bg-[#18181b] border border-cyan-500/40 space-y-1">
               <span className="text-[10px] text-cyan-400 uppercase font-bold">Total Score</span>
-              <div className="text-xl font-extrabold text-cyan-400 tabular-nums">{run.finalScore}</div>
-              <span className="text-[9px] text-[#a1a1aa]">{run.baseScore} × {run.difficultyMultiplier}</span>
+              <div className="text-xl font-extrabold text-cyan-400 tabular-nums">{run.finalScore % 1 === 0 ? run.finalScore : run.finalScore.toFixed(2)}</div>
+              <span className="text-[9px] text-[#a1a1aa]">{run.baseScore % 1 === 0 ? run.baseScore : run.baseScore.toFixed(2)} × {run.difficultyMultiplier}</span>
             </div>
           </div>
         </div>

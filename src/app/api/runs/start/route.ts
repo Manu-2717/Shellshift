@@ -57,13 +57,25 @@ export async function POST(request: Request) {
     });
 
     if (existingActiveRun) {
+      let cwd = existingActiveRun.currentWorkingDir;
+      if (existingActiveRun.commandCount === 0 && cwd === "/workspace") {
+        try {
+          const vfsState = JSON.parse(existingActiveRun.filesystemState);
+          vfsState.cwd = "/";
+          cwd = "/";
+          await prisma.run.update({
+            where: { id: existingActiveRun.id },
+            data: { currentWorkingDir: "/", filesystemState: JSON.stringify(vfsState) },
+          });
+        } catch {}
+      }
       return NextResponse.json({
         run: {
           id: existingActiveRun.id,
           status: existingActiveRun.status,
           startedAt: existingActiveRun.startedAt,
           deadlineAt: existingActiveRun.deadlineAt,
-          currentWorkingDir: existingActiveRun.currentWorkingDir,
+          currentWorkingDir: cwd,
           commandCount: existingActiveRun.commandCount,
           isExisting: true,
         },
@@ -100,12 +112,15 @@ export async function POST(request: Request) {
       initialFiles = JSON.parse(challenge.initialFilesystem);
     } catch {}
 
-    const vfs = createInitialVfs(initialFiles);
+    const vfs = createInitialVfs(initialFiles, "/");
 
     // Parse challenge scoring config
     const timeLimitSeconds = challenge.timeLimitSeconds || 1200;
     const startedAt = new Date();
-    const deadlineAt = new Date(startedAt.getTime() + timeLimitSeconds * 1000);
+    let deadlineAt = new Date(startedAt.getTime() + timeLimitSeconds * 1000);
+    if (currentEvent.endTime && deadlineAt > currentEvent.endTime) {
+      deadlineAt = currentEvent.endTime;
+    }
 
     let scoringConfig = {
       maxBaseScore: 1000,

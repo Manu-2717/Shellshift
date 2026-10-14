@@ -50,7 +50,7 @@ export async function GET() {
     orderBy: { order: "asc" },
     include: {
       hints: {
-        select: { id: true, title: true, penaltySeconds: true, order: true },
+        select: { id: true, title: true, penaltySeconds: true, pointPenalty: true, order: true },
       },
     },
   });

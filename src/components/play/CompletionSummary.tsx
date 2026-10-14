@@ -63,7 +63,10 @@ export function CompletionSummary({
           <div className="flex items-center justify-between pt-0.5">
             <span className="text-xs text-zinc-400">Final Score</span>
             <span className="text-xl font-extrabold tabular-nums text-cyan-300">
-              {runData.finalScore || runData.objectivePoints || 0} PTS
+              {typeof runData.finalScore === "number" && runData.finalScore > 0
+                ? (runData.finalScore % 1 === 0 ? runData.finalScore : runData.finalScore.toFixed(2))
+                : (runData.objectivePoints || 0)}{" "}
+              PTS
             </span>
           </div>
         </div>

@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { StandingsTable } from "@/components/games/StandingsTable";
 import { getSession } from "@/lib/auth/session";
@@ -31,6 +33,16 @@ export default async function Standings({
     <div className="min-h-screen bg-[#07080b] text-white">
       <Navbar user={user} />
       <main className="mx-auto max-w-5xl px-5 py-12">
+        <div className="mb-6 flex items-center justify-between">
+          <Link
+            href={`/games/${game.id}/lobby`}
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition"
+          >
+            <ArrowLeft className="size-3.5" />
+            <span>Return to Lobby</span>
+          </Link>
+          <span className="text-xs text-zinc-500">Live verified leaderboard</span>
+        </div>
         <p className="text-sm text-cyan-400">Individual standings</p>
         <h1 className="mt-2 text-4xl font-semibold">{game.name}</h1>
         <p className="mt-3 mb-8 text-zinc-500">

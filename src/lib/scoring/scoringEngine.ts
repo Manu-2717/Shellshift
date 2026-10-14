@@ -5,12 +5,12 @@
  * - Maximum base score: 1,000 points.
  * - Intermediate verified objectives: up to 500 points total.
  * - Full challenge completion bonus: 200 points.
- * - Maximum speed bonus: 300 points (floor(speedBonusMax * max(0, 1 - elapsedSeconds / timeLimitSeconds))).
+ * - Maximum speed bonus: 300 points (roundScore(speedBonusMax * max(0, 1 - elapsedSeconds / timeLimitSeconds))).
  * - Total hint penalty: capped at 100 base points.
  * - Difficulty multipliers: Easy 1.00, Medium 1.25, Hard 1.50.
  *
- * Base score: max(0, objectivePoints + completionBonus + speedBonus - hintPenalty)
- * Final score: min(floor(maxBaseScore * multiplier), floor(baseScore * multiplier))
+ * Base score: max(0, roundScore(objectivePoints + completionBonus + speedBonus - hintPenalty))
+ * Final score: min(roundScore(maxBaseScore * multiplier), roundScore(baseScore * multiplier))
  */
 
 export type ChallengeDifficulty = "EASY" | "MEDIUM" | "HARD";
@@ -135,9 +135,18 @@ export function validateScoringConfig(
 }
 
 /**
+ * Rounds score value to 2 decimal places to ensure floating point stability
+ * while strictly differentiating every single elapsed second.
+ */
+export function roundScore(val: number): number {
+  return Math.round(val * 100) / 100;
+}
+
+/**
  * Calculates the speed bonus.
- * speedBonus = floor(speedBonusMax * max(0, 1 - elapsedSeconds / timeLimitSeconds))
+ * speedBonus = roundScore(speedBonusMax * max(0, 1 - elapsedSeconds / timeLimitSeconds))
  * Awarded ONLY for a successfully completed run within its time limit.
+ * Guaranteed to strictly differentiate every single elapsed second.
  */
 export function calculateSpeedBonus(
   speedBonusMax: number,
@@ -151,7 +160,7 @@ export function calculateSpeedBonus(
   if (elapsedSeconds >= timeLimitSeconds) return 0;
 
   const ratio = Math.max(0, 1 - elapsedSeconds / timeLimitSeconds);
-  return Math.floor(speedBonusMax * ratio);
+  return roundScore(speedBonusMax * ratio);
 }
 
 /**
@@ -264,23 +273,23 @@ export function calculateRunScore(params: {
   if (isCompleted) {
     baseScore = Math.max(
       0,
-      objectivePoints + completionBonus + speedBonus - hintPenalty
+      roundScore(objectivePoints + completionBonus + speedBonus - hintPenalty)
     );
   } else if (isExpired) {
     if (config.partialCreditOnExpiry) {
-      baseScore = Math.max(0, objectivePoints - hintPenalty);
+      baseScore = Math.max(0, roundScore(objectivePoints - hintPenalty));
     } else {
       baseScore = 0;
     }
   } else {
     // In progress: display current verified intermediate points minus hints
-    baseScore = Math.max(0, objectivePoints - hintPenalty);
+    baseScore = Math.max(0, roundScore(objectivePoints - hintPenalty));
   }
 
   // 6. Final Score with difficulty multiplier
   const multiplier = Math.max(0.1, config.difficultyMultiplier);
-  const maxFinalScore = Math.floor(config.maxBaseScore * multiplier);
-  const finalScore = Math.min(maxFinalScore, Math.floor(baseScore * multiplier));
+  const maxFinalScore = roundScore(config.maxBaseScore * multiplier);
+  const finalScore = Math.min(maxFinalScore, roundScore(baseScore * multiplier));
 
   return {
     objectivePoints,

@@ -22,6 +22,9 @@ export interface VfsState {
   root: VfsDirectory;
   cwd: string;
   env?: Record<string, string>;
+  history?: string[];
+  aliases?: Record<string, string>;
+  oldCwd?: string;
 }
 
 export interface CommandMapping {

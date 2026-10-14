@@ -156,11 +156,11 @@ model Run {
   scoringSnapshot      String?               // JSON string
   objectivePoints      Int                   @default(0)
   completionBonus      Int                   @default(0)
-  speedBonus           Int                   @default(0)
+  speedBonus           Float                 @default(0)
   hintPenalty          Int                   @default(0)
-  baseScore            Int                   @default(0)
+  baseScore            Float                 @default(0)
   difficultyMultiplier Float                 @default(1.0)
-  finalScore           Int                   @default(0)
+  finalScore           Float                 @default(0)
   scoringBreakdown     String?               // JSON string
   isRanked             Boolean               @default(true)
   createdAt            DateTime              @default(now())

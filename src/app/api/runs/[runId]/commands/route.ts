@@ -54,24 +54,76 @@ export async function POST(
     }
 
     const access = evaluateRunAccess(run, session);
-    if (access !== "OK") return NextResponse.json({ error: access }, { status: access === "RUN_FORBIDDEN" ? 403 : 409 });
+    if (access !== "OK") {
+      if (access === "GAME_ENDED") {
+        if (run.event && run.event.status !== "ENDED") {
+          await prisma.event.updateMany({
+            where: { id: run.event.id },
+            data: { status: "ENDED" },
+          });
+        }
+        if (run.status === "IN_PROGRESS") {
+          await prisma.run.updateMany({
+            where: { id: run.id, status: "IN_PROGRESS" },
+            data: { status: "EXPIRED" },
+          });
+        }
+        return NextResponse.json({
+          output: "[COMPETITION ENDED] The event duration has concluded. Terminal is locked and submissions are closed.",
+          exitCode: 1,
+          isGameEnded: true,
+          isExpired: true,
+          status: "EXPIRED",
+        }, { status: 200 });
+      }
+
+      if (access === "RUN_EXPIRED") {
+        if (run.status === "IN_PROGRESS") {
+          await prisma.run.updateMany({
+            where: { id: run.id, status: "IN_PROGRESS" },
+            data: { status: "EXPIRED" },
+          });
+        }
+        return NextResponse.json({
+          output: "[TIME EXPIRED] Challenge deadline has passed. Run concluded.",
+          exitCode: 1,
+          isExpired: true,
+          status: "EXPIRED",
+        }, { status: 200 });
+      }
+
+      if (access === "GAME_PAUSED") {
+        return NextResponse.json({
+          output: "[GAME PAUSED] The competition is paused by tournament admins. Please wait for resumption.",
+          exitCode: 1,
+          isGamePaused: true,
+        }, { status: 200 });
+      }
+
+      return NextResponse.json({ error: access }, { status: access === "RUN_FORBIDDEN" ? 403 : 409 });
+    }
 
     // Check if run is already completed
     if (run.status === "COMPLETED") {
       return NextResponse.json(
         {
-          error: "Run has already completed. Subsequent commands are rejected.",
+          output: "[COMPLETED] Challenge is already completed. Subsequent commands are locked.",
           isCompleted: true,
           durationMs: run.durationMs,
+          exitCode: 0,
         },
-        { status: 400 }
+        { status: 200 }
       );
     }
 
     if (run.status !== "IN_PROGRESS") {
       return NextResponse.json(
-        { error: `Run is not active (status: ${run.status}).` },
-        { status: 400 }
+        {
+          output: `[LOCKED] Run is not active (status: ${run.status}).`,
+          isExpired: run.status === "EXPIRED",
+          exitCode: 1,
+        },
+        { status: 200 }
       );
     }
 

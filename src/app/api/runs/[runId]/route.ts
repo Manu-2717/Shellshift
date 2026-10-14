@@ -40,7 +40,7 @@ export async function GET(
       challenge: {
         include: {
           hints: {
-            select: { id: true, title: true, penaltySeconds: true, order: true },
+            select: { id: true, title: true, penaltySeconds: true, pointPenalty: true, order: true },
           },
         },
       },
@@ -81,8 +81,23 @@ export async function GET(
 
   let currentStatus = run.status;
 
-  // Authoritative Expiration check on retrieval
-  if (currentStatus === "IN_PROGRESS" && now.getTime() > deadline.getTime()) {
+  // Check if event has ended or reached endTime
+  const isEventEnded =
+    run.event &&
+    (run.event.status === "ENDED" ||
+      run.event.status === "ARCHIVED" ||
+      (run.event.endTime && now.getTime() >= new Date(run.event.endTime).getTime()));
+
+  if (run.event && run.event.status === "PUBLISHED" && run.event.endTime && now.getTime() >= new Date(run.event.endTime).getTime()) {
+    run.event.status = "ENDED";
+    await prisma.event.updateMany({
+      where: { id: run.event.id, status: { not: "ENDED" } },
+      data: { status: "ENDED" },
+    });
+  }
+
+  // Authoritative Expiration check on retrieval (challenge deadline OR event ended)
+  if (currentStatus === "IN_PROGRESS" && (now.getTime() > deadline.getTime() || isEventEnded)) {
     currentStatus = "EXPIRED";
     await prisma.run.updateMany({
       where: { id: run.id, status: "IN_PROGRESS" },

@@ -44,6 +44,15 @@ export default async function Game({
     notFound();
   }
 
+  const now = new Date();
+  if (g.status === "PUBLISHED" && g.endTime && now >= g.endTime) {
+    await prisma.event.update({
+      where: { id: g.id },
+      data: { status: "ENDED" },
+    });
+    g.status = "ENDED";
+  }
+
   const phase = deriveGamePhase(
     {
       status: g.status as any,
@@ -52,7 +61,7 @@ export default async function Game({
       startsAt: g.startTime,
       endsAt: g.endTime,
     },
-    new Date()
+    now
   );
 
   const durationHours = Math.round(

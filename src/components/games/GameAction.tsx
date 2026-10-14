@@ -31,6 +31,15 @@ export function GameAction({
     );
   }
 
+  if (phase === "ENDED") {
+    return (
+      <Link className="btn-primary" href={`/games/${gameId}/standings`}>
+        View Leaderboard
+        <ArrowRight className="size-4" />
+      </Link>
+    );
+  }
+
   if (!signedIn) {
     return (
       <a

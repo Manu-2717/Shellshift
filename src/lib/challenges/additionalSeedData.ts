@@ -877,11 +877,18 @@ const scenarios: Scenario[] = [
     steps: [
       "cd /workspace/deploy",
       "mv /workspace/build.bin /workspace/deploy/build.bin",
-      "mkdir /workspace/a.tmp",
-      "mkdir /workspace/b.tmp",
+      "touch /workspace/a.tmp",
+      "touch /workspace/b.tmp",
     ],
     negativeCmd: "mkdir /workspace/deploy",
-    mapping: { cd: "mkdir", mkdir: "rm", mv: "cp" },
+    mapping: {
+      cd: "mkdir",
+      mkdir: "cd",
+      mv: "cp",
+      cp: "mv",
+      touch: "rm",
+      rm: "touch",
+    },
   },
   {
     slug: "final-workspace-handoff",
@@ -944,7 +951,14 @@ function makeChallenge(scenario: Scenario): SeedChallengeDef {
       : scenario.difficulty === "MEDIUM"
         ? 900
         : 1200;
-  const instructions = `Complete these terminal steps: ${scenario.steps.join("; ")}`;
+  let instructions = `Complete these terminal steps: ${scenario.steps.join("; ")}`;
+  if (scenario.slug === "swapped-touch") {
+    instructions = `CLUE: 'pwd' and 'touch' are swapped: 'pwd' creates files (acting as touch). Run: pwd /workspace/ready.txt`;
+  } else if (scenario.slug === "swapped-copy-move") {
+    instructions = `CLUE: 'cp' and 'mv' are swapped: 'mv' copies files (acting as cp), while 'cp' moves files (acting as mv). Run: mv /workspace/guide.txt /workspace/out/guide.txt; cp /workspace/draft.txt /workspace/out/draft.txt`;
+  } else if (scenario.slug === "swapped-deploy-cleanup") {
+    instructions = `CLUE: Swapped commands: 'cd' creates folders (acting as mkdir), 'mv' copies files (acting as cp), and 'touch' deletes files (acting as rm). Run: cd /workspace/deploy; mv /workspace/build.bin /workspace/deploy/build.bin; touch /workspace/a.tmp; touch /workspace/b.tmp`;
+  }
   return {
     slug: scenario.slug,
     title: scenario.title,

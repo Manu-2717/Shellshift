@@ -59,6 +59,22 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
     );
   });
 
+  it("enforces all remapped commands are strictly pairwise symmetric swaps with no open chains", () => {
+    for (const challenge of SEED_CHALLENGES) {
+      const mappings = challenge.commandMappings || {};
+      for (const [cmd, target] of Object.entries(mappings)) {
+        expect(
+          mappings[target],
+          `Challenge ${challenge.slug} has asymmetric mapping for '${cmd}' -> '${target}': missing reverse swap '${target}' -> '${cmd}'`,
+        ).toBe(cmd);
+      }
+      expect(
+        mappings.ls,
+        `Challenge ${challenge.slug} should not remap 'ls'; standard navigation utilities must remain unmapped`,
+      ).toBeUndefined();
+    }
+  });
+
   it("preserves stable IDs and details for the original 3 challenges", () => {
     const c1 = SEED_CHALLENGES.find((c) => c.slug === "operation-inversion");
     const c2 = SEED_CHALLENGES.find((c) => c.slug === "the-cryptic-agent");

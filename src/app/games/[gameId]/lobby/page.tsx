@@ -1,4 +1,6 @@
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { Trophy } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { GameCountdown } from "@/components/games/GameCountdown";
 import { GameLobby } from "@/components/games/GameLobby";
@@ -51,6 +53,15 @@ export default async function Lobby({
     redirect(`/games/${g.id}`);
   }
 
+  const now = new Date();
+  if (g.status === "PUBLISHED" && g.endTime && now >= g.endTime) {
+    await prisma.event.update({
+      where: { id: g.id },
+      data: { status: "ENDED" },
+    });
+    g.status = "ENDED";
+  }
+
   const phase = deriveGamePhase(
     {
       status: g.status as any,
@@ -59,10 +70,11 @@ export default async function Lobby({
       startsAt: g.startTime,
       endsAt: g.endTime,
     },
-    new Date()
+    now
   );
 
-  const live = phase === "LIVE";
+  const isEnded = phase === "ENDED" || g.status === "ENDED";
+  const live = phase === "LIVE" && !isEnded;
 
   return (
     <div className="min-h-screen bg-[#07080b] text-white">
@@ -71,18 +83,43 @@ export default async function Lobby({
         <div className="flex flex-col justify-between gap-5 border-b border-zinc-800 pb-7 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm text-cyan-400">
-              {live ? "Competition live" : "Waiting room"}
+              {isEnded ? "Competition concluded" : live ? "Competition live" : "Waiting room"}
             </p>
             <h1 className="mt-2 text-3xl font-semibold">{g.name}</h1>
           </div>
-          <GameCountdown
-            target={(live ? g.endTime : g.startTime).toISOString()}
-            label={live ? "Time remaining" : "Starts in"}
-          />
+          {isEnded ? (
+            <Link
+              href={`/games/${g.id}/standings`}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-bold text-black hover:bg-amber-400 transition"
+            >
+              <Trophy className="size-4" />
+              <span>View Leaderboard</span>
+            </Link>
+          ) : (
+            <GameCountdown
+              target={(live ? g.endTime : g.startTime).toISOString()}
+              label={live ? "Time remaining" : "Starts in"}
+            />
+          )}
         </div>
 
         <div className="mt-8">
-          {!live ? (
+          {isEnded ? (
+            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-rose-500/30 bg-rose-950/20 p-5 text-sm">
+              <div>
+                <p className="font-semibold text-rose-300">This live competition has concluded.</p>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Submissions are closed. Check the event leaderboard to see final verified standings and rankings.
+                </p>
+              </div>
+              <Link
+                href={`/games/${g.id}/standings`}
+                className="shrink-0 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-black hover:bg-amber-400 transition"
+              >
+                Go to Leaderboard
+              </Link>
+            </div>
+          ) : !live ? (
             <div className="mb-6 rounded-xl border border-cyan-900/60 bg-cyan-950/20 p-5 text-sm text-cyan-100">
               You’re registered. Challenge details unlock when the competition begins.
             </div>

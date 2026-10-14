@@ -203,7 +203,12 @@ export function LobbyCatalog({ challenges }: LobbyCatalogProps) {
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   {formatDuration(challenge.runDurationMs)}
                 </span>
-                <span className="text-cyan-400 font-bold tabular-nums">{challenge.finalScore} PTS</span>
+                <span className="text-cyan-400 font-bold tabular-nums">
+                  {typeof challenge.finalScore === "number"
+                    ? (challenge.finalScore % 1 === 0 ? challenge.finalScore : challenge.finalScore.toFixed(2))
+                    : challenge.finalScore}{" "}
+                  PTS
+                </span>
               </div>
               <Link
                 href={`/results/${challenge.runId}`}

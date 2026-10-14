@@ -26,6 +26,7 @@ export function rankIndividualRuns(runs: StandingsRun[]) {
       row.aggregateDurationMs += run.durationMs || 0;
       row.lastCompletionMs = Math.max(row.lastCompletionMs, run.completedAt?.getTime() || 0);
     }
+    row.totalScore = Math.round(row.totalScore * 100) / 100;
     row.challengesCompleted = row.best.size;
     return row;
   });
@@ -34,10 +35,23 @@ export function rankIndividualRuns(runs: StandingsRun[]) {
 }
 
 export async function getGameStandings(eventId: string, viewerId?: string) {
-  const game = await prisma.event.findUnique({ where: { id: eventId } });
+  let game = await prisma.event.findFirst({
+    where: {
+      OR: [{ id: eventId }, { slug: eventId }],
+    },
+  });
   if (!game) return { error: "Game not found.", standings: [] };
+
+  const now = new Date();
+  if (game.status === "PUBLISHED" && game.endTime && now >= game.endTime) {
+    game = await prisma.event.update({
+      where: { id: game.id },
+      data: { status: "ENDED" },
+    });
+  }
+
   if (game.leaderboardVisibility === "HIDDEN" || (game.leaderboardVisibility === "AFTER_END" && game.status !== "ENDED" && game.status !== "ARCHIVED")) return { error: "Standings are not available yet.", standings: [] };
-  const runs = await prisma.run.findMany({ where: { eventId, status: "COMPLETED", isRanked: true, userId: { not: null }, legacyIndividualEligible: false }, include: { user: { select: { name: true } } } });
+  const runs = await prisma.run.findMany({ where: { eventId: game.id, status: "COMPLETED", isRanked: true, userId: { not: null }, legacyIndividualEligible: false }, include: { user: { select: { name: true } } } });
   const standings = rankIndividualRuns(runs.flatMap((run) => run.userId && run.user ? [{ userId: run.userId, userName: run.user.name, challengeId: run.challengeId, finalScore: run.finalScore, durationMs: run.durationMs, completedAt: run.completedAt }] : []));
   return { standings: standings.map((row) => ({ ...row, isViewer: row.userId === viewerId })) };
 }
