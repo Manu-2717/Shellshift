@@ -1,6 +1,10 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { deleteUnusedDraft, updateGameDraft } from "@/lib/games/service";
+import {
+  deleteGamePermanently,
+  deleteUnusedDraft,
+  updateGameDraft,
+} from "@/lib/games/service";
 
 export async function GET(
   _request: Request,
@@ -52,6 +56,6 @@ export async function DELETE(
   const body = await request.json().catch(() => ({}));
   const confirmation =
     typeof body?.confirmation === "string" ? body.confirmation : "";
-  const result = await deleteUnusedDraft(gameId, confirmation, session.id);
+  const result = await deleteGamePermanently(gameId, confirmation, session.id);
   return Response.json(result, { status: result.status });
 }

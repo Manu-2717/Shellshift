@@ -235,11 +235,86 @@ describe("Challenge Catalog & Solvability Engine Verification", () => {
       });
 
       expect(scoreRes.isCompleted).toBe(true);
+      expect(scoreRes.objectivePoints).toBe(
+        challenge.scoringConfig.intermediateBudget,
+      );
       expect(scoreRes.finalScore).toBeGreaterThan(0);
       expect(scoreRes.speedBonus).toBeGreaterThan(0);
       expect(scoreRes.completionBonus).toBe(
         challenge.scoringConfig.completionBonus,
       );
+    }
+  });
+
+  it("verifies every challenge objective rules sum to exactly the intermediate budget (500 pts)", () => {
+    for (const challenge of SEED_CHALLENGES) {
+      const sumPoints = challenge.objectiveConfig.rules.reduce(
+        (sum, r) => sum + r.points,
+        0,
+      );
+      expect(
+        sumPoints,
+        `Challenge ${challenge.order} (${challenge.slug}) rules sum (${sumPoints}) does not match intermediate budget (${challenge.scoringConfig.intermediateBudget})`,
+      ).toBe(challenge.scoringConfig.intermediateBudget);
+    }
+  });
+
+  it("verifies no challenge is pre-completed before running any commands", () => {
+    for (const challenge of SEED_CHALLENGES) {
+      const initVfs = setupInitialVfs(challenge);
+      const initEval = evaluateObjective(initVfs, challenge.objectiveConfig, 0);
+      expect(
+        initEval.isCompleted,
+        `Challenge ${challenge.order} (${challenge.slug}) is prematurely completed on initial state!`,
+      ).toBe(false);
+    }
+  });
+
+  it("verifies objective rules conform to evaluator schema with valid target paths and positive points", () => {
+    const validRuleTypes = new Set([
+      "dir_exists",
+      "file_exists",
+      "file_deleted",
+      "dir_deleted",
+      "file_contains",
+      "file_exact",
+      "file_moved",
+      "min_commands",
+      "cwd_equals",
+    ]);
+
+    for (const challenge of SEED_CHALLENGES) {
+      for (const rule of challenge.objectiveConfig.rules) {
+        expect(
+          validRuleTypes.has(rule.type),
+          `Challenge ${challenge.slug} rule ${rule.id} has invalid type: ${rule.type}`,
+        ).toBe(true);
+        expect(
+          rule.points,
+          `Challenge ${challenge.slug} rule ${rule.id} points must be positive`,
+        ).toBeGreaterThan(0);
+        expect(
+          rule.description.trim().length,
+          `Challenge ${challenge.slug} rule ${rule.id} needs description`,
+        ).toBeGreaterThan(0);
+
+        if (["dir_exists", "file_exists", "file_deleted", "dir_deleted", "file_moved", "cwd_equals"].includes(rule.type)) {
+          expect(
+            rule.path?.startsWith("/"),
+            `Challenge ${challenge.slug} rule ${rule.id} path must be absolute: ${rule.path}`,
+          ).toBe(true);
+        }
+        if (rule.type === "file_contains" || rule.type === "file_exact") {
+          expect(
+            rule.path?.startsWith("/"),
+            `Challenge ${challenge.slug} rule ${rule.id} path must be absolute: ${rule.path}`,
+          ).toBe(true);
+          expect(
+            rule.content,
+            `Challenge ${challenge.slug} rule ${rule.id} needs content`,
+          ).toBeDefined();
+        }
+      }
     }
   });
 });

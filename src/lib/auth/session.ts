@@ -49,17 +49,29 @@ export async function getSession(): Promise<SessionUser | null> {
   return await verifySessionToken(sessionCookie.value);
 }
 
-export async function setSessionCookie(user: SessionUser): Promise<void> {
+export async function setSessionCookie(
+  user: SessionUser,
+  response?: import("next/server").NextResponse
+): Promise<string> {
   const token = await createSessionToken(user);
   const cookieStore = await cookies();
-  const isSecure = process.env.COOKIE_SECURE === "true" || (process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false" && process.env.MOCK_AUTH_ENABLED !== "true");
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
+  const isSecure =
+    process.env.COOKIE_SECURE === "true" ||
+    (process.env.NODE_ENV === "production" &&
+      process.env.COOKIE_SECURE !== "false" &&
+      process.env.MOCK_AUTH_ENABLED !== "true");
+  const cookieOptions = {
     httpOnly: true,
     secure: isSecure,
-    sameSite: "lax",
+    sameSite: "lax" as const,
     path: "/",
     maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-  });
+  };
+  cookieStore.set(SESSION_COOKIE_NAME, token, cookieOptions);
+  if (response) {
+    response.cookies.set(SESSION_COOKIE_NAME, token, cookieOptions);
+  }
+  return token;
 }
 
 export async function clearSessionCookie(): Promise<void> {

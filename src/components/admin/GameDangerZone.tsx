@@ -29,9 +29,6 @@ export function GameDangerZone({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
-  const isEligibleForDeletion =
-    status === "DRAFT" && registrationCount === 0 && runCount === 0;
-
   const handleDelete = async () => {
     if (confirmation.trim() !== name.trim() || pending) return;
     setPending(true);
@@ -98,65 +95,57 @@ export function GameDangerZone({
       </div>
 
       <div className="mt-5 grid gap-4">
-        {isEligibleForDeletion ? (
-          <div className="flex flex-col justify-between gap-4 rounded-xl border border-rose-900/40 bg-black/40 p-5 sm:flex-row sm:items-center">
+        {status !== "ARCHIVED" ? (
+          <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-black/40 p-5 sm:flex-row sm:items-center">
             <div>
-              <h3 className="font-medium text-white">Delete unused draft</h3>
+              <h3 className="font-medium text-white">Archive competition</h3>
               <p className="mt-1 text-sm text-zinc-400">
-                Permanently delete this unpublished draft and its lineup links.
+                Close the event and remove it from active schedules while retaining all registrations, runs, and scores.
               </p>
             </div>
             <Button
-              variant="danger"
-              className="w-fit shrink-0 shadow-lg shadow-rose-950/50"
+              variant="secondary"
+              className="w-fit shrink-0"
               onClick={() => {
-                setConfirmation("");
                 setError("");
-                setIsDeleteDialogOpen(true);
+                setIsArchiveDialogOpen(true);
               }}
             >
-              <Trash2 className="size-4" />
-              <span>Delete game</span>
+              <Archive className="size-4" />
+              <span>Archive game</span>
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3">
-            <p className="text-sm text-zinc-400">
-              Permanent deletion is only available for unused draft games with
-              no registrations or runs. This competition preserves history
-              through archival.
+          <Notice>
+            This competition is archived. Historical data, participants, and scores remain safely preserved.
+          </Notice>
+        )}
+
+        <div className="flex flex-col justify-between gap-4 rounded-xl border border-rose-900/40 bg-black/40 p-5 sm:flex-row sm:items-center">
+          <div>
+            <h3 className="font-medium text-white">Delete game permanently</h3>
+            <p className="mt-1 text-sm text-zinc-400">
+              Permanently delete this competition and all associated data including lineups, participant registrations, and run scores.
             </p>
-            {status !== "ARCHIVED" ? (
-              <div className="flex flex-col justify-between gap-4 rounded-xl border border-zinc-800 bg-black/40 p-5 sm:flex-row sm:items-center">
-                <div>
-                  <h3 className="font-medium text-white">
-                    Archive competition
-                  </h3>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    Close the event and remove it from active schedules while
-                    retaining all registrations, runs, and scores.
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  className="w-fit shrink-0"
-                  onClick={() => {
-                    setError("");
-                    setIsArchiveDialogOpen(true);
-                  }}
-                >
-                  <Archive className="size-4" />
-                  <span>Archive game</span>
-                </Button>
-              </div>
-            ) : (
-              <Notice>
-                This competition is archived. Historical data, participants, and
-                scores remain safely preserved.
-              </Notice>
+            {(registrationCount > 0 || runCount > 0) && (
+              <p className="mt-1 text-xs text-rose-400">
+                Contains {registrationCount} registered contestant(s) and {runCount} run(s).
+              </p>
             )}
           </div>
-        )}
+          <Button
+            variant="danger"
+            className="w-fit shrink-0 shadow-lg shadow-rose-950/50"
+            onClick={() => {
+              setConfirmation("");
+              setError("");
+              setIsDeleteDialogOpen(true);
+            }}
+          >
+            <Trash2 className="size-4" />
+            <span>Delete game</span>
+          </Button>
+        </div>
       </div>
 
       <Dialog
@@ -165,8 +154,14 @@ export function GameDangerZone({
         onClose={() => !pending && setIsDeleteDialogOpen(false)}
       >
         <div className="grid gap-4">
+          {(registrationCount > 0 || runCount > 0) && (
+            <Notice tone="danger">
+              Caution: This competition has {registrationCount} registered contestant(s) and {runCount} run(s).
+              Permanently deleting it will erase all participant data, command logs, and scores.
+            </Notice>
+          )}
           <p className="text-sm text-zinc-300">
-            This action cannot be undone. To permanently remove this draft,
+            This action cannot be undone. To permanently remove this game,
             please type the exact game name to confirm:
           </p>
           <p className="rounded-lg border border-rose-950 bg-black/70 p-3 font-mono text-sm font-semibold text-rose-300">

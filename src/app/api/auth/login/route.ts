@@ -99,14 +99,14 @@ export async function GET(request: Request) {
       teamRole: (activeMembership?.role as "LEADER" | "MEMBER") || null,
     };
 
-    await setSessionCookie(sessionUser);
-
     const destination = resolvePostLoginDestination(
       sessionUser.role,
       sessionUser.teamId,
       redirectTarget
     );
-    return NextResponse.redirect(new URL(destination, request.url));
+    const response = NextResponse.redirect(new URL(destination, request.url));
+    await setSessionCookie(sessionUser, response);
+    return response;
   }
 
   // Real OIDC Flow with Dynamic Discovery & PKCE

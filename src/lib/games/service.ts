@@ -270,6 +270,7 @@ export function checkGameDeletionEligibility(
     runCount: number;
   },
   confirmation: string,
+  mode: "draft_only" | "permanent" = "draft_only",
 ): { eligible: boolean; error?: string; status?: 400 | 409 } {
   if (game.name.trim() !== confirmation?.trim()) {
     return {
@@ -279,9 +280,10 @@ export function checkGameDeletionEligibility(
     };
   }
   if (
-    game.status !== "DRAFT" ||
-    game.registrationCount > 0 ||
-    game.runCount > 0
+    mode === "draft_only" &&
+    (game.status !== "DRAFT" ||
+      game.registrationCount > 0 ||
+      game.runCount > 0)
   ) {
     return {
       eligible: false,
@@ -293,7 +295,7 @@ export function checkGameDeletionEligibility(
   return { eligible: true };
 }
 
-export async function deleteUnusedDraft(
+export async function deleteGamePermanently(
   gameId: string,
   confirmation: string,
   actorId: string,
@@ -318,25 +320,61 @@ export async function deleteUnusedDraft(
         runCount: game._count.runs,
       },
       confirmation,
+      "permanent",
     );
     if (!check.eligible) {
       return { error: check.error, status: check.status! };
     }
+
+    // Cascade delete any runs and associated child records belonging to this game
+    const runs = await tx.run.findMany({
+      where: { eventId: gameId },
+      select: { id: true },
+    });
+    const runIds = runs.map((r) => r.id);
+    if (runIds.length > 0) {
+      await tx.objectiveCompletion.deleteMany({
+        where: { runId: { in: runIds } },
+      });
+      await tx.hintUsage.deleteMany({
+        where: { runId: { in: runIds } },
+      });
+      await tx.commandLog.deleteMany({
+        where: { runId: { in: runIds } },
+      });
+      await tx.run.deleteMany({
+        where: { id: { in: runIds } },
+      });
+    }
+
+    await tx.gameRegistration.deleteMany({ where: { eventId: gameId } });
     await tx.eventChallenge.deleteMany({ where: { eventId: gameId } });
+
     await tx.auditLog.create({
       data: {
         userId: actorId,
-        action: "GAME_DELETED",
+        action: "GAME_PERMANENTLY_DELETED",
         details: JSON.stringify({
           gameId,
           name: game.name,
           slug: game.slug,
+          deletedRunsCount: runIds.length,
+          deletedRegistrationsCount: game._count.registrations,
         }),
       },
     });
+
     await tx.event.delete({ where: { id: gameId } });
     return { success: true, status: 200 as const };
   });
+}
+
+export async function deleteUnusedDraft(
+  gameId: string,
+  confirmation: string,
+  actorId: string,
+) {
+  return await deleteGamePermanently(gameId, confirmation, actorId);
 }
 
 export async function archiveGame(gameId: string, actorId: string) {

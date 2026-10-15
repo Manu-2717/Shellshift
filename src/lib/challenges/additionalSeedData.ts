@@ -1005,7 +1005,10 @@ function makeChallenge(scenario: Scenario): SeedChallengeDef {
     },
     objectiveConfig: {
       description: scenario.description,
-      rules: scenario.rules,
+      rules: scenario.rules.map((rule) => ({
+        ...rule,
+        points: rule.points * 2,
+      })),
     },
     hints: [
       {

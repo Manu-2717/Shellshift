@@ -9,11 +9,16 @@ export const dynamic = "force-dynamic";
 function formatScheduleTime(date: Date | null, timezone?: string | null): string {
   if (!date) return "Schedule not set";
   try {
-    return date.toLocaleString("en-IN", {
-      dateStyle: "medium",
-      timeStyle: "short",
+    const formatted = date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
       timeZone: timezone || "UTC",
     });
+    return formatted.replace(/\u202f/g, " ");
   } catch {
     return date.toUTCString();
   }

@@ -208,16 +208,15 @@ export async function GET(request: Request) {
       teamRole: (activeMembership?.role as "LEADER" | "MEMBER") || null,
     };
 
-    // 8. Establish secure application session
-    await setSessionCookie(sessionUser);
-
-    // 9. Redirect to contestant registration if no team yet, else destination
+    // 8. Redirect to contestant registration if no team yet, else destination
     const destination = resolvePostLoginDestination(
       sessionUser.role,
       sessionUser.teamId,
       redirectTarget
     );
-    return NextResponse.redirect(new URL(destination, request.url));
+    const response = NextResponse.redirect(new URL(destination, request.url));
+    await setSessionCookie(sessionUser, response);
+    return response;
   } catch (err) {
     console.error("OIDC callback exception:", err);
     const msg = (err as Error)?.message || "Authentication processing failure";

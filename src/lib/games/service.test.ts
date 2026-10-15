@@ -144,4 +144,37 @@ describe("game lifecycle and protected deletion", () => {
     expect(result.status).toBe(409);
     expect(result.error).toContain("runs");
   });
+
+  it("allows permanent deletion for published games with matching confirmation", () => {
+    const publishedGame = {
+      name: "Championship 2026",
+      status: "PUBLISHED",
+      registrationCount: 15,
+      runCount: 42,
+    };
+    const result = checkGameDeletionEligibility(
+      publishedGame,
+      "Championship 2026",
+      "permanent",
+    );
+    expect(result.eligible).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("rejects permanent deletion when confirmation does not match", () => {
+    const publishedGame = {
+      name: "Championship 2026",
+      status: "PUBLISHED",
+      registrationCount: 15,
+      runCount: 42,
+    };
+    const result = checkGameDeletionEligibility(
+      publishedGame,
+      "Wrong Name",
+      "permanent",
+    );
+    expect(result.eligible).toBe(false);
+    expect(result.status).toBe(400);
+    expect(result.error).toContain("match");
+  });
 });
