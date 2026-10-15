@@ -9,7 +9,7 @@ export interface ChallengeSolution {
 export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   "operation-inversion": {
     negativeCmd: "mkdir /workspace/breach",
-    steps: ["cd /workspace/breach", "cat /workspace/signal.txt"],
+    steps: ["cd /workspace/breach"],
   },
   "the-cryptic-agent": {
     negativeCmd: "touch /workspace/agent.key",
@@ -23,14 +23,14 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
       "touch /workspace/temp.tmp",
     ],
   },
-  "pathfinder-basics": { negativeCmd: "mkdir /workspace/project", steps: ["cd /workspace/project"] },
+  "pathfinder-basics": { negativeCmd: "mkdir /workspace/project", steps: ["touch /workspace/project"] },
   "morse-mail": {
     negativeCmd: "cat /workspace/other.txt",
     steps: ["touch /workspace/note.txt", "cat /workspace/read.txt"],
   },
   "binary-breadcrumbs": {
     negativeCmd: "mkdir /workspace/secret",
-    steps: ["cd /workspace/secret"],
+    steps: ["pwd /workspace/secret"],
   },
   "hex-in-plain-sight": {
     negativeCmd: "rm /workspace/temp.txt",
@@ -47,13 +47,13 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   "first-flag": {
     negativeCmd: "mkdir /workspace/mission",
     steps: [
-      "cd /workspace/mission",
+      "cat /workspace/mission",
       "cp /workspace/briefing.txt /workspace/mission/briefing.txt",
     ],
   },
   "dead-letter": {
     negativeCmd: "mkdir /workspace/alpha",
-    steps: ["cd /workspace/alpha", "cd /workspace/beta"],
+    steps: ["diff /workspace/alpha", "diff /workspace/beta"],
   },
   "log-diver": {
     negativeCmd: "find /workspace -name secret.txt",
@@ -64,7 +64,7 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   },
   "the-relocation-protocol": {
     negativeCmd: "cp /workspace/report.doc /workspace/archive/report.doc",
-    steps: ["mv /workspace/report.doc /workspace/archive/report.doc"],
+    steps: ["head /workspace/report.doc /workspace/archive/report.doc"],
   },
   "needle-in-the-archive": {
     negativeCmd: "touch /workspace/alert.txt",
@@ -72,34 +72,34 @@ export const CHALLENGE_SOLUTIONS: Record<string, ChallengeSolution> = {
   },
   "ghost-signal": {
     negativeCmd: "mkdir /workspace/safe",
-    steps: ["rm /workspace/safe", "mkdir /workspace/junk.txt"],
+    steps: ["rmdir /workspace/safe", "touch /workspace/junk.txt"],
   },
   "three-keys": {
     negativeCmd: "mv /workspace/code.js /workspace/src/code.js",
     steps: [
-      "cp /workspace/code.js /workspace/src/code.js",
-      "cp /workspace/style.css /workspace/styles/style.css",
+      "cat /workspace/code.js /workspace/src/code.js",
+      "cat /workspace/style.css /workspace/styles/style.css",
     ],
   },
   "decoy-protocol": {
     negativeCmd: "touch /workspace/confirmation.txt",
     steps: [
-      "grep /workspace/target_omega.txt",
-      "pwd /workspace/confirmation.txt",
+      "tail /workspace/target_omega.txt",
+      "diff /workspace/confirmation.txt",
     ],
   },
   "broken-chain": {
     negativeCmd: "mkdir /workspace/vault",
     steps: [
-      "cd /workspace/vault",
+      "head /workspace/vault",
       "cp /workspace/data.bin /workspace/vault/data.bin",
     ],
   },
   "recursive-vault": {
     negativeCmd: "mkdir /workspace/secure",
     steps: [
-      "grep /workspace/secure",
-      "cp /workspace/key.dat /workspace/secure/key.dat",
+      "find /workspace/secure",
+      "cat /workspace/key.dat /workspace/secure/key.dat",
     ],
   },
   "final-convergence": {

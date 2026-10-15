@@ -15,6 +15,7 @@ interface Scenario {
   steps: string[];
   negativeCmd: string;
   mapping?: Record<string, string>;
+  clueText?: string;
 }
 
 const scenarios: Scenario[] = [
@@ -33,8 +34,13 @@ const scenarios: Scenario[] = [
         description: "The welcome folder exists",
       },
     ],
-    steps: ["mkdir /workspace/welcome"],
-    negativeCmd: "touch /workspace/welcome",
+    steps: ["rmdir /workspace/welcome"],
+    negativeCmd: "mkdir /workspace/welcome",
+    mapping: {
+      rmdir: "mkdir",
+      mkdir: "rmdir"
+},
+    clueText: "CLUE: 'rmdir' and 'mkdir' are swapped: typing 'rmdir' creates directories (acting as mkdir). Run 'rmdir /workspace/welcome'.",
   },
   {
     slug: "empty-checklist",
@@ -51,8 +57,13 @@ const scenarios: Scenario[] = [
         description: "The checklist file exists",
       },
     ],
-    steps: ["touch /workspace/checklist.txt"],
-    negativeCmd: "mkdir /workspace/checklist.txt",
+    steps: ["pwd /workspace/checklist.txt"],
+    negativeCmd: "touch /workspace/checklist.txt",
+    mapping: {
+      pwd: "touch",
+      touch: "pwd"
+},
+    clueText: "CLUE: 'pwd' and 'touch' are swapped: typing 'pwd' creates files (acting as touch). Run 'pwd /workspace/checklist.txt'.",
   },
   {
     slug: "remove-old-note",
@@ -70,8 +81,13 @@ const scenarios: Scenario[] = [
         description: "The old note is deleted",
       },
     ],
-    steps: ["rm /workspace/old-note.txt"],
-    negativeCmd: "cat /workspace/old-note.txt",
+    steps: ["touch /workspace/old-note.txt"],
+    negativeCmd: "rm /workspace/old-note.txt",
+    mapping: {
+      touch: "rm",
+      rm: "touch"
+},
+    clueText: "CLUE: 'touch' and 'rm' are swapped: typing 'touch' deletes files (acting as rm). Run 'touch /workspace/old-note.txt'.",
   },
   {
     slug: "copy-readme",
@@ -92,8 +108,13 @@ const scenarios: Scenario[] = [
         description: "A readme copy exists in backup",
       },
     ],
-    steps: ["cp /workspace/readme.txt /workspace/backup/readme.txt"],
-    negativeCmd: "cat /workspace/readme.txt",
+    steps: ["mkdir /workspace/readme.txt /workspace/backup/readme.txt"],
+    negativeCmd: "cp /workspace/readme.txt /workspace/backup/readme.txt",
+    mapping: {
+      mkdir: "cp",
+      cp: "mkdir"
+},
+    clueText: "CLUE: 'mkdir' and 'cp' are swapped: typing 'mkdir' copies files (acting as cp). Run 'mkdir /workspace/readme.txt /workspace/backup/readme.txt'.",
   },
   {
     slug: "move-draft",
@@ -121,8 +142,13 @@ const scenarios: Scenario[] = [
         description: "The draft left its old location",
       },
     ],
-    steps: ["mv /workspace/draft.txt /workspace/ready/draft.txt"],
-    negativeCmd: "cp /workspace/draft.txt /workspace/ready/draft.txt",
+    steps: ["head /workspace/draft.txt /workspace/ready/draft.txt"],
+    negativeCmd: "mv /workspace/draft.txt /workspace/ready/draft.txt",
+    mapping: {
+      head: "mv",
+      mv: "head"
+},
+    clueText: "CLUE: 'head' and 'mv' are swapped: typing 'head' moves files (acting as mv). Run 'head /workspace/draft.txt /workspace/ready/draft.txt'.",
   },
   {
     slug: "enter-docs",
@@ -140,8 +166,13 @@ const scenarios: Scenario[] = [
         description: "The terminal is inside docs",
       },
     ],
-    steps: ["cd /workspace/docs"],
-    negativeCmd: "ls /workspace/docs",
+    steps: ["pwd /workspace/docs"],
+    negativeCmd: "cd /workspace/docs",
+    mapping: {
+      pwd: "cd",
+      cd: "pwd"
+},
+    clueText: "CLUE: 'pwd' and 'cd' are swapped: typing 'pwd' changes directories (acting as cd). Run 'pwd /workspace/docs'.",
   },
   {
     slug: "save-message",
@@ -160,8 +191,13 @@ const scenarios: Scenario[] = [
         description: "The answer contains the exact message",
       },
     ],
-    steps: ["cp /workspace/message.txt /workspace/answer.txt"],
-    negativeCmd: "touch /workspace/answer.txt",
+    steps: ["cat /workspace/message.txt /workspace/answer.txt"],
+    negativeCmd: "cp /workspace/message.txt /workspace/answer.txt",
+    mapping: {
+      cat: "cp",
+      cp: "cat"
+},
+    clueText: "CLUE: 'cat' and 'cp' are swapped: typing 'cat' copies files (acting as cp). Run 'cat /workspace/message.txt /workspace/answer.txt'.",
   },
   {
     slug: "remove-empty-folder",
@@ -179,8 +215,13 @@ const scenarios: Scenario[] = [
         description: "The unused folder is deleted",
       },
     ],
-    steps: ["rm /workspace/unused/.keep", "rmdir /workspace/unused"],
-    negativeCmd: "ls /workspace/unused",
+    steps: ["rmdir /workspace/unused/.keep","rm /workspace/unused"],
+    negativeCmd: "touch /workspace/unused",
+    mapping: {
+      rm: "rmdir",
+      rmdir: "rm"
+},
+    clueText: "CLUE: 'rm' and 'rmdir' are swapped: typing 'rmdir' removes files (acting as rm), and typing 'rm' removes empty directories (acting as rmdir). Run 'rmdir /workspace/unused/.keep', then 'rm /workspace/unused'.",
   },
   {
     slug: "copy-team-list",
@@ -201,8 +242,13 @@ const scenarios: Scenario[] = [
         description: "The shared team list exists",
       },
     ],
-    steps: ["cp /workspace/team.txt /workspace/shared/team.txt"],
-    negativeCmd: "cat /workspace/team.txt",
+    steps: ["diff /workspace/team.txt /workspace/shared/team.txt"],
+    negativeCmd: "cp /workspace/team.txt /workspace/shared/team.txt",
+    mapping: {
+      diff: "cp",
+      cp: "diff"
+},
+    clueText: "CLUE: 'diff' and 'cp' are swapped: typing 'diff' copies files (acting as cp). Run 'diff /workspace/team.txt /workspace/shared/team.txt'.",
   },
   {
     slug: "nested-notes",
@@ -219,8 +265,13 @@ const scenarios: Scenario[] = [
         description: "The daily notes folder exists",
       },
     ],
-    steps: ["mkdir -p /workspace/notes/daily"],
-    negativeCmd: "mkdir /workspace/daily",
+    steps: ["grep -p /workspace/notes/daily"],
+    negativeCmd: "mkdir -p /workspace/notes/daily",
+    mapping: {
+      grep: "mkdir",
+      mkdir: "grep"
+},
+    clueText: "CLUE: 'grep' and 'mkdir' are swapped: typing 'grep' creates directories (acting as mkdir). Run 'grep -p /workspace/notes/daily'.",
   },
   {
     slug: "swapped-touch",
@@ -237,9 +288,13 @@ const scenarios: Scenario[] = [
         description: "The ready file exists",
       },
     ],
-    steps: ["pwd /workspace/ready.txt"],
+    steps: ["truncate /workspace/ready.txt"],
     negativeCmd: "touch /workspace/ready.txt",
-    mapping: { pwd: "touch", touch: "pwd" },
+    mapping: {
+      truncate: "touch",
+      touch: "truncate"
+},
+    clueText: "CLUE: 'truncate' and 'touch' are swapped: typing 'truncate' creates files (acting as touch). Run 'truncate /workspace/ready.txt'.",
   },
   {
     slug: "two-command-warmup",
@@ -263,8 +318,13 @@ const scenarios: Scenario[] = [
         description: "The terminal is inside warmup",
       },
     ],
-    steps: ["mkdir /workspace/warmup", "cd /workspace/warmup"],
-    negativeCmd: "touch /workspace/warmup",
+    steps: ["echo /workspace/warmup","cd /workspace/warmup"],
+    negativeCmd: "mkdir /workspace/warmup",
+    mapping: {
+      echo: "mkdir",
+      mkdir: "echo"
+},
+    clueText: "CLUE: 'echo' and 'mkdir' are swapped: typing 'echo' creates directories (acting as mkdir). Run 'echo /workspace/warmup', then 'cd /workspace/warmup'.",
   },
   {
     slug: "stage-release-notes",
@@ -289,11 +349,13 @@ const scenarios: Scenario[] = [
         description: "The notes are in release",
       },
     ],
-    steps: [
-      "mkdir /workspace/release",
-      "cp /workspace/notes.txt /workspace/release/notes.txt",
-    ],
+    steps: ["find /workspace/release","cp /workspace/notes.txt /workspace/release/notes.txt"],
     negativeCmd: "mkdir /workspace/release",
+    mapping: {
+      find: "mkdir",
+      mkdir: "find"
+},
+    clueText: "CLUE: 'find' and 'mkdir' are swapped: typing 'find' creates directories (acting as mkdir). Run 'find /workspace/release', then 'cp /workspace/notes.txt /workspace/release/notes.txt'.",
   },
   {
     slug: "archive-two-files",
@@ -322,11 +384,13 @@ const scenarios: Scenario[] = [
         description: "The second report is archived",
       },
     ],
-    steps: [
-      "cp /workspace/one.txt /workspace/archive/one.txt",
-      "cp /workspace/two.txt /workspace/archive/two.txt",
-    ],
+    steps: ["sort /workspace/one.txt /workspace/archive/one.txt","sort /workspace/two.txt /workspace/archive/two.txt"],
     negativeCmd: "cp /workspace/one.txt /workspace/archive/one.txt",
+    mapping: {
+      sort: "cp",
+      cp: "sort"
+},
+    clueText: "CLUE: 'sort' and 'cp' are swapped: typing 'sort' copies files (acting as cp). Run 'sort /workspace/one.txt /workspace/archive/one.txt' and 'sort /workspace/two.txt /workspace/archive/two.txt'.",
   },
   {
     slug: "replace-old-config",
@@ -355,11 +419,15 @@ const scenarios: Scenario[] = [
         description: "The old config is removed",
       },
     ],
-    steps: [
-      "mv /workspace/new.conf /workspace/config/app.conf",
-      "rm /workspace/config/old.conf",
-    ],
-    negativeCmd: "cp /workspace/new.conf /workspace/config/app.conf",
+    steps: ["head /workspace/new.conf /workspace/config/app.conf","rmdir /workspace/config/old.conf"],
+    negativeCmd: "mv /workspace/new.conf /workspace/config/app.conf",
+    mapping: {
+      head: "mv",
+      mv: "head",
+      rmdir: "rm",
+      rm: "rmdir"
+},
+    clueText: "CLUE: 'head' moves files (acting as mv) and 'rmdir' deletes files (acting as rm). Run 'head /workspace/new.conf /workspace/config/app.conf', then 'rmdir /workspace/config/old.conf'.",
   },
   {
     slug: "collect-log-copy",
@@ -387,11 +455,15 @@ const scenarios: Scenario[] = [
         description: "At least two commands were used",
       },
     ],
-    steps: [
-      "grep ERROR /workspace/app.log",
-      "cp /workspace/app.log /workspace/review/app.log",
-    ],
-    negativeCmd: "cp /workspace/app.log /workspace/review/app.log",
+    steps: ["head ERROR /workspace/app.log","touch /workspace/app.log /workspace/review/app.log"],
+    negativeCmd: "grep ERROR /workspace/app.log",
+    mapping: {
+      head: "grep",
+      grep: "head",
+      touch: "cp",
+      cp: "touch"
+},
+    clueText: "CLUE: 'head' filters files (acting as grep) and 'touch' copies files (acting as cp). Run 'head ERROR /workspace/app.log', then 'touch /workspace/app.log /workspace/review/app.log'.",
   },
   {
     slug: "sort-project-assets",
@@ -421,11 +493,13 @@ const scenarios: Scenario[] = [
         description: "The image is in images",
       },
     ],
-    steps: [
-      "mv /workspace/app.js /workspace/src/app.js",
-      "mv /workspace/logo.png /workspace/images/logo.png",
-    ],
+    steps: ["echo /workspace/app.js /workspace/src/app.js","echo /workspace/logo.png /workspace/images/logo.png"],
     negativeCmd: "mv /workspace/app.js /workspace/src/app.js",
+    mapping: {
+      echo: "mv",
+      mv: "echo"
+},
+    clueText: "CLUE: 'echo' and 'mv' are swapped: typing 'echo' moves files (acting as mv). Run 'echo /workspace/app.js /workspace/src/app.js' and 'echo /workspace/logo.png /workspace/images/logo.png'.",
   },
   {
     slug: "build-backup-tree",
@@ -451,11 +525,15 @@ const scenarios: Scenario[] = [
         description: "The database backup exists",
       },
     ],
-    steps: [
-      "mkdir -p /workspace/backups/today",
-      "cp /workspace/db.sqlite /workspace/backups/today/db.sqlite",
-    ],
+    steps: ["diff -p /workspace/backups/today","tail /workspace/db.sqlite /workspace/backups/today/db.sqlite"],
     negativeCmd: "mkdir -p /workspace/backups/today",
+    mapping: {
+      diff: "mkdir",
+      mkdir: "diff",
+      tail: "cp",
+      cp: "tail"
+},
+    clueText: "CLUE: 'diff' creates directories (acting as mkdir) and 'tail' copies files (acting as cp). Run 'diff -p /workspace/backups/today', then 'tail /workspace/db.sqlite /workspace/backups/today/db.sqlite'.",
   },
   {
     slug: "clean-build-output",
@@ -491,8 +569,13 @@ const scenarios: Scenario[] = [
         description: "The second temporary file is removed",
       },
     ],
-    steps: ["rm /workspace/build/a.tmp", "rm /workspace/build/b.tmp"],
+    steps: ["cat /workspace/build/a.tmp","cat /workspace/build/b.tmp"],
     negativeCmd: "rm /workspace/build/a.tmp",
+    mapping: {
+      cat: "rm",
+      rm: "cat"
+},
+    clueText: "CLUE: 'cat' and 'rm' are swapped: typing 'cat' deletes files (acting as rm). Run 'cat /workspace/build/a.tmp' and 'cat /workspace/build/b.tmp'.",
   },
   {
     slug: "swapped-copy-move",
@@ -522,12 +605,15 @@ const scenarios: Scenario[] = [
         description: "The draft is moved",
       },
     ],
-    steps: [
-      "mv /workspace/guide.txt /workspace/out/guide.txt",
-      "cp /workspace/draft.txt /workspace/out/draft.txt",
-    ],
+    steps: ["rmdir /workspace/guide.txt /workspace/out/guide.txt","diff /workspace/draft.txt /workspace/out/draft.txt"],
     negativeCmd: "cp /workspace/guide.txt /workspace/out/guide.txt",
-    mapping: { cp: "mv", mv: "cp" },
+    mapping: {
+      rmdir: "cp",
+      cp: "rmdir",
+      diff: "mv",
+      mv: "diff"
+},
+    clueText: "CLUE: 'rmdir' copies files (acting as cp) and 'diff' moves files (acting as mv). Run 'rmdir /workspace/guide.txt /workspace/out/guide.txt', then 'diff /workspace/draft.txt /workspace/out/draft.txt'.",
   },
   {
     slug: "prepare-review-pack",
@@ -552,12 +638,15 @@ const scenarios: Scenario[] = [
         description: "The test is in review",
       },
     ],
-    steps: [
-      "mkdir /workspace/review",
-      "cp /workspace/code.txt /workspace/review/code.txt",
-      "cp /workspace/test.txt /workspace/review/test.txt",
-    ],
+    steps: ["tail /workspace/review","diff /workspace/code.txt /workspace/review/code.txt","diff /workspace/test.txt /workspace/review/test.txt"],
     negativeCmd: "mkdir /workspace/review",
+    mapping: {
+      tail: "mkdir",
+      mkdir: "tail",
+      diff: "cp",
+      cp: "diff"
+},
+    clueText: "CLUE: 'tail' creates directories (acting as mkdir) and 'diff' copies files (acting as cp). Run 'tail /workspace/review', 'diff /workspace/code.txt /workspace/review/code.txt', and 'diff /workspace/test.txt /workspace/review/test.txt'.",
   },
   {
     slug: "move-and-enter",
@@ -582,11 +671,15 @@ const scenarios: Scenario[] = [
         description: "The terminal is inside done",
       },
     ],
-    steps: [
-      "mv /workspace/task.txt /workspace/done/task.txt",
-      "cd /workspace/done",
-    ],
+    steps: ["head /workspace/task.txt /workspace/done/task.txt","echo /workspace/done"],
     negativeCmd: "cp /workspace/task.txt /workspace/done/task.txt",
+    mapping: {
+      head: "mv",
+      mv: "head",
+      echo: "cd",
+      cd: "echo"
+},
+    clueText: "CLUE: 'head' moves files (acting as mv) and 'echo' changes directories (acting as cd). Run 'head /workspace/task.txt /workspace/done/task.txt', then 'echo /workspace/done'.",
   },
   {
     slug: "verify-and-store-token",
@@ -615,11 +708,15 @@ const scenarios: Scenario[] = [
         description: "The token was checked before storage",
       },
     ],
-    steps: [
-      "cat /workspace/token.txt",
-      "cp /workspace/token.txt /workspace/secure/token.txt",
-    ],
-    negativeCmd: "cp /workspace/token.txt /workspace/secure/token.txt",
+    steps: ["wc /workspace/token.txt","echo /workspace/token.txt /workspace/secure/token.txt"],
+    negativeCmd: "cat /workspace/token.txt",
+    mapping: {
+      wc: "cat",
+      cat: "wc",
+      echo: "cp",
+      cp: "echo"
+},
+    clueText: "CLUE: 'wc' displays files (acting as cat) and 'echo' copies files (acting as cp). Run 'wc /workspace/token.txt', then 'echo /workspace/token.txt /workspace/secure/token.txt'.",
   },
   {
     slug: "release-three-assets",
@@ -656,14 +753,17 @@ const scenarios: Scenario[] = [
         description: "The manifest is in release",
       },
     ],
-    steps: [
-      "mkdir -p /workspace/release/bin",
-      "mkdir -p /workspace/release/docs",
-      "cp /workspace/app.bin /workspace/release/bin/app.bin",
-      "cp /workspace/help.txt /workspace/release/docs/help.txt",
-      "mv /workspace/manifest.json /workspace/release/manifest.json",
-    ],
+    steps: ["rmdir -p /workspace/release/bin","rmdir -p /workspace/release/docs","echo /workspace/app.bin /workspace/release/bin/app.bin","echo /workspace/help.txt /workspace/release/docs/help.txt","tail /workspace/manifest.json /workspace/release/manifest.json"],
     negativeCmd: "mkdir -p /workspace/release/bin",
+    mapping: {
+      rmdir: "mkdir",
+      mkdir: "rmdir",
+      echo: "cp",
+      cp: "echo",
+      tail: "mv",
+      mv: "tail"
+},
+    clueText: "CLUE: 'rmdir' creates directories (acting as mkdir), 'echo' copies files (acting as cp), and 'tail' moves files (acting as mv). Run: rmdir -p /workspace/release/bin; rmdir -p /workspace/release/docs; echo /workspace/app.bin /workspace/release/bin/app.bin; echo /workspace/help.txt /workspace/release/docs/help.txt; tail /workspace/manifest.json /workspace/release/manifest.json",
   },
   {
     slug: "restore-clean-snapshot",
@@ -701,12 +801,15 @@ const scenarios: Scenario[] = [
         description: "The broken temporary file is removed",
       },
     ],
-    steps: [
-      "cp /workspace/snapshot.db /workspace/restored/live.db",
-      "rm /workspace/live.db",
-      "rm /workspace/live.tmp",
-    ],
+    steps: ["cat /workspace/snapshot.db /workspace/restored/live.db","pwd /workspace/live.db","pwd /workspace/live.tmp"],
     negativeCmd: "cp /workspace/snapshot.db /workspace/restored/live.db",
+    mapping: {
+      cat: "cp",
+      cp: "cat",
+      pwd: "rm",
+      rm: "pwd"
+},
+    clueText: "CLUE: 'cat' copies files (acting as cp) and 'pwd' deletes files (acting as rm). Run: cat /workspace/snapshot.db /workspace/restored/live.db; pwd /workspace/live.db; pwd /workspace/live.tmp",
   },
   {
     slug: "publish-site-bundle",
@@ -743,13 +846,19 @@ const scenarios: Scenario[] = [
         description: "The cache is removed",
       },
     ],
-    steps: [
-      "mkdir -p /workspace/public/assets",
-      "mv /workspace/index.html /workspace/public/index.html",
-      "cp /workspace/style.css /workspace/public/assets/style.css",
-      "rm /workspace/cache.tmp",
-    ],
+    steps: ["touch -p /workspace/public/assets","head /workspace/index.html /workspace/public/index.html","tail /workspace/style.css /workspace/public/assets/style.css","cat /workspace/cache.tmp"],
     negativeCmd: "mkdir -p /workspace/public/assets",
+    mapping: {
+      touch: "mkdir",
+      mkdir: "touch",
+      head: "mv",
+      mv: "head",
+      tail: "cp",
+      cp: "tail",
+      cat: "rm",
+      rm: "cat"
+},
+    clueText: "CLUE: 'touch' creates directories (acting as mkdir), 'head' moves files (acting as mv), 'tail' copies files (acting as cp), and 'cat' deletes files (acting as rm). Run: touch -p /workspace/public/assets; head /workspace/index.html /workspace/public/index.html; tail /workspace/style.css /workspace/public/assets/style.css; cat /workspace/cache.tmp",
   },
   {
     slug: "rotate-service-files",
@@ -789,12 +898,15 @@ const scenarios: Scenario[] = [
         description: "The stale lock is removed",
       },
     ],
-    steps: [
-      "mv /workspace/service.log /workspace/archive/service.log",
-      "mv /workspace/new.conf /workspace/config/service.conf",
-      "rm /workspace/service.lock",
-    ],
+    steps: ["echo /workspace/service.log /workspace/archive/service.log","echo /workspace/new.conf /workspace/config/service.conf","diff /workspace/service.lock"],
     negativeCmd: "mv /workspace/service.log /workspace/archive/service.log",
+    mapping: {
+      echo: "mv",
+      mv: "echo",
+      diff: "rm",
+      rm: "diff"
+},
+    clueText: "CLUE: 'echo' moves files (acting as mv) and 'diff' deletes files (acting as rm). Run: echo /workspace/service.log /workspace/archive/service.log; echo /workspace/new.conf /workspace/config/service.conf; diff /workspace/service.lock",
   },
   {
     slug: "assemble-evidence-pack",
@@ -831,13 +943,19 @@ const scenarios: Scenario[] = [
         description: "The terminal is inside evidence",
       },
     ],
-    steps: [
-      "grep ERROR /workspace/events.log",
-      "cp /workspace/events.log /workspace/evidence/events.log",
-      "mv /workspace/screenshot.txt /workspace/evidence/screenshot.txt",
-      "cd /workspace/evidence",
-    ],
+    steps: ["tail ERROR /workspace/events.log","diff /workspace/events.log /workspace/evidence/events.log","pwd /workspace/screenshot.txt /workspace/evidence/screenshot.txt","echo /workspace/evidence"],
     negativeCmd: "cp /workspace/events.log /workspace/evidence/events.log",
+    mapping: {
+      tail: "grep",
+      grep: "tail",
+      diff: "cp",
+      cp: "diff",
+      pwd: "mv",
+      mv: "pwd",
+      echo: "cd",
+      cd: "echo"
+},
+    clueText: "CLUE: 'tail' searches logs (acting as grep), 'diff' copies files (acting as cp), 'pwd' moves files (acting as mv), and 'echo' changes directories (acting as cd). Run: tail ERROR /workspace/events.log; diff /workspace/events.log /workspace/evidence/events.log; pwd /workspace/screenshot.txt /workspace/evidence/screenshot.txt; echo /workspace/evidence",
   },
   {
     slug: "swapped-deploy-cleanup",
@@ -874,12 +992,7 @@ const scenarios: Scenario[] = [
         description: "The second temporary file is removed",
       },
     ],
-    steps: [
-      "cd /workspace/deploy",
-      "mv /workspace/build.bin /workspace/deploy/build.bin",
-      "touch /workspace/a.tmp",
-      "touch /workspace/b.tmp",
-    ],
+    steps: ["cd /workspace/deploy","mv /workspace/build.bin /workspace/deploy/build.bin","touch /workspace/a.tmp","touch /workspace/b.tmp"],
     negativeCmd: "mkdir /workspace/deploy",
     mapping: {
       cd: "mkdir",
@@ -887,8 +1000,9 @@ const scenarios: Scenario[] = [
       mv: "cp",
       cp: "mv",
       touch: "rm",
-      rm: "touch",
-    },
+      rm: "touch"
+},
+    clueText: "CLUE: 'cd' creates directories (acting as mkdir), 'mv' copies files (acting as cp), and 'touch' deletes files (acting as rm). Run: cd /workspace/deploy; mv /workspace/build.bin /workspace/deploy/build.bin; touch /workspace/a.tmp; touch /workspace/b.tmp",
   },
   {
     slug: "final-workspace-handoff",
@@ -932,15 +1046,21 @@ const scenarios: Scenario[] = [
         description: "The terminal finishes in output",
       },
     ],
-    steps: [
-      "mkdir -p /workspace/handoff/docs",
-      "mkdir -p /workspace/handoff/output",
-      "cp /workspace/guide.txt /workspace/handoff/docs/guide.txt",
-      "mv /workspace/app.bin /workspace/handoff/output/app.bin",
-      "rm /workspace/draft.tmp",
-      "cd /workspace/handoff/output",
-    ],
+    steps: ["rmdir -p /workspace/handoff/docs","rmdir -p /workspace/handoff/output","echo /workspace/guide.txt /workspace/handoff/docs/guide.txt","cat /workspace/app.bin /workspace/handoff/output/app.bin","head /workspace/draft.tmp","pwd /workspace/handoff/output"],
     negativeCmd: "mkdir -p /workspace/handoff/docs",
+    mapping: {
+      rmdir: "mkdir",
+      mkdir: "rmdir",
+      echo: "cp",
+      cp: "echo",
+      cat: "mv",
+      mv: "cat",
+      head: "rm",
+      rm: "head",
+      pwd: "cd",
+      cd: "pwd"
+},
+    clueText: "CLUE: 'rmdir' creates directories (acting as mkdir), 'echo' copies files (acting as cp), 'cat' moves files (acting as mv), 'head' deletes files (acting as rm), and 'pwd' changes directories (acting as cd). Run: rmdir -p /workspace/handoff/docs; rmdir -p /workspace/handoff/output; echo /workspace/guide.txt /workspace/handoff/docs/guide.txt; cat /workspace/app.bin /workspace/handoff/output/app.bin; head /workspace/draft.tmp; pwd /workspace/handoff/output",
   },
 ];
 
@@ -951,14 +1071,9 @@ function makeChallenge(scenario: Scenario): SeedChallengeDef {
       : scenario.difficulty === "MEDIUM"
         ? 900
         : 1200;
-  let instructions = `Complete these terminal steps: ${scenario.steps.join("; ")}`;
-  if (scenario.slug === "swapped-touch") {
-    instructions = `CLUE: 'pwd' and 'touch' are swapped: 'pwd' creates files (acting as touch). Run: pwd /workspace/ready.txt`;
-  } else if (scenario.slug === "swapped-copy-move") {
-    instructions = `CLUE: 'cp' and 'mv' are swapped: 'mv' copies files (acting as cp), while 'cp' moves files (acting as mv). Run: mv /workspace/guide.txt /workspace/out/guide.txt; cp /workspace/draft.txt /workspace/out/draft.txt`;
-  } else if (scenario.slug === "swapped-deploy-cleanup") {
-    instructions = `CLUE: Swapped commands: 'cd' creates folders (acting as mkdir), 'mv' copies files (acting as cp), and 'touch' deletes files (acting as rm). Run: cd /workspace/deploy; mv /workspace/build.bin /workspace/deploy/build.bin; touch /workspace/a.tmp; touch /workspace/b.tmp`;
-  }
+  const instructions =
+    scenario.clueText ??
+    `Complete these terminal steps: ${scenario.steps.join("; ")}`;
   return {
     slug: scenario.slug,
     title: scenario.title,
