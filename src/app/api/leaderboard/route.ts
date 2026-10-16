@@ -1,11 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/auth/session";
 import { getGameStandings } from "@/lib/games/standings";
-
-export const dynamic = "force-dynamic";
-
 import { formatDuration } from "@/lib/format";
 export { formatDuration };
+
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const requestedId = new URL(request.url).searchParams.get("gameId");
@@ -22,14 +20,15 @@ export async function GET(request: Request) {
       { event: null, leaderboard: [], total: 0 },
       {
         headers: {
-          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Cache-Control": "public, s-maxage=5, stale-while-revalidate=25",
+          "CDN-Cache-Control": "public, s-maxage=5",
+          "Vercel-CDN-Cache-Control": "public, s-maxage=5",
         },
       }
     );
   }
 
-  const session = await getSession().catch(() => null);
-  const result = await getGameStandings(game.id, session?.id);
+  const result = await getGameStandings(game.id);
   const leaderboard = result.standings.map((row) => ({
     ...row,
     playerId: row.userId,
@@ -46,7 +45,9 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "Cache-Control": "public, s-maxage=5, stale-while-revalidate=25",
+        "CDN-Cache-Control": "public, s-maxage=5",
+        "Vercel-CDN-Cache-Control": "public, s-maxage=5",
       },
     }
   );

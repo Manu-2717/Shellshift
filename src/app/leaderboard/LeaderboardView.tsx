@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
-import { Trophy, Medal, User } from "lucide-react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { Trophy, Medal, User, RefreshCw } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 
 export interface LeaderboardEntry {
@@ -34,52 +34,93 @@ export function LeaderboardView({
   gameId,
 }: LeaderboardViewProps) {
   const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>(entries);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [secondsAgo, setSecondsAgo] = useState(0);
+  const lastUpdatedRef = useRef<number>(Date.now());
+  const isIdleRef = useRef<boolean>(false);
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setLiveEntries(entries);
+    lastUpdatedRef.current = Date.now();
   }, [entries]);
 
+  const fetchLatest = useCallback(async () => {
+    if (!gameId) return;
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+
+    setIsRefreshing(true);
+    try {
+      const res = await fetch(`/api/leaderboard?gameId=${encodeURIComponent(gameId)}`, {
+        cache: "default", // Vercel Edge CDN cache (s-maxage=5)
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json?.leaderboard)) {
+          setLiveEntries(json.leaderboard);
+          lastUpdatedRef.current = Date.now();
+          setSecondsAgo(0);
+        }
+      }
+    } catch {
+      // Tolerate transient background network drops
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [gameId]);
+
+  // Smart Polling with Vercel Free-Tier Optimization:
+  // 1. 10s interval (reduces function invocations by 70% compared to 3s).
+  // 2. Pauses completely when tab is hidden or backgrounded.
+  // 3. Pauses when user has been idle for > 3 minutes.
+  // 4. Instantly refreshes on tab refocus or user activity resumption.
   useEffect(() => {
     if (!gameId) return;
 
-    let isMounted = true;
+    const tickerInterval = setInterval(() => {
+      setSecondsAgo(Math.floor((Date.now() - lastUpdatedRef.current) / 1000));
+    }, 1000);
 
-    const fetchLatest = async () => {
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
-        return;
+    const resetIdle = () => {
+      if (isIdleRef.current) {
+        isIdleRef.current = false;
+        fetchLatest();
       }
-
-      try {
-        const res = await fetch(`/api/leaderboard?gameId=${encodeURIComponent(gameId)}`, {
-          cache: "no-store",
-          headers: { "Cache-Control": "no-cache" },
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted && Array.isArray(json?.leaderboard)) {
-            setLiveEntries(json.leaderboard);
-          }
-        }
-      } catch {
-        // Silently tolerate background poll disruptions
-      }
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      idleTimeoutRef.current = setTimeout(() => {
+        isIdleRef.current = true;
+      }, 180000);
     };
 
-    const intervalId = setInterval(fetchLatest, 3000);
+    resetIdle();
+    window.addEventListener("mousemove", resetIdle, { passive: true });
+    window.addEventListener("keydown", resetIdle, { passive: true });
+    window.addEventListener("touchstart", resetIdle, { passive: true });
+
+    const intervalId = setInterval(() => {
+      if (!isIdleRef.current) {
+        fetchLatest();
+      }
+    }, 10000);
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
+        resetIdle();
         fetchLatest();
       }
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      isMounted = false;
+      clearInterval(tickerInterval);
       clearInterval(intervalId);
+      if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+      window.removeEventListener("mousemove", resetIdle);
+      window.removeEventListener("keydown", resetIdle);
+      window.removeEventListener("touchstart", resetIdle);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [gameId]);
+  }, [gameId, fetchLatest]);
 
   // Sorted list: Pure points tournament (Score desc, Completed desc, Duration asc, LastCompletion asc)
   const sortedEntries = useMemo(() => {
@@ -107,12 +148,26 @@ export function LeaderboardView({
 
         <div className="flex items-center gap-3 text-[11px] text-[#a1a1aa] px-2 font-mono">
           {gameId && (
-            <div className="flex items-center gap-1.5 text-emerald-400">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider">LIVE (3S)</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-[10px] font-semibold tracking-wider">LIVE</span>
+                <span className="text-[10px] text-zinc-500 hidden sm:inline">
+                  · {secondsAgo}s ago
+                </span>
+              </div>
+              <button
+                onClick={() => fetchLatest()}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900/60 px-1.5 py-0.5 text-[10px] text-zinc-400 transition hover:border-zinc-700 hover:text-white disabled:opacity-50"
+                title="Refresh leaderboard"
+              >
+                <RefreshCw className={`size-2.5 ${isRefreshing ? "animate-spin text-cyan-400" : ""}`} />
+                <span>Refresh</span>
+              </button>
             </div>
           )}
           <span>Ranked by: Total Points → Duration</span>
