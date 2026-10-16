@@ -158,29 +158,37 @@ export function ContextPanel({
                     </div>
                   </div>
 
-                  {/* Encoded Content Box with Copy */}
-                  <div className="relative group">
-                    <pre className="max-h-40 overflow-y-auto rounded-lg border border-[#1e2434] bg-[#05060a] p-3 font-mono text-xs whitespace-pre-wrap break-all select-all text-cyan-400 leading-relaxed">
+                  {/* Encoded Content Box with Header & Copy Button */}
+                  <div className="overflow-hidden rounded-lg border border-[#1e2434] bg-[#05060a]">
+                    <div className="flex items-center justify-between border-b border-[#1e2434] bg-[#0c101a] px-3 py-1.5">
+                      <span className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                        <span className="size-1.5 rounded-full bg-cyan-400" />
+                        Encoded Clue Payload
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(clue.encodedContent, clue.id)}
+                        className="inline-flex items-center gap-1.5 rounded border border-[#23293a] bg-[#121622] hover:bg-[#1a2030] hover:text-white px-2.5 py-1 text-[10px] font-medium text-zinc-300 transition cursor-pointer leading-none"
+                        title="Copy encoded clue"
+                      >
+                        {copiedId === clue.id ? (
+                          <>
+                            <Check className="size-3 text-emerald-400 shrink-0" />
+                            <span className="text-emerald-400 font-semibold">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="size-3 text-cyan-400 shrink-0" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    <pre className="max-h-40 overflow-y-auto p-3 font-mono text-xs whitespace-pre-wrap break-all select-all text-cyan-400 leading-relaxed">
                       {clue.encodedContent}
                     </pre>
-
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(clue.encodedContent, clue.id)}
-                      className="absolute top-2.5 right-2.5 flex items-center gap-1 rounded border border-[#23293a] bg-[#121622] hover:bg-[#1a2030] px-2.5 py-1 text-[10px] font-medium text-zinc-300 transition cursor-pointer"
-                    >
-                      {copiedId === clue.id ? (
-                        <>
-                          <Check className="size-3 text-emerald-400" />
-                          <span className="text-emerald-400">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="size-3" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
                   </div>
 
                   <p className="text-[11px] text-zinc-400 font-mono">
@@ -358,16 +366,17 @@ export function ContextPanel({
                 <button
                   type="button"
                   onClick={() => handleCopy(scratchpadText, "notes")}
-                  className="flex items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-[10px] text-zinc-300 hover:bg-zinc-700 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded border border-[#23293a] bg-[#121622] hover:bg-[#1a2030] hover:text-white px-2.5 py-1 text-[10px] font-medium text-zinc-300 transition cursor-pointer leading-none"
+                  title="Copy notes"
                 >
                   {copiedId === "notes" ? (
                     <>
-                      <Check className="size-3 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <Check className="size-3 text-emerald-400 shrink-0" />
+                      <span className="text-emerald-400 font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="size-3" />
+                      <Copy className="size-3 text-cyan-400 shrink-0" />
                       <span>Copy</span>
                     </>
                   )}
@@ -376,9 +385,10 @@ export function ContextPanel({
                 <button
                   type="button"
                   onClick={() => handleNotesChange("")}
-                  className="flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-[10px] text-zinc-400 hover:text-rose-400 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded border border-[#23293a] bg-[#121622] hover:bg-rose-950/40 hover:border-rose-900/50 hover:text-rose-400 px-2.5 py-1 text-[10px] font-medium text-zinc-400 transition cursor-pointer leading-none"
+                  title="Clear notes"
                 >
-                  <Trash2 className="size-3" />
+                  <Trash2 className="size-3 shrink-0" />
                   <span>Clear</span>
                 </button>
               </div>

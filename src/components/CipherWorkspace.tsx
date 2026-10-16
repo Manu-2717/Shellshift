@@ -229,30 +229,36 @@ export function CipherWorkspace({
                   </div>
 
                   {/* Encoded Content Display */}
-                  <div className="relative group">
-                    <pre className="p-2.5 rounded bg-[#09090b] border border-[#27272a] text-cyan-300 whitespace-pre-wrap break-all text-[11px] select-all max-h-40 overflow-y-auto font-mono">
-                      {clue.encodedContent}
-                    </pre>
+                  <div className="overflow-hidden rounded-lg border border-[#27272a] bg-[#09090b]">
+                    <div className="flex items-center justify-between border-b border-[#27272a] bg-[#111115] px-3 py-1.5">
+                      <span className="flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-zinc-400">
+                        <span className="size-1.5 rounded-full bg-cyan-400" />
+                        Encoded Clue Payload
+                      </span>
 
-                    <div className="absolute top-2 right-2 flex items-center gap-1">
                       <button
+                        type="button"
                         onClick={() => handleCopy(clue.encodedContent, clue.id)}
-                        className="px-2.5 py-1 rounded bg-[#18181b] hover:bg-[#27272a] text-[#fafafa] border border-[#27272a] transition-colors flex items-center gap-1 text-[10px] font-medium"
+                        className="inline-flex items-center gap-1.5 rounded bg-[#18181b] hover:bg-[#27272a] text-[#fafafa] border border-[#27272a] px-2.5 py-1 text-[10px] font-medium transition cursor-pointer leading-none"
                         title="Copy Encoded String"
                       >
                         {copiedId === clue.id ? (
                           <>
-                            <Check className="w-3 h-3 text-emerald-400" />
-                            <span className="text-emerald-400">Copied</span>
+                            <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                            <span className="text-emerald-400 font-semibold">Copied</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3 h-3" />
+                            <Copy className="w-3 h-3 text-cyan-400 shrink-0" />
                             <span>Copy Clue</span>
                           </>
                         )}
                       </button>
                     </div>
+
+                    <pre className="p-3 text-cyan-300 whitespace-pre-wrap break-all text-[11px] select-all max-h-40 overflow-y-auto font-mono leading-relaxed">
+                      {clue.encodedContent}
+                    </pre>
                   </div>
                 </div>
               );
@@ -471,16 +477,17 @@ export function CipherWorkspace({
                 <button
                   type="button"
                   onClick={() => handleCopy(scratchpadText, "notes")}
-                  className="px-2 py-1 rounded bg-[#18181b] hover:bg-[#27272a] text-[#fafafa] border border-[#27272a] text-[10px] flex items-center gap-1 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded bg-[#18181b] hover:bg-[#27272a] text-[#fafafa] border border-[#27272a] px-2.5 py-1 text-[10px] font-medium transition cursor-pointer leading-none"
+                  title="Copy scratchpad notes"
                 >
                   {copiedId === "notes" ? (
                     <>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
+                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="text-emerald-400 font-semibold">Copied</span>
                     </>
                   ) : (
                     <>
-                      <Copy className="w-3 h-3" />
+                      <Copy className="w-3 h-3 text-cyan-400 shrink-0" />
                       <span>Copy</span>
                     </>
                   )}
@@ -488,10 +495,10 @@ export function CipherWorkspace({
                 <button
                   type="button"
                   onClick={() => handleNotesChange("")}
-                  className="px-2 py-1 rounded bg-[#18181b] hover:bg-[#27272a] text-neutral-400 hover:text-rose-400 border border-[#27272a] text-[10px] flex items-center gap-1 transition-colors"
+                  className="inline-flex items-center gap-1.5 rounded bg-[#18181b] hover:bg-rose-950/40 hover:border-rose-900/50 hover:text-rose-400 border border-[#27272a] px-2.5 py-1 text-[10px] font-medium text-neutral-400 transition cursor-pointer leading-none"
                   title="Clear scratchpad"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-3 h-3 shrink-0" />
                   <span>Clear</span>
                 </button>
               </div>

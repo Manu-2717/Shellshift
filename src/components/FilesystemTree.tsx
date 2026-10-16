@@ -176,13 +176,13 @@ export function FilesystemTree({
               <button
                 type="button"
                 onClick={(e) => handleCopy(node.path, e)}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:text-white transition-opacity"
+                className="opacity-0 group-hover:opacity-100 inline-flex items-center justify-center rounded p-1 hover:bg-[#1a2030] hover:text-white transition cursor-pointer"
                 title={`Copy path: ${node.path}`}
               >
                 {copiedPath === node.path ? (
-                  <Check className="w-3 h-3 text-emerald-400" />
+                  <Check className="w-3 h-3 text-emerald-400 shrink-0" />
                 ) : (
-                  <Copy className="w-3 h-3 text-neutral-500" />
+                  <Copy className="w-3 h-3 text-neutral-500 hover:text-cyan-400 shrink-0" />
                 )}
               </button>
             </div>
