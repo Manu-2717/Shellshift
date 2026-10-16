@@ -73,7 +73,7 @@ export default async function Lobby({
     now
   );
 
-  const isEnded = phase === "ENDED" || g.status === "ENDED";
+  const isEnded = phase === "ENDED" || g.status === "ENDED" || (!!g.endTime && now >= g.endTime);
   const live = phase === "LIVE" && !isEnded;
 
   // Distinct question assignment: Each team member receives distinct, non-overlapping questions
@@ -125,6 +125,7 @@ export default async function Lobby({
             <GameCountdown
               target={(live ? g.endTime : g.startTime).toISOString()}
               label={live ? "Time remaining" : "Starts in"}
+              isEnded={isEnded}
             />
           )}
         </div>

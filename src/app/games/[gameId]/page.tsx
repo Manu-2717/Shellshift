@@ -64,6 +64,8 @@ export default async function Game({
     now
   );
 
+  const isEnded = phase === "ENDED" || g.status === "ENDED" || (!!g.endTime && now >= g.endTime);
+
   const durationHours = Math.round(
     (g.endTime.getTime() - g.startTime.getTime()) / 36e5
   );
@@ -72,8 +74,8 @@ export default async function Game({
     <div className="min-h-screen bg-[#07080b] text-white">
       <Navbar user={user} />
       <main className="mx-auto max-w-6xl px-5 py-12">
-        <StatusBadge tone={phase === "LIVE" ? "success" : "info"}>
-          {phase.replaceAll("_", " ")}
+        <StatusBadge tone={phase === "LIVE" ? "success" : isEnded ? "danger" : "info"}>
+          {isEnded ? "ENDED" : phase.replaceAll("_", " ")}
         </StatusBadge>
 
         <div className="mt-6 grid gap-12 lg:grid-cols-[1fr_360px]">
@@ -84,6 +86,17 @@ export default async function Game({
             <p className="mt-5 max-w-2xl text-lg leading-8 text-zinc-400">
               {g.description}
             </p>
+
+            {isEnded && (
+              <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-xl border border-rose-500/30 bg-rose-950/20 p-4 text-sm">
+                <div>
+                  <p className="font-semibold text-rose-300">This competition has concluded.</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Submissions are closed. Check the event leaderboard to view final rankings and scores.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="mt-9 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-zinc-800 bg-[#0e1016] p-4">
@@ -119,7 +132,7 @@ export default async function Game({
               <ul className="mt-4 grid gap-3 text-sm text-zinc-400">
                 <li className="flex gap-2">
                   <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
-                  Individual scores only—no team ranking.
+                  Individual and team rankings with verified score averaging.
                 </li>
                 <li className="flex gap-2">
                   <ShieldCheck className="size-4 text-emerald-400 shrink-0" />
@@ -130,21 +143,38 @@ export default async function Game({
           </div>
 
           <aside className="h-fit rounded-2xl border border-zinc-700 bg-[#0e1016] p-6 shadow-2xl">
-            <GameCountdown
-              target={(phase === "LIVE" ? g.endTime : g.startTime).toISOString()}
-              label={phase === "LIVE" ? "Time remaining" : "Competition begins in"}
-            />
+            {isEnded ? (
+              <div className="font-mono">
+                <span className="block text-[11px] uppercase tracking-wider text-rose-400 font-semibold">
+                  Competition Status
+                </span>
+                <strong className="mt-1 block text-xl font-bold text-rose-400" suppressHydrationWarning>
+                  Event Ended
+                </strong>
+                <p className="mt-1.5 text-xs text-zinc-400">
+                  This competition has officially concluded.
+                </p>
+              </div>
+            ) : (
+              <GameCountdown
+                target={(phase === "LIVE" ? g.endTime : g.startTime).toISOString()}
+                label={phase === "LIVE" ? "Time remaining" : "Competition begins in"}
+                isEnded={isEnded}
+              />
+            )}
             <div className="my-6 h-px bg-zinc-800" />
             <GameAction
               gameId={g.id}
-              phase={phase}
+              phase={isEnded ? "ENDED" : phase}
               signedIn={!!user}
               registered={!!(g.registrations && g.registrations.length)}
               hasResults={!!(g.runs && g.runs.some((r) => r.status === "COMPLETED"))}
               hasStarted={!!(g.runs && g.runs.length > 0)}
             />
             <p className="mt-4 text-xs leading-5 text-zinc-500">
-              Times shown in {g.timezone}. Your browser countdown stays synchronized with the authoritative schedule.
+              {isEnded
+                ? `Times shown in ${g.timezone}. Final scores and standings have been verified.`
+                : `Times shown in ${g.timezone}. Your browser countdown stays synchronized with the authoritative schedule.`}
             </p>
           </aside>
         </div>
