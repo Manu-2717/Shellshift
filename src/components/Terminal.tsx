@@ -55,14 +55,28 @@ export function Terminal({
   const [copied, setCopied] = useState(false);
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
+  const terminalOutputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll when lines change
+  // Auto-scroll inside terminal container only (never scrolling the parent window/viewport)
   useEffect(() => {
-    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (terminalOutputRef.current) {
+      terminalOutputRef.current.scrollTop = terminalOutputRef.current.scrollHeight;
+    }
   }, [lines, isExecuting]);
 
+  // Keep cursor focused in terminal unless user explicitly focused another element or selected text
+  useEffect(() => {
+    if (!disabled) {
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      if (activeTag !== "input" && activeTag !== "textarea" && !window.getSelection()?.toString()) {
+        inputRef.current?.focus();
+      }
+    }
+  }, [lines, disabled]);
+
   const handleContainerClick = () => {
+    if (window.getSelection()?.toString()) return;
     if (!disabled) {
       inputRef.current?.focus();
     }
@@ -185,6 +199,11 @@ export function Terminal({
       ]);
     } finally {
       setIsExecuting(false);
+      requestAnimationFrame(() => {
+        if (!disabled) {
+          inputRef.current?.focus();
+        }
+      });
     }
   };
 
@@ -262,7 +281,7 @@ export function Terminal({
       </div>
 
       {/* Terminal Output Area */}
-      <div className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-2.5">
+      <div ref={terminalOutputRef} className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-2.5">
         {lines.map((line) => (
           <div key={line.id} className="leading-relaxed font-mono">
             {line.type === "command" && (
@@ -318,9 +337,11 @@ export function Terminal({
                 ref={inputRef}
                 type="text"
                 value={inputVal}
-                onChange={(e) => setInputVal(e.target.value)}
+                onChange={(e) => {
+                  if (!isExecuting) setInputVal(e.target.value);
+                }}
                 onKeyDown={handleKeyDown}
-                disabled={isExecuting}
+                readOnly={isExecuting}
                 autoFocus
                 spellCheck={false}
                 autoComplete="off"

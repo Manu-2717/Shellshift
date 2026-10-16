@@ -36,12 +36,19 @@ export async function GET(request: Request) {
     formattedTime: formatDuration(row.aggregateDurationMs),
   }));
 
+  const teamLeaderboard = (result.teamStandings || []).map((row) => ({
+    ...row,
+    formattedTime: formatDuration(row.aggregateDurationMs),
+  }));
+
   return Response.json(
     {
       mode: game.mode,
       event: { id: game.id, name: game.name },
       leaderboard,
+      teamLeaderboard,
       total: leaderboard.length,
+      totalTeams: teamLeaderboard.length,
     },
     {
       headers: {

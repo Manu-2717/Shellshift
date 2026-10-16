@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Users, User } from "lucide-react";
+import type { TeamStanding } from "@/lib/games/standings";
 
 export interface Standing {
   rank: number;
@@ -15,14 +16,22 @@ export interface Standing {
 
 export function StandingsTable({
   rows,
+  teamRows = [],
   gameId,
   currentUserId,
+  currentTeamId,
 }: {
   rows: Standing[];
+  teamRows?: TeamStanding[];
   gameId?: string;
   currentUserId?: string;
+  currentTeamId?: string;
 }) {
   const [dataRows, setDataRows] = useState<Standing[]>(rows);
+  const [dataTeamRows, setDataTeamRows] = useState<TeamStanding[]>(teamRows);
+  const [viewMode, setViewMode] = useState<"teams" | "individuals">(
+    teamRows.length > 0 ? "teams" : "individuals"
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const lastUpdatedRef = useRef<number>(Date.now());
@@ -31,8 +40,9 @@ export function StandingsTable({
 
   useEffect(() => {
     setDataRows(rows);
+    setDataTeamRows(teamRows);
     lastUpdatedRef.current = Date.now();
-  }, [rows]);
+  }, [rows, teamRows]);
 
   const fetchLatest = useCallback(async () => {
     if (!gameId) return;
@@ -47,9 +57,12 @@ export function StandingsTable({
         const json = await res.json();
         if (Array.isArray(json?.standings)) {
           setDataRows(json.standings);
-          lastUpdatedRef.current = Date.now();
-          setSecondsAgo(0);
         }
+        if (Array.isArray(json?.teamStandings)) {
+          setDataTeamRows(json.teamStandings);
+        }
+        lastUpdatedRef.current = Date.now();
+        setSecondsAgo(0);
       }
     } catch {
       // Tolerate background network fluctuations
@@ -116,8 +129,8 @@ export function StandingsTable({
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-[#0e1016]">
-      {gameId && (
-        <div className="flex items-center justify-between border-b border-zinc-800/80 bg-zinc-950/40 px-4 py-2.5 text-xs font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800/80 bg-zinc-950/40 px-4 py-2.5 text-xs font-mono gap-2">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-emerald-400">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
@@ -129,7 +142,43 @@ export function StandingsTable({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          {dataTeamRows.length > 0 && (
+            <div className="flex items-center gap-1 rounded bg-zinc-900/90 p-0.5 border border-zinc-800">
+              <button
+                type="button"
+                onClick={() => setViewMode("teams")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                  viewMode === "teams"
+                    ? "bg-cyan-950 text-cyan-300 border border-cyan-800/80 shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <Users className="size-3" />
+                <span>Teams ({dataTeamRows.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("individuals")}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                  viewMode === "individuals"
+                    ? "bg-cyan-950 text-cyan-300 border border-cyan-800/80 shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <User className="size-3" />
+                <span>Individuals ({dataRows.length})</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {viewMode === "teams" && (
+            <span className="text-[10px] text-zinc-500 hidden md:inline">
+              Team score = exact average of all member scores
+            </span>
+          )}
+          {gameId && (
             <button
               onClick={() => fetchLatest()}
               disabled={isRefreshing}
@@ -139,63 +188,143 @@ export function StandingsTable({
               <RefreshCw className={`size-3 ${isRefreshing ? "animate-spin text-cyan-400" : ""}`} />
               <span>Refresh</span>
             </button>
-          </div>
+          )}
         </div>
-      )}
-      <table className="w-full min-w-[620px] text-left text-sm">
-        <thead className="text-xs uppercase tracking-wider text-zinc-500">
-          <tr>
-            <th className="p-4">Rank</th>
-            <th>Player</th>
-            <th>Score</th>
-            <th>Completed</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {dataRows.map((r) => {
-            const isViewer = r.isViewer || (currentUserId && r.userId === currentUserId);
+      </div>
 
-            return (
-              <tr
-                key={r.userId}
-                className={`border-t border-zinc-800 transition-colors ${
-                  isViewer ? "bg-cyan-950/25" : "hover:bg-zinc-900/30"
-                }`}
-              >
-                <td className="p-4 font-mono text-cyan-300">#{r.rank}</td>
-                <td className="font-medium text-white">
-                  {r.userName}
-                  {isViewer ? (
-                    <span className="ml-2 text-xs font-semibold text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50">
-                      You
-                    </span>
-                  ) : null}
-                </td>
-                <td className="font-mono font-bold text-cyan-300">
-                  {r.totalScore % 1 === 0
-                    ? r.totalScore.toLocaleString()
-                    : r.totalScore.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                  <span className="text-[10px] font-normal text-zinc-500">PTS</span>
-                </td>
-                <td>{r.challengesCompleted}</td>
-                <td className="font-mono text-zinc-400">
-                  {Math.floor(r.aggregateDurationMs / 60000)}m{" "}
-                  {Math.floor(r.aggregateDurationMs / 1000) % 60}s
-                </td>
+      {viewMode === "teams" ? (
+        <>
+          <table className="w-full min-w-[620px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wider text-zinc-500">
+              <tr>
+                <th className="p-4 w-16">Rank</th>
+                <th>Team</th>
+                <th>Avg Score</th>
+                <th>Total Solved</th>
+                <th>Time</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {dataRows.length === 0 ? (
-        <p className="p-10 text-center text-sm text-zinc-500">
-          No verified finishes yet.
-        </p>
-      ) : null}
+            </thead>
+            <tbody>
+              {dataTeamRows.map((r) => {
+                const isViewer = r.isViewer || (currentTeamId && r.teamId === currentTeamId);
+
+                return (
+                  <tr
+                    key={r.teamId}
+                    className={`border-t border-zinc-800 transition-colors ${
+                      isViewer ? "bg-cyan-950/25 border-l-2 border-l-cyan-400" : "hover:bg-zinc-900/30"
+                    }`}
+                  >
+                    <td className="p-4 font-mono text-cyan-300">#{r.rank}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-white">{r.teamName}</span>
+                        {isViewer ? (
+                          <span className="text-xs font-semibold text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50">
+                            Your Team
+                          </span>
+                        ) : null}
+                        <span className="text-[10px] text-zinc-500 font-mono">
+                          ({r.memberCount} {r.memberCount === 1 ? "member" : "members"})
+                        </span>
+                      </div>
+                      {r.members && r.members.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {r.members.map((m) => (
+                            <span
+                              key={m.userId}
+                              className="inline-flex items-center gap-1 rounded bg-zinc-900/80 px-2 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-800/60"
+                            >
+                              <span>{m.userName}</span>
+                              <span className="text-cyan-400 font-semibold">{m.score} pts</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="p-4 font-mono font-bold text-cyan-300">
+                      {r.totalScore % 1 === 0
+                        ? r.totalScore.toLocaleString()
+                        : r.totalScore.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                      <span className="text-[10px] font-normal text-zinc-500">PTS (avg)</span>
+                    </td>
+                    <td className="p-4 font-mono text-zinc-300">{r.challengesCompleted}</td>
+                    <td className="p-4 font-mono text-zinc-400">
+                      {Math.floor(r.aggregateDurationMs / 60000)}m{" "}
+                      {Math.floor(r.aggregateDurationMs / 1000) % 60}s
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {dataTeamRows.length === 0 ? (
+            <p className="p-10 text-center text-sm text-zinc-500">
+              No verified team finishes yet.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <table className="w-full min-w-[620px] text-left text-sm">
+            <thead className="text-xs uppercase tracking-wider text-zinc-500">
+              <tr>
+                <th className="p-4 w-16">Rank</th>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Completed</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {dataRows.map((r) => {
+                const isViewer = r.isViewer || (currentUserId && r.userId === currentUserId);
+
+                return (
+                  <tr
+                    key={r.userId}
+                    className={`border-t border-zinc-800 transition-colors ${
+                      isViewer ? "bg-cyan-950/25" : "hover:bg-zinc-900/30"
+                    }`}
+                  >
+                    <td className="p-4 font-mono text-cyan-300">#{r.rank}</td>
+                    <td className="p-4 font-medium text-white">
+                      {r.userName}
+                      {isViewer ? (
+                        <span className="ml-2 text-xs font-semibold text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-800/50">
+                          You
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="p-4 font-mono font-bold text-cyan-300">
+                      {r.totalScore % 1 === 0
+                        ? r.totalScore.toLocaleString()
+                        : r.totalScore.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}{" "}
+                      <span className="text-[10px] font-normal text-zinc-500">PTS</span>
+                    </td>
+                    <td className="p-4 font-mono text-zinc-300">{r.challengesCompleted}</td>
+                    <td className="p-4 font-mono text-zinc-400">
+                      {Math.floor(r.aggregateDurationMs / 60000)}m{" "}
+                      {Math.floor(r.aggregateDurationMs / 1000) % 60}s
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {dataRows.length === 0 ? (
+            <p className="p-10 text-center text-sm text-zinc-500">
+              No verified finishes yet.
+            </p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

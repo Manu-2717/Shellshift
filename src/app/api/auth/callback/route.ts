@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import crypto from "crypto";
 import {
   checkIsAdmin,
   discoverEndpoints,
   exchangeAuthorizationCode,
+  extractOidcTeam,
   fetchUserInfo,
   getOidcConfig,
   resolvePostLoginDestination,
@@ -191,6 +193,60 @@ export async function GET(request: Request) {
             },
           },
         });
+      }
+    }
+
+    // 7.5. Automatically detect and pair team from OIDC claims or UserInfo
+    const detectedTeam = extractOidcTeam(validatedClaims, userInfo);
+    if (detectedTeam) {
+      try {
+        let team = await prisma.team.findUnique({
+          where: { name: detectedTeam.name },
+        });
+
+        if (!team) {
+          const inviteCode = crypto.randomBytes(4).toString("hex").toUpperCase();
+          team = await prisma.team.create({
+            data: {
+              name: detectedTeam.name,
+              inviteCode,
+            },
+          });
+        }
+
+        const existingMembership = await prisma.teamMembership.findUnique({
+          where: {
+            userId_teamId: {
+              userId: user.id,
+              teamId: team.id,
+            },
+          },
+        });
+
+        if (!existingMembership) {
+          await prisma.teamMembership.create({
+            data: {
+              userId: user.id,
+              teamId: team.id,
+              role: detectedTeam.role || "MEMBER",
+            },
+          });
+        }
+
+        // Refresh user memberships
+        const refreshedUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          include: {
+            memberships: {
+              include: { team: true },
+            },
+          },
+        });
+        if (refreshedUser) {
+          user = refreshedUser;
+        }
+      } catch (teamSyncErr) {
+        console.warn("OIDC team sync warning:", teamSyncErr);
       }
     }
 

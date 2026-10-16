@@ -76,6 +76,32 @@ export default async function Lobby({
   const isEnded = phase === "ENDED" || g.status === "ENDED";
   const live = phase === "LIVE" && !isEnded;
 
+  // Distinct question assignment: Each team member receives distinct, non-overlapping questions
+  const userMembership = await prisma.teamMembership.findFirst({
+    where: { userId: user.id },
+    include: {
+      team: {
+        include: {
+          memberships: {
+            orderBy: { createdAt: "asc" },
+            include: { user: { select: { id: true, name: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  const team = userMembership?.team;
+  const teamMembers = team?.memberships || [];
+  const memberCount = Math.max(1, teamMembers.length);
+  const sortedMemberIds = teamMembers.map((m) => m.userId).sort();
+  const memberIndex = sortedMemberIds.indexOf(user.id);
+  const effectiveIndex = memberIndex >= 0 ? memberIndex : 0;
+
+  const assignedChallenges = memberCount > 1
+    ? g.challenges.filter((_, idx) => idx % memberCount === effectiveIndex)
+    : g.challenges;
+
   return (
     <div className="min-h-screen bg-[#07080b] text-white">
       <Navbar user={user} />
@@ -125,10 +151,38 @@ export default async function Lobby({
             </div>
           ) : null}
 
+          {team && memberCount > 1 && (
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-800/40 bg-cyan-950/20 p-4 text-xs font-mono">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-7 items-center justify-center rounded-lg bg-cyan-900/60 text-cyan-300 font-bold">
+                  {effectiveIndex + 1}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white text-sm">{team.name}</span>
+                    <span className="rounded bg-cyan-950 border border-cyan-800/60 px-1.5 py-0.5 text-[10px] text-cyan-400 font-semibold">
+                      Member {effectiveIndex + 1} of {memberCount}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Your assigned missions are unique to you. Teammates receive different questions to maximize team average score.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500 block">Assigned Missions</span>
+                <span className="text-sm font-bold text-emerald-400 font-mono">
+                  {assignedChallenges.length} <span className="text-zinc-500 font-normal">/ {g.challenges.length} total</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           <GameLobby
             gameId={g.id}
             live={live}
-            challenges={g.challenges.map((x) => {
+            challenges={assignedChallenges.map((x) => {
               const run = g.runs.find((r) => r.challengeId === x.challengeId);
               return {
                 id: x.challenge.id,

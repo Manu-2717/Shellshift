@@ -62,28 +62,37 @@ export async function GET(
   }
 
   let nextChallenge = null;
-  if (run.eventId) {
-    const currentEventChallenge = await prisma.eventChallenge.findFirst({
-      where: { eventId: run.eventId, challengeId: run.challengeId },
+  if (run.eventId && run.userId) {
+    const userMembership = await prisma.teamMembership.findFirst({
+      where: { userId: run.userId },
+      include: { team: { include: { memberships: { orderBy: { createdAt: "asc" } } } } },
     });
-    if (currentEventChallenge) {
-      const nextEc = await prisma.eventChallenge.findFirst({
-        where: {
-          eventId: run.eventId,
-          order: { gt: currentEventChallenge.order },
-        },
-        orderBy: { order: "asc" },
-        include: { challenge: true },
-      });
-      if (nextEc) {
-        nextChallenge = {
-          id: nextEc.challenge.id,
-          order: nextEc.order,
-          title: nextEc.challenge.title,
-          slug: nextEc.challenge.slug,
-          difficulty: nextEc.challenge.difficulty,
-        };
-      }
+
+    const teamMembers = userMembership?.team?.memberships || [];
+    const memberCount = Math.max(1, teamMembers.length);
+    const sortedMemberIds = teamMembers.map((m) => m.userId).sort();
+    const memberIndex = sortedMemberIds.indexOf(run.userId);
+
+    const allEventChallenges = await prisma.eventChallenge.findMany({
+      where: { eventId: run.eventId },
+      orderBy: { order: "asc" },
+      include: { challenge: true },
+    });
+
+    const currentEc = allEventChallenges.find((ec) => ec.challengeId === run.challengeId);
+    const assignedChallenges = memberCount > 1 && memberIndex >= 0
+      ? allEventChallenges.filter((_, idx) => idx % memberCount === memberIndex)
+      : allEventChallenges;
+
+    const nextEc = assignedChallenges.find((ec) => ec.order > (currentEc?.order || 0));
+    if (nextEc) {
+      nextChallenge = {
+        id: nextEc.challenge.id,
+        order: nextEc.order,
+        title: nextEc.challenge.title,
+        slug: nextEc.challenge.slug,
+        difficulty: nextEc.challenge.difficulty,
+      };
     }
   }
 

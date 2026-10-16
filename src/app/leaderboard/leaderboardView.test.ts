@@ -84,4 +84,80 @@ describe("Points-Only Event Leaderboard", () => {
     expect(lowIndex).toBeGreaterThan(-1);
     expect(highIndex).toBeLessThan(lowIndex);
   });
+
+  it("renders team leaderboard with exact average score and member breakdown", () => {
+    const teamEntries = [
+      {
+        rank: 1,
+        teamId: "t-solo",
+        teamName: "SoloHacker",
+        totalScore: 900, // 1 member scoring 900 -> 900
+        memberCount: 1,
+        members: [
+          { userId: "u1", userName: "Neo", score: 900, challengesCompleted: 2 },
+        ],
+        challengesCompleted: 2,
+        aggregateDurationMs: 60000,
+        lastCompletionMs: 1000,
+      },
+      {
+        rank: 2,
+        teamId: "t-quad",
+        teamName: "QuadSquad",
+        totalScore: 800, // 4 members scoring 800 each -> average 800 (not 3200)
+        memberCount: 4,
+        members: [
+          { userId: "u2", userName: "Alice", score: 800, challengesCompleted: 2 },
+          { userId: "u3", userName: "Bob", score: 800, challengesCompleted: 2 },
+          { userId: "u4", userName: "Charlie", score: 800, challengesCompleted: 2 },
+          { userId: "u5", userName: "Dave", score: 800, challengesCompleted: 2 },
+        ],
+        challengesCompleted: 8,
+        aggregateDurationMs: 240000,
+        lastCompletionMs: 2000,
+      },
+    ];
+
+    const html = renderToStaticMarkup(
+      React.createElement(LeaderboardView, {
+        entries: [],
+        teamEntries,
+        totalChallenges: 10,
+        currentTeamId: "t-quad",
+        eventName: "Championship 2026",
+        defaultView: "teams",
+      })
+    );
+
+    // Verify Points Leaderboard header
+    expect(html).toContain("Points Leaderboard");
+    expect(html).toContain("Championship 2026");
+
+    // Verify team names
+    expect(html).toContain("SoloHacker");
+    expect(html).toContain("QuadSquad");
+
+    // Verify team scores are the exact average, not sum!
+    expect(html).toContain("900 PTS");
+    expect(html).toContain("800 PTS");
+    expect(html).not.toContain("3,200 PTS");
+    expect(html).not.toContain("3200 PTS");
+
+    // Verify member breakdown
+    expect(html).toContain("Alice");
+    expect(html).toContain("Bob");
+    expect(html).toContain("Charlie");
+    expect(html).toContain("Dave");
+    expect(html).toContain("Neo");
+
+    // Verify viewer's team badge
+    expect(html).toContain("YOUR TEAM");
+
+    // Verify rank order: SoloHacker (900) before QuadSquad (800)
+    const soloIndex = html.indexOf("SoloHacker");
+    const quadIndex = html.indexOf("QuadSquad");
+    expect(soloIndex).toBeGreaterThan(-1);
+    expect(quadIndex).toBeGreaterThan(-1);
+    expect(soloIndex).toBeLessThan(quadIndex);
+  });
 });

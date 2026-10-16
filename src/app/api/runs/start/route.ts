@@ -46,6 +46,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Challenge not found or unavailable." }, { status: 404 });
     }
 
+    // Query user's team membership to attach teamId to run and verify distinct assignment
+    const userMembership = await prisma.teamMembership.findFirst({
+      where: { userId: session.id },
+      include: {
+        team: {
+          include: {
+            memberships: {
+              orderBy: { createdAt: "asc" },
+            },
+          },
+        },
+      },
+    });
+
+    const team = userMembership?.team;
+    const teamMembers = team?.memberships || [];
+    const memberCount = Math.max(1, teamMembers.length);
+    const sortedMemberIds = teamMembers.map((m) => m.userId).sort();
+    const memberIndex = sortedMemberIds.indexOf(session.id);
+
+    if (memberCount > 1 && memberIndex >= 0) {
+      const allChallenges = await prisma.eventChallenge.findMany({
+        where: { eventId: gameId },
+        orderBy: { order: "asc" },
+      });
+      const challengeIdx = allChallenges.findIndex((ec) => ec.challengeId === challengeId);
+      if (challengeIdx >= 0 && challengeIdx % memberCount !== memberIndex) {
+        return NextResponse.json(
+          { error: "This challenge is assigned to another member of your team." },
+          { status: 403 }
+        );
+      }
+    }
+
     // Duplicate-start prevention: check for existing active run
     const existingActiveRun = await prisma.run.findFirst({
       where: {
@@ -150,6 +184,7 @@ export async function POST(request: Request) {
     const newRun = await prisma.run.create({
       data: {
         userId: session.id,
+        teamId: team?.id || null,
         eventId: gameId,
         challengeId: challenge.id,
         status: "IN_PROGRESS",

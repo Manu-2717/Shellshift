@@ -480,3 +480,54 @@ export function resolvePostLoginDestination(
 ): string {
   return role === "ADMIN" || teamId ? redirectTarget : "/register";
 }
+
+export interface ExtractedOidcTeam {
+  name: string;
+  role?: "LEADER" | "MEMBER";
+  id?: string;
+}
+
+/**
+ * Extracts team information from OIDC ID token claims or userinfo payload.
+ * Supports standard claims (team, team_name, teams, groups, club_team) and object formats.
+ */
+export function extractOidcTeam(
+  claims?: Record<string, unknown> | null,
+  userInfo?: Record<string, unknown> | null
+): ExtractedOidcTeam | null {
+  const merged: Record<string, unknown> = { ...(claims || {}), ...(userInfo || {}) };
+
+  const rawTeam =
+    merged.team ||
+    merged.team_name ||
+    merged.teamName ||
+    merged.club_team ||
+    merged.clubTeam ||
+    (Array.isArray(merged.teams) && merged.teams.length > 0 ? merged.teams[0] : null) ||
+    (Array.isArray(merged.groups) && merged.groups.length > 0 ? merged.groups[0] : null);
+
+  if (!rawTeam) return null;
+
+  if (typeof rawTeam === "string" && rawTeam.trim().length > 0) {
+    const roleClaim = String(merged.team_role || merged.teamRole || merged.role || "").toUpperCase();
+    return {
+      name: rawTeam.trim(),
+      role: roleClaim === "LEADER" || roleClaim === "CAPTAIN" ? "LEADER" : "MEMBER",
+    };
+  }
+
+  if (typeof rawTeam === "object" && rawTeam !== null) {
+    const obj = rawTeam as Record<string, unknown>;
+    const name = String(obj.name || obj.team_name || obj.title || obj.id || "").trim();
+    if (!name) return null;
+    const roleClaim = String(obj.role || obj.team_role || merged.team_role || "").toUpperCase();
+    return {
+      name,
+      role: roleClaim === "LEADER" || roleClaim === "CAPTAIN" ? "LEADER" : "MEMBER",
+      id: obj.id ? String(obj.id) : undefined,
+    };
+  }
+
+  return null;
+}
+

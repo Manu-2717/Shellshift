@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
-import { Trophy, Medal, User, RefreshCw } from "lucide-react";
+import { Trophy, Medal, User, Users, RefreshCw } from "lucide-react";
 import { formatDuration } from "@/lib/format";
+import type { TeamStanding } from "@/lib/games/standings";
 
 export interface LeaderboardEntry {
   userId: string;
@@ -18,22 +19,32 @@ export interface LeaderboardEntry {
   teamName?: string;
 }
 
-interface LeaderboardViewProps {
+export interface LeaderboardViewProps {
   entries: LeaderboardEntry[];
+  teamEntries?: TeamStanding[];
   totalChallenges: number;
   currentUserId?: string | null;
+  currentTeamId?: string | null;
   eventName?: string;
   gameId?: string;
+  defaultView?: "teams" | "individuals";
 }
 
 export function LeaderboardView({
   entries,
+  teamEntries = [],
   totalChallenges,
   currentUserId,
+  currentTeamId,
   eventName,
   gameId,
+  defaultView,
 }: LeaderboardViewProps) {
   const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>(entries);
+  const [liveTeamEntries, setLiveTeamEntries] = useState<TeamStanding[]>(teamEntries);
+  const [viewMode, setViewMode] = useState<"teams" | "individuals">(
+    defaultView || (teamEntries.length > 0 ? "teams" : "individuals")
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const lastUpdatedRef = useRef<number>(Date.now());
@@ -42,8 +53,9 @@ export function LeaderboardView({
 
   useEffect(() => {
     setLiveEntries(entries);
+    setLiveTeamEntries(teamEntries);
     lastUpdatedRef.current = Date.now();
-  }, [entries]);
+  }, [entries, teamEntries]);
 
   const fetchLatest = useCallback(async () => {
     if (!gameId) return;
@@ -58,9 +70,12 @@ export function LeaderboardView({
         const json = await res.json();
         if (Array.isArray(json?.leaderboard)) {
           setLiveEntries(json.leaderboard);
-          lastUpdatedRef.current = Date.now();
-          setSecondsAgo(0);
         }
+        if (Array.isArray(json?.teamLeaderboard)) {
+          setLiveTeamEntries(json.teamLeaderboard);
+        }
+        lastUpdatedRef.current = Date.now();
+        setSecondsAgo(0);
       }
     } catch {
       // Tolerate transient background network drops
@@ -132,6 +147,15 @@ export function LeaderboardView({
     });
   }, [liveEntries]);
 
+  const sortedTeamEntries = useMemo(() => {
+    return [...liveTeamEntries].sort((a, b) => {
+      if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+      if (b.challengesCompleted !== a.challengesCompleted) return b.challengesCompleted - a.challengesCompleted;
+      if (a.aggregateDurationMs !== b.aggregateDurationMs) return a.aggregateDurationMs - b.aggregateDurationMs;
+      return (a.lastCompletionMs || 0) - (b.lastCompletionMs || 0);
+    });
+  }, [liveTeamEntries]);
+
   return (
     <div className="space-y-4">
       {/* View Header Info */}
@@ -147,6 +171,35 @@ export function LeaderboardView({
         </div>
 
         <div className="flex items-center gap-3 text-[11px] text-[#a1a1aa] px-2 font-mono">
+          {liveTeamEntries.length > 0 && (
+            <div className="flex items-center gap-1 rounded bg-[#18181b] p-0.5 border border-[#27272a]">
+              <button
+                type="button"
+                onClick={() => setViewMode("teams")}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                  viewMode === "teams"
+                    ? "bg-cyan-950 text-cyan-300 border border-cyan-800/80 shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Teams ({liveTeamEntries.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("individuals")}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                  viewMode === "individuals"
+                    ? "bg-cyan-950 text-cyan-300 border border-cyan-800/80 shadow-sm"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Individuals ({liveEntries.length})</span>
+              </button>
+            </div>
+          )}
+
           {gameId && (
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 text-emerald-400">
@@ -174,7 +227,116 @@ export function LeaderboardView({
         </div>
       </div>
 
-      {sortedEntries.length === 0 ? (
+      {viewMode === "teams" ? (
+        sortedTeamEntries.length === 0 ? (
+          <div className="bg-[#121215] border border-[#27272a] rounded-xl p-12 text-center space-y-3">
+            <Trophy className="w-8 h-8 text-[#a1a1aa] mx-auto opacity-50" />
+            <h3 className="text-sm font-bold text-white">No Verified Team Submissions Yet</h3>
+            <p className="text-xs text-[#a1a1aa] max-w-md mx-auto">
+              Participate in this event with your team to record verified team points on the leaderboard.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-[#121215] border border-[#27272a] rounded-xl overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#18181b] border-b border-[#27272a] text-[#a1a1aa] font-semibold uppercase tracking-wider text-[10px]">
+                  <tr>
+                    <th className="py-3 px-3 sm:px-4 w-14 sm:w-16">Rank</th>
+                    <th className="py-3 px-3 sm:px-4">Team</th>
+                    <th className="py-3 px-3 sm:px-4">Avg Score</th>
+                    <th className="py-3 px-3 sm:px-4">Team Solved</th>
+                    <th className="py-3 px-3 sm:px-4">Time</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#27272a] font-mono">
+                  {sortedTeamEntries.map((t, idx) => {
+                    const isCurrent = t.isViewer || (currentTeamId && t.teamId === currentTeamId);
+
+                    return (
+                      <tr
+                        key={t.teamId || idx}
+                        className={`transition-colors ${
+                          isCurrent
+                            ? "bg-cyan-950/20 border-l-2 border-cyan-400 hover:bg-cyan-950/30"
+                            : "hover:bg-[#18181b]/50"
+                        }`}
+                      >
+                        <td className="py-3.5 px-3 sm:px-4 font-bold tabular-nums">
+                          {idx === 0 ? (
+                            <span className="flex items-center gap-1.5 text-amber-400 font-black">
+                              <Medal className="w-4 h-4 text-amber-400 shrink-0" /> #1
+                            </span>
+                          ) : idx === 1 ? (
+                            <span className="flex items-center gap-1.5 text-neutral-300 font-bold">
+                              <Medal className="w-4 h-4 text-neutral-300 shrink-0" /> #2
+                            </span>
+                          ) : idx === 2 ? (
+                            <span className="flex items-center gap-1.5 text-amber-600 font-bold">
+                              <Medal className="w-4 h-4 text-amber-600 shrink-0" /> #3
+                            </span>
+                          ) : (
+                            <span className="text-[#a1a1aa]">#{idx + 1}</span>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-3 sm:px-4 font-semibold text-white">
+                          <div className="flex items-center gap-2">
+                            <Users className="w-3.5 h-3.5 text-cyan-400 shrink-0 hidden sm:inline" />
+                            <span className="truncate max-w-[140px] sm:max-w-none text-white font-bold font-sans">
+                              {t.teamName}
+                            </span>
+                            {isCurrent && (
+                              <span className="px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-400 border border-cyan-800 text-[10px] font-bold">
+                                YOUR TEAM
+                              </span>
+                            )}
+                            <span className="text-[10px] text-zinc-500 font-mono">
+                              ({t.memberCount} {t.memberCount === 1 ? "member" : "members"})
+                            </span>
+                          </div>
+                          {t.members && t.members.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {t.members.map((m) => (
+                                <span
+                                  key={m.userId}
+                                  className="inline-flex items-center gap-1 rounded bg-zinc-900/80 px-2 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-800/60"
+                                >
+                                  <span>{m.userName}</span>
+                                  <span className="text-cyan-400 font-semibold">{m.score} pts</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-3 sm:px-4 font-extrabold text-cyan-400 text-sm tabular-nums">
+                          {t.totalScore % 1 === 0
+                            ? t.totalScore.toLocaleString()
+                            : t.totalScore.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}{" "}
+                          PTS
+                          <span className="ml-1 text-[10px] font-normal text-zinc-500 uppercase">avg</span>
+                        </td>
+
+                        <td className="py-3.5 px-3 sm:px-4 text-[#fafafa] tabular-nums">
+                          {t.challengesCompleted} {totalChallenges > 0 ? `/ ${totalChallenges}` : ""}
+                        </td>
+
+                        <td className="py-3.5 px-3 sm:px-4 font-bold text-emerald-400 tabular-nums">
+                          {formatDuration(t.aggregateDurationMs)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      ) : sortedEntries.length === 0 ? (
         <div className="bg-[#121215] border border-[#27272a] rounded-xl p-12 text-center space-y-3">
           <Trophy className="w-8 h-8 text-[#a1a1aa] mx-auto opacity-50" />
           <h3 className="text-sm font-bold text-white">No Verified Submissions Yet</h3>

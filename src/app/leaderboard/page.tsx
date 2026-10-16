@@ -36,6 +36,7 @@ export default async function LeaderboardPage({
     : events.find((e) => e.status === "PUBLISHED") || events[0];
 
   let entries: LeaderboardEntry[] = [];
+  let teamEntries: any[] = [];
   let standingsError: string | null = null;
   let totalChallenges = 0;
 
@@ -56,9 +57,21 @@ export default async function LeaderboardPage({
           rank: s.rank,
           isViewer: s.isViewer,
         }));
+        teamEntries = standingsResult.teamStandings || [];
       }
     } catch (err) {
       console.error("[Leaderboard] Standings query error:", (err as Error)?.message || err);
+    }
+  }
+
+  let sessionTeamId = session?.teamId;
+  if (session?.id && !sessionTeamId) {
+    const membership = await prisma.teamMembership.findFirst({
+      where: { userId: session.id },
+      select: { teamId: true },
+    });
+    if (membership) {
+      sessionTeamId = membership.teamId;
     }
   }
 
@@ -104,7 +117,9 @@ export default async function LeaderboardPage({
                 {selectedEvent.status === "PUBLISHED" ? "Live Event" : selectedEvent.status}
               </span>
               <span className="text-[#a1a1aa] bg-[#18181b] border border-[#27272a] px-2.5 py-1 rounded">
-                {entries.length} Contestants
+                {teamEntries.length > 0
+                  ? `${teamEntries.length} Teams · ${entries.length} Contestants`
+                  : `${entries.length} Contestants`}
               </span>
             </div>
           )}
@@ -160,8 +175,10 @@ export default async function LeaderboardPage({
         ) : (
           <LeaderboardView
             entries={entries}
+            teamEntries={teamEntries}
             totalChallenges={totalChallenges}
             currentUserId={session?.id}
+            currentTeamId={sessionTeamId}
             eventName={selectedEvent.name}
             gameId={selectedEvent.id}
           />
