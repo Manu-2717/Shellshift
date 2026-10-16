@@ -3,10 +3,29 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { executeCommand } from "@/lib/vfs/engine";
 import { evaluateObjective } from "@/lib/vfs/evaluator";
-import { CommandMapping, ObjectiveConfig, VfsState } from "@/lib/vfs/types";
+import { CommandMapping, ObjectiveConfig, VfsDirectory, VfsState } from "@/lib/vfs/types";
 import { rateLimit } from "@/lib/rateLimit";
 import { calculateRunScore } from "@/lib/scoring/scoringEngine";
 import { evaluateRunAccess } from "@/lib/games/runAccess";
+
+function extractTreeList(
+  dir: VfsDirectory,
+  basePath: string = ""
+): Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> {
+  const items: Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> = [];
+
+  for (const [name, child] of Object.entries(dir.children || {})) {
+    const fullPath = `${basePath}/${name}`;
+    if (child.type === "dir") {
+      items.push({ path: fullPath, name, type: "dir" });
+      items.push(...extractTreeList(child, fullPath));
+    } else {
+      items.push({ path: fullPath, name, type: "file", size: child.content?.length || 0 });
+    }
+  }
+
+  return items;
+}
 
 export async function POST(
   request: Request,
@@ -43,10 +62,15 @@ export async function POST(
       return NextResponse.json({ error: "Missing or invalid command string." }, { status: 400 });
     }
 
-    // Fetch run and challenge
+    // Fetch run, challenge, existing objective milestones, and hint usages in ONE query
     const run = await prisma.run.findUnique({
       where: { id: runId },
-      include: { challenge: true, event: true },
+      include: {
+        challenge: true,
+        event: true,
+        objectiveCompletions: true,
+        hintUsages: { include: { hint: true } },
+      },
     });
 
     if (!run) {
@@ -267,10 +291,15 @@ export async function POST(
       points: r.points || 0,
     }));
 
-    const existingCompletions = await prisma.objectiveCompletion.findMany({
-      where: { runId: run.id },
-    });
+    const existingCompletions = run.objectiveCompletions || [];
     const completedSet = new Set(existingCompletions.map((c) => c.objectiveId));
+    const newCompletionsData: Array<{
+      runId: string;
+      objectiveId: string;
+      ruleIndex: number;
+      pointsAwarded: number;
+      completedAt: Date;
+    }> = [];
 
     for (let i = 0; i < evaluation.details.length; i++) {
       const detail = evaluation.details[i];
@@ -278,21 +307,16 @@ export async function POST(
         const objId = detail.id || `rule-${i}`;
         if (!completedSet.has(objId)) {
           const pts = detail.points || 0;
-          try {
-            const created = await prisma.objectiveCompletion.create({
-              data: {
-                runId: run.id,
-                objectiveId: objId,
-                ruleIndex: i,
-                pointsAwarded: pts,
-                completedAt: now,
-              },
-            });
-            completedSet.add(objId);
-            existingCompletions.push(created);
-          } catch {
-            // Handled concurrency / already recorded
-          }
+          const newObj = {
+            runId: run.id,
+            objectiveId: objId,
+            ruleIndex: i,
+            pointsAwarded: pts,
+            completedAt: now,
+          };
+          newCompletionsData.push(newObj);
+          completedSet.add(objId);
+          existingCompletions.push(newObj as any);
         }
       }
     }
@@ -307,18 +331,24 @@ export async function POST(
         ? cmdResult.output.slice(0, MAX_OUTPUT_SIZE) + "\n...[output truncated by ShellShift]"
         : cmdResult.output;
 
+    const allHints = run.hintUsages || [];
+    const verifiedIds = existingCompletions.map((c) => c.objectiveId);
+    const hintPenalties = allHints.map((h) => h.pointPenalty || h.hint?.pointPenalty || 25);
+
+    const txOps: any[] = [];
+
+    // 1. Batch newly completed milestones
+    if (newCompletionsData.length > 0) {
+      txOps.push(
+        prisma.objectiveCompletion.createMany({
+          data: newCompletionsData,
+          skipDuplicates: true,
+        })
+      );
+    }
+
     if (evaluation.isCompleted) {
       finalDurationMs = now.getTime() - run.startedAt.getTime();
-
-      // Retrieve all verified milestones and used hints
-      const allCompletions = existingCompletions;
-      const allHints = await prisma.hintUsage.findMany({
-        where: { runId: run.id },
-        include: { hint: true },
-      });
-
-      const verifiedIds = allCompletions.map((c) => c.objectiveId);
-      const hintPenalties = allHints.map((h) => h.pointPenalty || h.hint.pointPenalty || 25);
 
       scoreBreakdown = calculateRunScore({
         status: "COMPLETED",
@@ -330,45 +360,32 @@ export async function POST(
         objectives: availableObjectives,
       });
 
-      // ATOMIC CONDITIONAL UPDATE:
-      // Prevents concurrent race condition where two finishing commands complete simultaneously.
-      const updateResult = await prisma.run.updateMany({
-        where: {
-          id: run.id,
-          status: "IN_PROGRESS",
-        },
-        data: {
-          status: "COMPLETED",
-          completedAt: now,
-          durationMs: finalDurationMs,
-          filesystemState: JSON.stringify(vfsState),
-          currentWorkingDir: cmdResult.newCwd,
-          commandCount: nextCommandCount,
-          objectivePoints: scoreBreakdown.objectivePoints,
-          completionBonus: scoreBreakdown.completionBonus,
-          speedBonus: scoreBreakdown.speedBonus,
-          hintPenalty: scoreBreakdown.hintPenalty,
-          baseScore: scoreBreakdown.baseScore,
-          difficultyMultiplier: scoreBreakdown.difficultyMultiplier,
-          finalScore: scoreBreakdown.finalScore,
-          scoringBreakdown: JSON.stringify(scoreBreakdown),
-        },
-      });
-
-      if (updateResult.count === 1) {
-        justCompleted = true;
-      }
+      // 2. Atomic conditional update to prevent double completion
+      txOps.push(
+        prisma.run.updateMany({
+          where: {
+            id: run.id,
+            status: "IN_PROGRESS",
+          },
+          data: {
+            status: "COMPLETED",
+            completedAt: now,
+            durationMs: finalDurationMs,
+            filesystemState: JSON.stringify(vfsState),
+            currentWorkingDir: cmdResult.newCwd,
+            commandCount: nextCommandCount,
+            objectivePoints: scoreBreakdown.objectivePoints,
+            completionBonus: scoreBreakdown.completionBonus,
+            speedBonus: scoreBreakdown.speedBonus,
+            hintPenalty: scoreBreakdown.hintPenalty,
+            baseScore: scoreBreakdown.baseScore,
+            difficultyMultiplier: scoreBreakdown.difficultyMultiplier,
+            finalScore: scoreBreakdown.finalScore,
+            scoringBreakdown: JSON.stringify(scoreBreakdown),
+          },
+        })
+      );
     } else {
-      // In-progress update: calculate current verified progress
-      const allCompletions = existingCompletions;
-      const allHints = await prisma.hintUsage.findMany({
-        where: { runId: run.id },
-        include: { hint: true },
-      });
-
-      const verifiedIds = allCompletions.map((c) => c.objectiveId);
-      const hintPenalties = allHints.map((h) => h.pointPenalty || h.hint.pointPenalty || 25);
-
       scoreBreakdown = calculateRunScore({
         status: "IN_PROGRESS",
         startedAt: run.startedAt,
@@ -379,39 +396,54 @@ export async function POST(
         objectives: availableObjectives,
       });
 
-      await prisma.run.updateMany({
-        where: {
-          id: run.id,
-          status: "IN_PROGRESS",
-        },
-        data: {
-          filesystemState: JSON.stringify(vfsState),
-          currentWorkingDir: cmdResult.newCwd,
-          commandCount: nextCommandCount,
-          objectivePoints: scoreBreakdown.objectivePoints,
-          hintPenalty: scoreBreakdown.hintPenalty,
-          baseScore: scoreBreakdown.baseScore,
-          finalScore: scoreBreakdown.finalScore,
-          scoringBreakdown: JSON.stringify(scoreBreakdown),
-        },
-      });
+      // 2. In-progress update
+      txOps.push(
+        prisma.run.updateMany({
+          where: {
+            id: run.id,
+            status: "IN_PROGRESS",
+          },
+          data: {
+            filesystemState: JSON.stringify(vfsState),
+            currentWorkingDir: cmdResult.newCwd,
+            commandCount: nextCommandCount,
+            objectivePoints: scoreBreakdown.objectivePoints,
+            hintPenalty: scoreBreakdown.hintPenalty,
+            baseScore: scoreBreakdown.baseScore,
+            finalScore: scoreBreakdown.finalScore,
+            scoringBreakdown: JSON.stringify(scoreBreakdown),
+          },
+        })
+      );
     }
 
-    // Log command audit entry
-    await prisma.commandLog.create({
-      data: {
-        runId: run.id,
-        userId: session.id,
-        enteredCommand: command,
-        mappedOperation: cmdResult.mappedOperation,
-        output: safeOutput,
-        executionTimeMs,
-      },
-    });
+    // 3. Command audit log entry
+    txOps.push(
+      prisma.commandLog.create({
+        data: {
+          runId: run.id,
+          userId: session.id,
+          enteredCommand: command,
+          mappedOperation: cmdResult.mappedOperation,
+          output: safeOutput,
+          executionTimeMs,
+        },
+      })
+    );
+
+    // Single batched round-trip for ALL database writes
+    const txResults = await prisma.$transaction(txOps);
+
+    if (evaluation.isCompleted) {
+      const updateResult = newCompletionsData.length > 0 ? txResults[1] : txResults[0];
+      if (updateResult?.count === 1) {
+        justCompleted = true;
+      }
+    }
 
     // Calculate player's live cumulative event score for immediate leaderboard synchronization
     let totalEventScore = scoreBreakdown?.finalScore || 0;
-    if (run.eventId && session.id) {
+    if (run.eventId && session.id && evaluation.isCompleted) {
       const userCompletedRuns = await prisma.run.findMany({
         where: {
           eventId: run.eventId,
@@ -432,17 +464,20 @@ export async function POST(
         }
       }
 
-      if (evaluation.isCompleted && scoreBreakdown && scoreBreakdown.finalScore > (bestByChallenge.get(run.challengeId) || 0)) {
+      if (scoreBreakdown && scoreBreakdown.finalScore > (bestByChallenge.get(run.challengeId) || 0)) {
         bestByChallenge.set(run.challengeId, scoreBreakdown.finalScore);
       }
 
       totalEventScore = Math.round(Array.from(bestByChallenge.values()).reduce((sum, s) => sum + s, 0) * 100) / 100;
     }
 
+    const treeList = vfsState.root ? extractTreeList(vfsState.root) : [];
+
     return NextResponse.json({
       output: safeOutput,
       exitCode: cmdResult.exitCode,
       cwd: cmdResult.newCwd,
+      treeList,
       commandCount: nextCommandCount,
       isCompleted: evaluation.isCompleted,
       justCompleted,

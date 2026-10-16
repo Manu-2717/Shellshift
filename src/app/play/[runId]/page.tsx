@@ -83,6 +83,7 @@ export default function PlayChallengePage() {
         return {
           ...prev,
           currentWorkingDir: result.cwd || prev.currentWorkingDir,
+          treeList: result.treeList || prev.treeList,
           commandCount: result.commandCount ?? prev.commandCount,
           objectiveEvaluation: result.objectiveEvaluation || prev.objectiveEvaluation,
           finalScore: finalSc,
@@ -102,8 +103,6 @@ export default function PlayChallengePage() {
     if (result?.isCompleted) {
       setFinalDuration(result.durationMs);
       setIsCompleted(true);
-      fetchRunState();
-    } else {
       fetchRunState();
     }
   };
