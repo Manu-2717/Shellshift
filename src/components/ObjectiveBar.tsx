@@ -13,9 +13,11 @@ import {
 } from "lucide-react";
 
 export interface ObjectiveRuleDetail {
+  id?: string;
   description: string;
   passed: boolean;
   blocked?: boolean;
+  points?: number;
 }
 
 interface ObjectiveBarProps {
@@ -67,6 +69,8 @@ export function ObjectiveBar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const completedCount = rules.filter((r) => r.passed).length;
   const totalCount = rules.length;
+  const totalPoints = rules.reduce((acc, r) => acc + (r.points || 0), 0);
+  const earnedPoints = rules.filter((r) => r.passed).reduce((acc, r) => acc + (r.points || 0), 0);
 
   const diffUpper = (difficulty || "EASY").toUpperCase();
   const diffBadgeClass =
@@ -108,6 +112,7 @@ export function ObjectiveBar({
             <div className="flex shrink-0 items-center gap-3">
               <span className="text-xs font-bold text-cyan-400 font-mono">
                 {completedCount} / {totalCount} OBJECTIVES
+                {totalPoints > 0 ? ` · ${isCompleted ? totalPoints : earnedPoints} / ${totalPoints} PTS` : ""}
               </span>
               <button
                 type="button"
@@ -143,6 +148,11 @@ export function ObjectiveBar({
                   <span className="font-bold text-cyan-300">
                     {completedCount} / {totalCount} OBJECTIVES
                   </span>
+                  {totalPoints > 0 && (
+                    <span className="font-bold tabular-nums text-emerald-400 border border-emerald-500/30 bg-emerald-950/40 px-2 py-0.5 rounded text-[11px]">
+                      {isCompleted ? totalPoints : earnedPoints} / {totalPoints} PTS
+                    </span>
+                  )}
                   <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
                     isCompleted
                       ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
@@ -239,17 +249,30 @@ export function ObjectiveBar({
                             </span>
                           </div>
 
-                          <span
-                            className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded tracking-wider shrink-0 border ${
-                              isPassed
-                                ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
-                                : isBlocked
-                                ? "bg-neutral-900 text-neutral-500 border-neutral-800"
-                                : "bg-[#141824] text-cyan-400 border-cyan-800/40"
-                            }`}
-                          >
-                            {isPassed ? "DONE" : isBlocked ? "BLOCKED" : "PENDING"}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {typeof rule.points === "number" && rule.points > 0 && (
+                              <span
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded border tabular-nums ${
+                                  isPassed
+                                    ? "border-emerald-500/40 bg-emerald-950/60 text-emerald-300"
+                                    : "border-cyan-500/30 bg-[#141824] text-cyan-400"
+                                }`}
+                              >
+                                {isPassed ? `+${rule.points}` : `${rule.points}`} PTS
+                              </span>
+                            )}
+                            <span
+                              className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded tracking-wider border ${
+                                isPassed
+                                  ? "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"
+                                  : isBlocked
+                                  ? "bg-neutral-900 text-neutral-500 border-neutral-800"
+                                  : "bg-[#141824] text-cyan-400 border-cyan-800/40"
+                              }`}
+                            >
+                              {isPassed ? "DONE" : isBlocked ? "BLOCKED" : "PENDING"}
+                            </span>
+                          </div>
                         </div>
                       );
                     })

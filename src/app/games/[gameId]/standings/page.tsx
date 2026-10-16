@@ -53,7 +53,7 @@ export default async function Standings({
             {result.error}
           </div>
         ) : (
-          <StandingsTable rows={result.standings} />
+          <StandingsTable rows={result.standings} gameId={game.id} />
         )}
       </main>
     </div>

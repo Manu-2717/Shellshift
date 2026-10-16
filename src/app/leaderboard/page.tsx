@@ -163,6 +163,7 @@ export default async function LeaderboardPage({
             totalChallenges={totalChallenges}
             currentUserId={session?.id}
             eventName={selectedEvent.name}
+            gameId={selectedEvent.id}
           />
         )}
       </main>

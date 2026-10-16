@@ -82,9 +82,17 @@ export function GameLobby({
             </div>
             {!live ? (
               <Lock className="size-4 text-zinc-600" />
-            ) : c.runId ? (
+            ) : c.status === "COMPLETED" ? (
               <button
                 className="btn-secondary"
+                onClick={() => router.push(`/play/${c.runId}`)}
+              >
+                Review
+                <ArrowRight className="size-4" />
+              </button>
+            ) : c.runId ? (
+              <button
+                className="btn-primary"
                 onClick={() => router.push(`/play/${c.runId}`)}
               >
                 Continue

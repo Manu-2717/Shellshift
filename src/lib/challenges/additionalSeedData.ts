@@ -15,7 +15,6 @@ interface Scenario {
   steps: string[];
   negativeCmd: string;
   mapping?: Record<string, string>;
-  clueText?: string;
 }
 
 const scenarios: Scenario[] = [
@@ -40,7 +39,6 @@ const scenarios: Scenario[] = [
       rmdir: "mkdir",
       mkdir: "rmdir"
 },
-    clueText: "CLUE: 'rmdir' and 'mkdir' are swapped: typing 'rmdir' creates directories (acting as mkdir). Run 'rmdir /workspace/welcome'.",
   },
   {
     slug: "empty-checklist",
@@ -63,7 +61,6 @@ const scenarios: Scenario[] = [
       pwd: "touch",
       touch: "pwd"
 },
-    clueText: "CLUE: 'pwd' and 'touch' are swapped: typing 'pwd' creates files (acting as touch). Run 'pwd /workspace/checklist.txt'.",
   },
   {
     slug: "remove-old-note",
@@ -87,7 +84,6 @@ const scenarios: Scenario[] = [
       touch: "rm",
       rm: "touch"
 },
-    clueText: "CLUE: 'touch' and 'rm' are swapped: typing 'touch' deletes files (acting as rm). Run 'touch /workspace/old-note.txt'.",
   },
   {
     slug: "copy-readme",
@@ -114,7 +110,6 @@ const scenarios: Scenario[] = [
       mkdir: "cp",
       cp: "mkdir"
 },
-    clueText: "CLUE: 'mkdir' and 'cp' are swapped: typing 'mkdir' copies files (acting as cp). Run 'mkdir /workspace/readme.txt /workspace/backup/readme.txt'.",
   },
   {
     slug: "move-draft",
@@ -148,7 +143,6 @@ const scenarios: Scenario[] = [
       head: "mv",
       mv: "head"
 },
-    clueText: "CLUE: 'head' and 'mv' are swapped: typing 'head' moves files (acting as mv). Run 'head /workspace/draft.txt /workspace/ready/draft.txt'.",
   },
   {
     slug: "enter-docs",
@@ -172,7 +166,6 @@ const scenarios: Scenario[] = [
       pwd: "cd",
       cd: "pwd"
 },
-    clueText: "CLUE: 'pwd' and 'cd' are swapped: typing 'pwd' changes directories (acting as cd). Run 'pwd /workspace/docs'.",
   },
   {
     slug: "save-message",
@@ -197,7 +190,6 @@ const scenarios: Scenario[] = [
       cat: "cp",
       cp: "cat"
 },
-    clueText: "CLUE: 'cat' and 'cp' are swapped: typing 'cat' copies files (acting as cp). Run 'cat /workspace/message.txt /workspace/answer.txt'.",
   },
   {
     slug: "remove-empty-folder",
@@ -221,7 +213,6 @@ const scenarios: Scenario[] = [
       rm: "rmdir",
       rmdir: "rm"
 },
-    clueText: "CLUE: 'rm' and 'rmdir' are swapped: typing 'rmdir' removes files (acting as rm), and typing 'rm' removes empty directories (acting as rmdir). Run 'rmdir /workspace/unused/.keep', then 'rm /workspace/unused'.",
   },
   {
     slug: "copy-team-list",
@@ -248,7 +239,6 @@ const scenarios: Scenario[] = [
       diff: "cp",
       cp: "diff"
 },
-    clueText: "CLUE: 'diff' and 'cp' are swapped: typing 'diff' copies files (acting as cp). Run 'diff /workspace/team.txt /workspace/shared/team.txt'.",
   },
   {
     slug: "nested-notes",
@@ -271,7 +261,6 @@ const scenarios: Scenario[] = [
       grep: "mkdir",
       mkdir: "grep"
 },
-    clueText: "CLUE: 'grep' and 'mkdir' are swapped: typing 'grep' creates directories (acting as mkdir). Run 'grep -p /workspace/notes/daily'.",
   },
   {
     slug: "swapped-touch",
@@ -294,7 +283,6 @@ const scenarios: Scenario[] = [
       truncate: "touch",
       touch: "truncate"
 },
-    clueText: "CLUE: 'truncate' and 'touch' are swapped: typing 'truncate' creates files (acting as touch). Run 'truncate /workspace/ready.txt'.",
   },
   {
     slug: "two-command-warmup",
@@ -324,7 +312,6 @@ const scenarios: Scenario[] = [
       echo: "mkdir",
       mkdir: "echo"
 },
-    clueText: "CLUE: 'echo' and 'mkdir' are swapped: typing 'echo' creates directories (acting as mkdir). Run 'echo /workspace/warmup', then 'cd /workspace/warmup'.",
   },
   {
     slug: "stage-release-notes",
@@ -355,7 +342,6 @@ const scenarios: Scenario[] = [
       find: "mkdir",
       mkdir: "find"
 },
-    clueText: "CLUE: 'find' and 'mkdir' are swapped: typing 'find' creates directories (acting as mkdir). Run 'find /workspace/release', then 'cp /workspace/notes.txt /workspace/release/notes.txt'.",
   },
   {
     slug: "archive-two-files",
@@ -390,7 +376,6 @@ const scenarios: Scenario[] = [
       sort: "cp",
       cp: "sort"
 },
-    clueText: "CLUE: 'sort' and 'cp' are swapped: typing 'sort' copies files (acting as cp). Run 'sort /workspace/one.txt /workspace/archive/one.txt' and 'sort /workspace/two.txt /workspace/archive/two.txt'.",
   },
   {
     slug: "replace-old-config",
@@ -427,7 +412,6 @@ const scenarios: Scenario[] = [
       rmdir: "rm",
       rm: "rmdir"
 },
-    clueText: "CLUE: 'head' moves files (acting as mv) and 'rmdir' deletes files (acting as rm). Run 'head /workspace/new.conf /workspace/config/app.conf', then 'rmdir /workspace/config/old.conf'.",
   },
   {
     slug: "collect-log-copy",
@@ -463,7 +447,6 @@ const scenarios: Scenario[] = [
       touch: "cp",
       cp: "touch"
 },
-    clueText: "CLUE: 'head' filters files (acting as grep) and 'touch' copies files (acting as cp). Run 'head ERROR /workspace/app.log', then 'touch /workspace/app.log /workspace/review/app.log'.",
   },
   {
     slug: "sort-project-assets",
@@ -499,7 +482,6 @@ const scenarios: Scenario[] = [
       echo: "mv",
       mv: "echo"
 },
-    clueText: "CLUE: 'echo' and 'mv' are swapped: typing 'echo' moves files (acting as mv). Run 'echo /workspace/app.js /workspace/src/app.js' and 'echo /workspace/logo.png /workspace/images/logo.png'.",
   },
   {
     slug: "build-backup-tree",
@@ -533,7 +515,6 @@ const scenarios: Scenario[] = [
       tail: "cp",
       cp: "tail"
 },
-    clueText: "CLUE: 'diff' creates directories (acting as mkdir) and 'tail' copies files (acting as cp). Run 'diff -p /workspace/backups/today', then 'tail /workspace/db.sqlite /workspace/backups/today/db.sqlite'.",
   },
   {
     slug: "clean-build-output",
@@ -575,7 +556,6 @@ const scenarios: Scenario[] = [
       cat: "rm",
       rm: "cat"
 },
-    clueText: "CLUE: 'cat' and 'rm' are swapped: typing 'cat' deletes files (acting as rm). Run 'cat /workspace/build/a.tmp' and 'cat /workspace/build/b.tmp'.",
   },
   {
     slug: "swapped-copy-move",
@@ -613,7 +593,6 @@ const scenarios: Scenario[] = [
       diff: "mv",
       mv: "diff"
 },
-    clueText: "CLUE: 'rmdir' copies files (acting as cp) and 'diff' moves files (acting as mv). Run 'rmdir /workspace/guide.txt /workspace/out/guide.txt', then 'diff /workspace/draft.txt /workspace/out/draft.txt'.",
   },
   {
     slug: "prepare-review-pack",
@@ -646,7 +625,6 @@ const scenarios: Scenario[] = [
       diff: "cp",
       cp: "diff"
 },
-    clueText: "CLUE: 'tail' creates directories (acting as mkdir) and 'diff' copies files (acting as cp). Run 'tail /workspace/review', 'diff /workspace/code.txt /workspace/review/code.txt', and 'diff /workspace/test.txt /workspace/review/test.txt'.",
   },
   {
     slug: "move-and-enter",
@@ -679,7 +657,6 @@ const scenarios: Scenario[] = [
       echo: "cd",
       cd: "echo"
 },
-    clueText: "CLUE: 'head' moves files (acting as mv) and 'echo' changes directories (acting as cd). Run 'head /workspace/task.txt /workspace/done/task.txt', then 'echo /workspace/done'.",
   },
   {
     slug: "verify-and-store-token",
@@ -716,7 +693,6 @@ const scenarios: Scenario[] = [
       echo: "cp",
       cp: "echo"
 },
-    clueText: "CLUE: 'wc' displays files (acting as cat) and 'echo' copies files (acting as cp). Run 'wc /workspace/token.txt', then 'echo /workspace/token.txt /workspace/secure/token.txt'.",
   },
   {
     slug: "release-three-assets",
@@ -763,7 +739,6 @@ const scenarios: Scenario[] = [
       tail: "mv",
       mv: "tail"
 },
-    clueText: "CLUE: 'rmdir' creates directories (acting as mkdir), 'echo' copies files (acting as cp), and 'tail' moves files (acting as mv). Run: rmdir -p /workspace/release/bin; rmdir -p /workspace/release/docs; echo /workspace/app.bin /workspace/release/bin/app.bin; echo /workspace/help.txt /workspace/release/docs/help.txt; tail /workspace/manifest.json /workspace/release/manifest.json",
   },
   {
     slug: "restore-clean-snapshot",
@@ -809,7 +784,6 @@ const scenarios: Scenario[] = [
       pwd: "rm",
       rm: "pwd"
 },
-    clueText: "CLUE: 'cat' copies files (acting as cp) and 'pwd' deletes files (acting as rm). Run: cat /workspace/snapshot.db /workspace/restored/live.db; pwd /workspace/live.db; pwd /workspace/live.tmp",
   },
   {
     slug: "publish-site-bundle",
@@ -858,7 +832,6 @@ const scenarios: Scenario[] = [
       cat: "rm",
       rm: "cat"
 },
-    clueText: "CLUE: 'touch' creates directories (acting as mkdir), 'head' moves files (acting as mv), 'tail' copies files (acting as cp), and 'cat' deletes files (acting as rm). Run: touch -p /workspace/public/assets; head /workspace/index.html /workspace/public/index.html; tail /workspace/style.css /workspace/public/assets/style.css; cat /workspace/cache.tmp",
   },
   {
     slug: "rotate-service-files",
@@ -906,7 +879,6 @@ const scenarios: Scenario[] = [
       diff: "rm",
       rm: "diff"
 },
-    clueText: "CLUE: 'echo' moves files (acting as mv) and 'diff' deletes files (acting as rm). Run: echo /workspace/service.log /workspace/archive/service.log; echo /workspace/new.conf /workspace/config/service.conf; diff /workspace/service.lock",
   },
   {
     slug: "assemble-evidence-pack",
@@ -955,7 +927,6 @@ const scenarios: Scenario[] = [
       echo: "cd",
       cd: "echo"
 },
-    clueText: "CLUE: 'tail' searches logs (acting as grep), 'diff' copies files (acting as cp), 'pwd' moves files (acting as mv), and 'echo' changes directories (acting as cd). Run: tail ERROR /workspace/events.log; diff /workspace/events.log /workspace/evidence/events.log; pwd /workspace/screenshot.txt /workspace/evidence/screenshot.txt; echo /workspace/evidence",
   },
   {
     slug: "swapped-deploy-cleanup",
@@ -1002,7 +973,6 @@ const scenarios: Scenario[] = [
       touch: "rm",
       rm: "touch"
 },
-    clueText: "CLUE: 'cd' creates directories (acting as mkdir), 'mv' copies files (acting as cp), and 'touch' deletes files (acting as rm). Run: cd /workspace/deploy; mv /workspace/build.bin /workspace/deploy/build.bin; touch /workspace/a.tmp; touch /workspace/b.tmp",
   },
   {
     slug: "final-workspace-handoff",
@@ -1060,9 +1030,21 @@ const scenarios: Scenario[] = [
       pwd: "cd",
       cd: "pwd"
 },
-    clueText: "CLUE: 'rmdir' creates directories (acting as mkdir), 'echo' copies files (acting as cp), 'cat' moves files (acting as mv), 'head' deletes files (acting as rm), and 'pwd' changes directories (acting as cd). Run: rmdir -p /workspace/handoff/docs; rmdir -p /workspace/handoff/output; echo /workspace/guide.txt /workspace/handoff/docs/guide.txt; cat /workspace/app.bin /workspace/handoff/output/app.bin; head /workspace/draft.tmp; pwd /workspace/handoff/output",
   },
 ];
+
+function formatRemapping(mapping: Record<string, string> = {}): string {
+  const seen = new Set<string>();
+  const pairs: string[] = [];
+  for (const [cmd, target] of Object.entries(mapping)) {
+    if (!seen.has(cmd)) {
+      seen.add(cmd);
+      seen.add(target);
+      pairs.push(`${cmd} and ${target} are swapped`);
+    }
+  }
+  return pairs.length > 0 ? pairs.join(". ") : "No commands are swapped";
+}
 
 function makeChallenge(scenario: Scenario): SeedChallengeDef {
   const timeLimitSeconds =
@@ -1071,9 +1053,7 @@ function makeChallenge(scenario: Scenario): SeedChallengeDef {
       : scenario.difficulty === "MEDIUM"
         ? 900
         : 1200;
-  const instructions =
-    scenario.clueText ??
-    `Complete these terminal steps: ${scenario.steps.join("; ")}`;
+  const remappingInfo = formatRemapping(scenario.mapping);
   return {
     slug: scenario.slug,
     title: scenario.title,
@@ -1108,10 +1088,10 @@ function makeChallenge(scenario: Scenario): SeedChallengeDef {
     clues: [
       {
         id: `clue-${scenario.order}-1`,
-        title: "Decoded Instructions",
+        title: "Transmission: Command Swaps",
         type: "base64",
-        plaintextAnswer: instructions,
-        encodedContent: encodeBase64(instructions),
+        plaintextAnswer: remappingInfo,
+        encodedContent: encodeBase64(remappingInfo),
         hintNote: "Base64 uses letters, numbers, +, /, and sometimes =.",
       },
     ],

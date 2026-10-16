@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Trophy, Medal, User } from "lucide-react";
-import { formatDuration } from "../api/leaderboard/route";
+import { formatDuration } from "@/lib/format";
 
 export interface LeaderboardEntry {
   userId: string;
@@ -23,6 +23,7 @@ interface LeaderboardViewProps {
   totalChallenges: number;
   currentUserId?: string | null;
   eventName?: string;
+  gameId?: string;
 }
 
 export function LeaderboardView({
@@ -30,16 +31,65 @@ export function LeaderboardView({
   totalChallenges,
   currentUserId,
   eventName,
+  gameId,
 }: LeaderboardViewProps) {
+  const [liveEntries, setLiveEntries] = useState<LeaderboardEntry[]>(entries);
+
+  useEffect(() => {
+    setLiveEntries(entries);
+  }, [entries]);
+
+  useEffect(() => {
+    if (!gameId) return;
+
+    let isMounted = true;
+
+    const fetchLatest = async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/leaderboard?gameId=${encodeURIComponent(gameId)}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (isMounted && Array.isArray(json?.leaderboard)) {
+            setLiveEntries(json.leaderboard);
+          }
+        }
+      } catch {
+        // Silently tolerate background poll disruptions
+      }
+    };
+
+    const intervalId = setInterval(fetchLatest, 3000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchLatest();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [gameId]);
+
   // Sorted list: Pure points tournament (Score desc, Completed desc, Duration asc, LastCompletion asc)
   const sortedEntries = useMemo(() => {
-    return [...entries].sort((a, b) => {
+    return [...liveEntries].sort((a, b) => {
       if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
       if (b.challengesCompleted !== a.challengesCompleted) return b.challengesCompleted - a.challengesCompleted;
       if (a.aggregateDurationMs !== b.aggregateDurationMs) return a.aggregateDurationMs - b.aggregateDurationMs;
       return (a.lastCompletionMs || 0) - (b.lastCompletionMs || 0);
     });
-  }, [entries]);
+  }, [liveEntries]);
 
   return (
     <div className="space-y-4">
@@ -55,7 +105,16 @@ export function LeaderboardView({
           )}
         </div>
 
-        <div className="text-[11px] text-[#a1a1aa] px-2 font-mono">
+        <div className="flex items-center gap-3 text-[11px] text-[#a1a1aa] px-2 font-mono">
+          {gameId && (
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
+              <span className="text-[10px] font-semibold tracking-wider">LIVE (3S)</span>
+            </div>
+          )}
           <span>Ranked by: Total Points → Duration</span>
         </div>
       </div>

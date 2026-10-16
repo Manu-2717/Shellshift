@@ -254,7 +254,7 @@ describe("Database & Competition Integrity Integration Tests", () => {
     // 3. Evaluate objective
     const evalResult = evaluateObjective(vfs, objectiveConfig, 1);
     expect(evalResult.isCompleted).toBe(true);
-    expect(evalResult.completedRules).toBe(2);
+    expect(evalResult.completedRules).toBe(objectiveConfig.rules.length);
 
     // 4. Finalize run on server
     const completedAt = new Date();

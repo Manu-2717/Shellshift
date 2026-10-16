@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeChallengeForPlayer } from "../../challenges/route";
 import { evaluateObjective } from "@/lib/vfs/evaluator";
 import { ObjectiveConfig, VfsDirectory, VfsState } from "@/lib/vfs/types";
+import { calculateRunScore } from "@/lib/scoring/scoringEngine";
+
+export const dynamic = "force-dynamic";
 
 function extractTreeList(dir: VfsDirectory, basePath: string = ""): Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> {
   const items: Array<{ path: string; name: string; type: "file" | "dir"; size?: number }> = [];
@@ -58,20 +61,48 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden: Run belongs to another player." }, { status: 403 });
   }
 
-  const nextChallenge = await prisma.challenge.findFirst({
-    where: {
-      order: { gt: run.challenge.order },
-      isPublished: true,
-    },
-    orderBy: { order: "asc" },
-    select: {
-      id: true,
-      order: true,
-      title: true,
-      slug: true,
-      difficulty: true,
-    },
-  });
+  let nextChallenge = null;
+  if (run.eventId) {
+    const currentEventChallenge = await prisma.eventChallenge.findFirst({
+      where: { eventId: run.eventId, challengeId: run.challengeId },
+    });
+    if (currentEventChallenge) {
+      const nextEc = await prisma.eventChallenge.findFirst({
+        where: {
+          eventId: run.eventId,
+          order: { gt: currentEventChallenge.order },
+        },
+        orderBy: { order: "asc" },
+        include: { challenge: true },
+      });
+      if (nextEc) {
+        nextChallenge = {
+          id: nextEc.challenge.id,
+          order: nextEc.order,
+          title: nextEc.challenge.title,
+          slug: nextEc.challenge.slug,
+          difficulty: nextEc.challenge.difficulty,
+        };
+      }
+    }
+  }
+
+  if (!nextChallenge) {
+    nextChallenge = await prisma.challenge.findFirst({
+      where: {
+        order: { gt: run.challenge.order },
+        isPublished: true,
+      },
+      orderBy: { order: "asc" },
+      select: {
+        id: true,
+        order: true,
+        title: true,
+        slug: true,
+        difficulty: true,
+      },
+    });
+  }
 
   const now = new Date();
   const timeLimitSeconds = run.challenge.timeLimitSeconds || 1200;
@@ -131,40 +162,152 @@ export async function GET(
     }
   } catch {}
 
-  return NextResponse.json({
-    run: {
-      id: run.id,
-      status: currentStatus,
-      startedAt: run.startedAt,
-      completedAt: run.completedAt,
-      deadlineAt: deadline,
+  // Recalculate score if run is COMPLETED but score was missing or zero
+  if (currentStatus === "COMPLETED" && (!run.finalScore || run.finalScore === 0)) {
+    let scoringConfig = {
+      maxBaseScore: 1000,
+      intermediateBudget: 500,
+      completionBonus: 200,
+      speedBonusMax: 300,
+      hintPenaltyCap: 100,
+      defaultHintPenalty: 25,
+      difficultyMultiplier:
+        run.challenge.difficulty === "HARD"
+          ? 1.5
+          : run.challenge.difficulty === "MEDIUM"
+          ? 1.25
+          : 1.0,
       timeLimitSeconds,
-      durationMs: run.durationMs,
-      currentWorkingDir: run.currentWorkingDir,
-      commandCount: run.commandCount,
-      objectivePoints: run.objectivePoints,
-      completionBonus: run.completionBonus,
-      speedBonus: run.speedBonus,
-      hintPenalty: run.hintPenalty,
-      baseScore: run.baseScore,
-      difficultyMultiplier: run.difficultyMultiplier,
-      finalScore: run.finalScore,
-      scoringBreakdown: parsedBreakdown,
-      player: run.user,
-      game: run.event,
-      challenge: sanitizeChallengeForPlayer(run.challenge),
-      nextChallenge: nextChallenge || null,
-      objectiveEvaluation: evaluation,
-      treeList,
-      unlockedHints: run.hintUsages.map((hu) => ({
-        id: hu.hint.id,
-        title: hu.hint.title,
-        content: hu.hint.content,
-        penaltySeconds: hu.hint.penaltySeconds,
-        pointPenalty: hu.pointPenalty,
-        order: hu.hint.order,
-        requestedAt: hu.requestedAt,
-      })),
+      partialCreditOnExpiry: true,
+      countsTowardLeaderboard: true,
+    };
+    try {
+      if (run.scoringSnapshot) {
+        scoringConfig = { ...scoringConfig, ...JSON.parse(run.scoringSnapshot) };
+      } else if (run.challenge.scoringConfig) {
+        scoringConfig = { ...scoringConfig, ...JSON.parse(run.challenge.scoringConfig) };
+      }
+    } catch {}
+
+    const availableObjectives = (objectiveConfig.rules || []).map((r, idx) => ({
+      id: r.id || `rule-${idx}`,
+      description: r.description,
+      points: r.points || 0,
+    }));
+
+    const verifiedIds = evaluation
+      ? evaluation.details.filter((d) => d.passed).map((d) => d.id || "")
+      : availableObjectives.map((o) => o.id);
+
+    const hintPenalties = run.hintUsages.map((hu) => hu.pointPenalty || hu.hint.pointPenalty || 25);
+
+    const computedBreakdown = calculateRunScore({
+      status: "COMPLETED",
+      startedAt: run.startedAt,
+      completedAt: run.completedAt || new Date(run.startedAt.getTime() + (run.durationMs || 1000)),
+      verifiedObjectiveIds: verifiedIds,
+      revealedHintPenalties: hintPenalties,
+      config: scoringConfig,
+      objectives: availableObjectives,
+    });
+
+    if (computedBreakdown.finalScore > 0) {
+      await prisma.run.updateMany({
+        where: { id: run.id },
+        data: {
+          objectivePoints: computedBreakdown.objectivePoints,
+          completionBonus: computedBreakdown.completionBonus,
+          speedBonus: computedBreakdown.speedBonus,
+          hintPenalty: computedBreakdown.hintPenalty,
+          baseScore: computedBreakdown.baseScore,
+          difficultyMultiplier: computedBreakdown.difficultyMultiplier,
+          finalScore: computedBreakdown.finalScore,
+          scoringBreakdown: JSON.stringify(computedBreakdown),
+        },
+      });
+      run.finalScore = computedBreakdown.finalScore;
+      run.objectivePoints = computedBreakdown.objectivePoints;
+      run.completionBonus = computedBreakdown.completionBonus;
+      run.speedBonus = computedBreakdown.speedBonus;
+      run.hintPenalty = computedBreakdown.hintPenalty;
+      run.baseScore = computedBreakdown.baseScore;
+      parsedBreakdown = computedBreakdown;
+    }
+  }
+
+  // Calculate cumulative event score across best completed runs
+  let totalEventScore = 0;
+  if (run.eventId && run.userId) {
+    const userCompletedRuns = await prisma.run.findMany({
+      where: {
+        eventId: run.eventId,
+        userId: run.userId,
+        status: "COMPLETED",
+      },
+      select: {
+        id: true,
+        challengeId: true,
+        finalScore: true,
+      },
+    });
+
+    const bestByChallenge = new Map<string, number>();
+    for (const cr of userCompletedRuns) {
+      const prev = bestByChallenge.get(cr.challengeId) || 0;
+      if (cr.finalScore > prev) {
+        bestByChallenge.set(cr.challengeId, cr.finalScore);
+      }
+    }
+
+    if (currentStatus === "COMPLETED" && run.finalScore > (bestByChallenge.get(run.challengeId) || 0)) {
+      bestByChallenge.set(run.challengeId, run.finalScore);
+    }
+
+    totalEventScore = Math.round(Array.from(bestByChallenge.values()).reduce((sum, s) => sum + s, 0) * 100) / 100;
+  }
+
+  return NextResponse.json(
+    {
+      run: {
+        id: run.id,
+        status: currentStatus,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        deadlineAt: deadline,
+        timeLimitSeconds,
+        durationMs: run.durationMs,
+        currentWorkingDir: run.currentWorkingDir,
+        commandCount: run.commandCount,
+        objectivePoints: run.objectivePoints,
+        completionBonus: run.completionBonus,
+        speedBonus: run.speedBonus,
+        hintPenalty: run.hintPenalty,
+        baseScore: run.baseScore,
+        difficultyMultiplier: run.difficultyMultiplier,
+        finalScore: run.finalScore,
+        totalEventScore,
+        scoringBreakdown: parsedBreakdown,
+        player: run.user,
+        game: run.event,
+        challenge: sanitizeChallengeForPlayer(run.challenge),
+        nextChallenge: nextChallenge || null,
+        objectiveEvaluation: evaluation,
+        treeList,
+        unlockedHints: run.hintUsages.map((hu) => ({
+          id: hu.hint.id,
+          title: hu.hint.title,
+          content: hu.hint.content,
+          penaltySeconds: hu.hint.penaltySeconds,
+          pointPenalty: hu.pointPenalty,
+          order: hu.hint.order,
+          requestedAt: hu.requestedAt,
+        })),
+      },
     },
-  });
+    {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    }
+  );
 }

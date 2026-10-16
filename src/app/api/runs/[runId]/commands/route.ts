@@ -409,6 +409,36 @@ export async function POST(
       },
     });
 
+    // Calculate player's live cumulative event score for immediate leaderboard synchronization
+    let totalEventScore = scoreBreakdown?.finalScore || 0;
+    if (run.eventId && session.id) {
+      const userCompletedRuns = await prisma.run.findMany({
+        where: {
+          eventId: run.eventId,
+          userId: session.id,
+          status: "COMPLETED",
+        },
+        select: {
+          challengeId: true,
+          finalScore: true,
+        },
+      });
+
+      const bestByChallenge = new Map<string, number>();
+      for (const cr of userCompletedRuns) {
+        const prev = bestByChallenge.get(cr.challengeId) || 0;
+        if (cr.finalScore > prev) {
+          bestByChallenge.set(cr.challengeId, cr.finalScore);
+        }
+      }
+
+      if (evaluation.isCompleted && scoreBreakdown && scoreBreakdown.finalScore > (bestByChallenge.get(run.challengeId) || 0)) {
+        bestByChallenge.set(run.challengeId, scoreBreakdown.finalScore);
+      }
+
+      totalEventScore = Math.round(Array.from(bestByChallenge.values()).reduce((sum, s) => sum + s, 0) * 100) / 100;
+    }
+
     return NextResponse.json({
       output: safeOutput,
       exitCode: cmdResult.exitCode,
@@ -419,6 +449,7 @@ export async function POST(
       durationMs: finalDurationMs,
       objectiveEvaluation: evaluation,
       scoreBreakdown,
+      totalEventScore,
       clearScreen: !!cmdResult.clearScreen,
     });
   } catch (err) {

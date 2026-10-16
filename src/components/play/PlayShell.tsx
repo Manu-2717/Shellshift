@@ -44,12 +44,13 @@ export function PlayShell({
   const challenge = runData.challenge;
   const game = runData.game;
   const isGamePaused = game?.status === "PAUSED";
-  const nowMs = Date.now();
+  const gameEndTimeMs = game?.endTime ? new Date(game.endTime).getTime() : null;
+  const runDeadlineMs = runData?.deadlineAt ? new Date(runData.deadlineAt).getTime() : null;
+
   const isGameEnded =
     game?.status === "ENDED" ||
     game?.status === "ARCHIVED" ||
-    (game?.endTime && nowMs >= new Date(game.endTime).getTime()) ||
-    runData.status === "EXPIRED";
+    runData?.status === "EXPIRED";
 
   useEffect(() => {
     if (isGameEnded && !isCompleted) {
@@ -57,14 +58,14 @@ export function PlayShell({
     }
   }, [isGameEnded, isCompleted]);
 
-  const effectiveDeadline = React.useMemo(() => {
-    const runDeadline = runData?.deadlineAt ? new Date(runData.deadlineAt).getTime() : null;
-    const gameEnd = game?.endTime ? new Date(game.endTime).getTime() : null;
-    if (runDeadline && gameEnd) {
-      return new Date(Math.min(runDeadline, gameEnd));
-    }
-    return runDeadline ? new Date(runDeadline) : (gameEnd ? new Date(gameEnd) : null);
-  }, [runData?.deadlineAt, game?.endTime]);
+  const effectiveDeadline =
+    runDeadlineMs && gameEndTimeMs
+      ? new Date(Math.min(runDeadlineMs, gameEndTimeMs))
+      : runDeadlineMs
+      ? new Date(runDeadlineMs)
+      : gameEndTimeMs
+      ? new Date(gameEndTimeMs)
+      : null;
 
   const playerName = runData.player?.name || runData.team?.name || "Admin Cipher Master";
   const clueCount = challenge.clues?.length || 0;
@@ -140,16 +141,36 @@ export function PlayShell({
           </Link>
 
           {/* Score Display with Trophy */}
-          <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono">
-            <Trophy className="size-3.5 text-amber-400 shrink-0" />
-            <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">SCORE</span>
-            <span className="font-bold tabular-nums text-cyan-300">
-              {typeof runData.finalScore === "number" && runData.finalScore > 0
-                ? (runData.finalScore % 1 === 0 ? runData.finalScore : runData.finalScore.toFixed(2))
-                : (runData.objectivePoints || 0)}{" "}
-              PTS
-            </span>
-          </div>
+          {(() => {
+            const currentMissionScore =
+              typeof runData.finalScore === "number" && runData.finalScore > 0
+                ? runData.finalScore
+                : typeof runData.scoringBreakdown?.finalScore === "number" && runData.scoringBreakdown.finalScore > 0
+                ? runData.scoringBreakdown.finalScore
+                : (runData.objectivePoints || 0);
+
+            const displayScore =
+              typeof runData.totalEventScore === "number" && runData.totalEventScore > 0
+                ? (runData.totalEventScore % 1 === 0 ? runData.totalEventScore : runData.totalEventScore.toFixed(2))
+                : (currentMissionScore % 1 === 0 ? currentMissionScore : currentMissionScore.toFixed(2));
+
+            return (
+              <div className="hidden sm:flex items-center gap-1.5 text-xs font-mono">
+                <Trophy className="size-3.5 text-amber-400 shrink-0" />
+                <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">
+                  {typeof runData.totalEventScore === "number" && runData.totalEventScore > 0 ? "TOTAL SCORE" : "SCORE"}
+                </span>
+                <span className="font-bold tabular-nums text-cyan-300">
+                  {displayScore} PTS
+                </span>
+                {typeof runData.totalEventScore === "number" && runData.totalEventScore > 0 && currentMissionScore > 0 && !isCompleted && (
+                  <span className="text-[10px] text-emerald-400 font-bold">
+                    (+{currentMissionScore})
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* User Profile Pill */}
           <div className="flex items-center gap-1.5 rounded-full border border-[#23293a] bg-[#121622] px-3 py-1 text-xs font-mono">
@@ -199,8 +220,19 @@ export function PlayShell({
         description={challenge.objective?.description || challenge.description || "Satisfy challenge objective criteria"}
         rules={
           runData.objectiveEvaluation?.details?.length
-            ? runData.objectiveEvaluation.details
-            : challenge.objective?.rules?.map((r: any) => ({ description: r.description, passed: false })) || []
+            ? runData.objectiveEvaluation.details.map((d: any, idx: number) => ({
+                id: d.id,
+                description: d.description,
+                passed: !!d.passed,
+                blocked: !!d.blocked,
+                points: d.points ?? challenge.objective?.rules?.[idx]?.points ?? 500,
+              }))
+            : challenge.objective?.rules?.map((r: any) => ({
+                id: r.id,
+                description: r.description,
+                passed: false,
+                points: r.points ?? 500,
+              })) || []
         }
         isCompleted={isCompleted}
         difficulty={challenge.difficulty}

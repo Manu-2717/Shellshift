@@ -15,7 +15,7 @@ export function CompetitionEndedModal({
   gameId,
   onClose,
 }: CompetitionEndedModalProps) {
-  const rawScore = runData?.finalScore ?? runData?.objectivePoints ?? 0;
+  const rawScore = runData?.finalScore || runData?.scoringBreakdown?.finalScore || runData?.baseScore || runData?.objectivePoints || 0;
   const finalScore = typeof rawScore === "number" ? (rawScore % 1 === 0 ? rawScore : rawScore.toFixed(2)) : rawScore;
   const commandCount = runData?.commandCount ?? 0;
   const evaluation = runData?.objectiveEvaluation;

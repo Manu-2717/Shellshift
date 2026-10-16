@@ -48,9 +48,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Transmission: Command Swaps",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'cd' and 'mkdir' are swapped: typing 'cd' creates directories (acting as mkdir). Run 'cd /workspace/breach'.",
+          "cd and mkdir are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'cd' and 'mkdir' are swapped: typing 'cd' creates directories (acting as mkdir). Run 'cd /workspace/breach'.",
+          "cd and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -123,9 +123,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Directive: Folder Creation",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'touch' and 'mkdir' are swapped: typing 'touch' creates directories (acting as mkdir). Run 'touch /workspace/project'.",
+          "touch and mkdir are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'touch' and 'mkdir' are swapped: typing 'touch' creates directories (acting as mkdir). Run 'touch /workspace/project'.",
+          "touch and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -199,9 +199,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Morse Code Directive",
         type: "morse",
         plaintextAnswer:
-          "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
+          "touch and cat are swapped",
         encodedContent: encodeMorse(
-          "CLUE: 'touch' reads files (acting as cat). 'cat' creates files (acting as touch). Read note.txt then run 'cat /workspace/read.txt'.",
+          "touch and cat are swapped",
         ),
         hintNote: "Morse code: dots (.), dashes (-), and slashes (/) for spaces.",
       },
@@ -276,9 +276,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Binary Directive: Swapped Folders",
         type: "binary",
         plaintextAnswer:
-          "CLUE: 'pwd' and 'mkdir' are swapped: typing 'pwd' creates directories (acting as mkdir). Run 'pwd /workspace/secret'.",
+          "pwd and mkdir are swapped",
         encodedContent: encodeBinary(
-          "CLUE: 'pwd' and 'mkdir' are swapped: typing 'pwd' creates directories (acting as mkdir). Run 'pwd /workspace/secret'.",
+          "pwd and mkdir are swapped",
         ),
         hintNote: "Binary encoding: each character is 8 bits (0s and 1s).",
       },
@@ -354,9 +354,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Hex Removal Directive",
         type: "hex",
         plaintextAnswer:
-          "CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it.",
+          "mkdir and rm are swapped",
         encodedContent: encodeHex(
-          "CLUE: 'mkdir' removes files (acting as rm). Standard 'rm' acts as mkdir. Run 'mkdir temp.txt' to delete it.",
+          "mkdir and rm are swapped",
         ),
         hintNote: "Hexadecimal byte encoding (0-9, a-f).",
       },
@@ -439,9 +439,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Hex Encoded Target",
         type: "hex",
         plaintextAnswer:
-          "TARGET: flag.txt. Commands 'touch' and 'cp' have swapped jobs: 'touch' copies files (acting as cp), while 'cp' creates files (acting as touch). Run 'touch /workspace/flag.txt /workspace/found.txt'.",
+          "touch and cp are swapped",
         encodedContent: encodeHex(
-          "TARGET: flag.txt. Commands 'touch' and 'cp' have swapped jobs: 'touch' copies files (acting as cp), while 'cp' creates files (acting as touch). Run 'touch /workspace/flag.txt /workspace/found.txt'.",
+          "touch and cp are swapped",
         ),
         hintNote: "",
       },
@@ -517,9 +517,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Duplication Directive",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'mv' copies files (acting as cp). 'cp' moves files (acting as mv). Run 'mv data.txt backup/data.txt'.",
+          "mv and cp are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'mv' copies files (acting as cp). 'cp' moves files (acting as mv). Run 'mv data.txt backup/data.txt'.",
+          "mv and cp are swapped",
         ),
         hintNote: "",
       },
@@ -601,9 +601,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Combined Mission Directive",
         type: "hex",
         plaintextAnswer:
-          "CLUE: 'cat' and 'mkdir' are swapped: typing 'cat' creates directories (acting as mkdir). Run 'cat /workspace/mission', then 'cp /workspace/briefing.txt /workspace/mission/briefing.txt'.",
+          "cat and mkdir are swapped",
         encodedContent: encodeHex(
-          "CLUE: 'cat' and 'mkdir' are swapped: typing 'cat' creates directories (acting as mkdir). Run 'cat /workspace/mission', then 'cp /workspace/briefing.txt /workspace/mission/briefing.txt'.",
+          "cat and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -686,9 +686,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Operative Clue: File Transposition",
         type: "hex",
         plaintextAnswer:
-          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch). Standard cat and touch are redirected.",
+          "pwd and touch are swapped. rm and cat are swapped",
         encodedContent: encodeHex(
-          "CLUE: 'rm' reads files (acting as cat). 'pwd' creates files (acting as touch). Standard cat and touch are redirected.",
+          "pwd and touch are swapped. rm and cat are swapped",
         ),
         hintNote: "",
       },
@@ -772,9 +772,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Dual Directory Directive",
         type: "rot13",
         plaintextAnswer:
-          "CLUE: 'diff' and 'mkdir' are swapped: typing 'diff' creates directories (acting as mkdir). Create '/workspace/alpha' and '/workspace/beta'.",
+          "diff and mkdir are swapped",
         encodedContent: encodeRot13(
-          "CLUE: 'diff' and 'mkdir' are swapped: typing 'diff' creates directories (acting as mkdir). Create '/workspace/alpha' and '/workspace/beta'.",
+          "diff and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -853,9 +853,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Search Directive",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'grep' searches directory trees (acting as find). 'find' acts as grep. Run 'grep /workspace -name secret.txt', then 'cp' to /workspace/found.txt.",
+          "grep and find are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'grep' searches directory trees (acting as find). 'find' acts as grep. Run 'grep /workspace -name secret.txt', then 'cp' to /workspace/found.txt.",
+          "grep and find are swapped",
         ),
         hintNote: "",
       },
@@ -936,9 +936,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Hex Target Specifier",
         type: "hex",
         plaintextAnswer:
-          "CLUE: Target file is report.doc. 'head' and 'cp' are swapped: 'head' copies files (acting as cp). Run 'head /workspace/report.doc /workspace/archive/report.doc'.",
+          "head and cp are swapped",
         encodedContent: encodeHex(
-          "CLUE: Target file is report.doc. 'head' and 'cp' are swapped: 'head' copies files (acting as cp). Run 'head /workspace/report.doc /workspace/archive/report.doc'.",
+          "head and cp are swapped",
         ),
         hintNote: "",
       },
@@ -947,9 +947,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Transmission: Command Swaps",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'head' and 'cp' are swapped: 'head' copies files (acting as cp). Run 'head /workspace/report.doc /workspace/archive/report.doc'.",
+          "head and cp are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'head' and 'cp' are swapped: 'head' copies files (acting as cp). Run 'head /workspace/report.doc /workspace/archive/report.doc'.",
+          "head and cp are swapped",
         ),
         hintNote: "",
       },
@@ -1034,9 +1034,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Log Investigation Directive",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'cat' and 'grep' have swapped jobs: 'cat' filters logs (acting as grep). 'pwd' and 'touch' have swapped jobs: 'pwd' creates files (acting as touch). Run 'cat ERROR /workspace/server.log', then 'pwd /workspace/alert.txt'.",
+          "cat and grep are swapped. pwd and touch are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'cat' and 'grep' have swapped jobs: 'cat' filters logs (acting as grep). 'pwd' and 'touch' have swapped jobs: 'pwd' creates files (acting as touch). Run 'cat ERROR /workspace/server.log', then 'pwd /workspace/alert.txt'.",
+          "cat and grep are swapped. pwd and touch are swapped",
         ),
         hintNote: "",
       },
@@ -1120,9 +1120,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Reciprocal Command Swaps",
         type: "rot13",
         plaintextAnswer:
-          "CLUE: 'rmdir' creates directories (acting as mkdir), and 'touch' deletes files (acting as rm). Run 'rmdir /workspace/safe', then 'touch /workspace/junk.txt'.",
+          "rmdir and mkdir are swapped. touch and rm are swapped",
         encodedContent: encodeRot13(
-          "CLUE: 'rmdir' creates directories (acting as mkdir), and 'touch' deletes files (acting as rm). Run 'rmdir /workspace/safe', then 'touch /workspace/junk.txt'.",
+          "rmdir and mkdir are swapped. touch and rm are swapped",
         ),
         hintNote: "",
       },
@@ -1203,9 +1203,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Sorting Directive",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'cat' and 'mv' are swapped: typing 'cat' moves files (acting as mv). Run 'cat /workspace/code.js /workspace/src/code.js' and 'cat /workspace/style.css /workspace/styles/style.css'.",
+          "cat and mv are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'cat' and 'mv' are swapped: typing 'cat' moves files (acting as mv). Run 'cat /workspace/code.js /workspace/src/code.js' and 'cat /workspace/style.css /workspace/styles/style.css'.",
+          "cat and mv are swapped",
         ),
         hintNote: "",
       },
@@ -1292,9 +1292,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Encoded Target Filename",
         type: "base64",
         plaintextAnswer:
-          "CLUE: Target is target_omega.txt. 'tail' inspects files (acting as cat), and 'diff' creates files (acting as touch). Run 'tail /workspace/target_omega.txt', then 'diff /workspace/confirmation.txt'.",
+          "tail and cat are swapped",
         encodedContent: encodeBase64(
-          "CLUE: Target is target_omega.txt. 'tail' inspects files (acting as cat), and 'diff' creates files (acting as touch). Run 'tail /workspace/target_omega.txt', then 'diff /workspace/confirmation.txt'.",
+          "tail and cat are swapped",
         ),
         hintNote: "",
       },
@@ -1303,9 +1303,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Inspection Directive",
         type: "rot13",
         plaintextAnswer:
-          "CLUE: 'tail' and 'cat' have swapped jobs ('tail' inspects files). 'diff' and 'touch' have swapped jobs ('diff' creates files). Standard cat and touch are redirected.",
+          "diff and touch are swapped",
         encodedContent: encodeRot13(
-          "CLUE: 'tail' and 'cat' have swapped jobs ('tail' inspects files). 'diff' and 'touch' have swapped jobs ('diff' creates files). Standard cat and touch are redirected.",
+          "diff and touch are swapped",
         ),
         hintNote: "",
       },
@@ -1387,9 +1387,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Missing Directory Directive",
         type: "hex",
         plaintextAnswer:
-          "CLUE: 'head' and 'mkdir' are swapped: 'head' creates directories (acting as mkdir). Run 'head /workspace/vault', then 'cp /workspace/data.bin /workspace/vault/data.bin'.",
+          "head and mkdir are swapped",
         encodedContent: encodeHex(
-          "CLUE: 'head' and 'mkdir' are swapped: 'head' creates directories (acting as mkdir). Run 'head /workspace/vault', then 'cp /workspace/data.bin /workspace/vault/data.bin'.",
+          "head and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -1476,9 +1476,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Vault Protocol: Creation & Duplication",
         type: "base64",
         plaintextAnswer:
-          "VAULT PROTOCOL: 'grep' and 'mkdir' have swapped functions ('grep' creates directories). 'mv' and 'cp' have swapped functions ('mv' copies files).",
+          "grep and mkdir are swapped. mv and cp are swapped",
         encodedContent: encodeBase64(
-          "VAULT PROTOCOL: 'grep' and 'mkdir' have swapped functions ('grep' creates directories). 'mv' and 'cp' have swapped functions ('mv' copies files).",
+          "grep and mkdir are swapped. mv and cp are swapped",
         ),
         hintNote: "",
       },
@@ -1487,9 +1487,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Cleanup Protocol: File Deletion",
         type: "hex",
         plaintextAnswer:
-          "CLEANUP PROTOCOL: 'touch' and 'rm' have swapped functions. Typing 'touch' deletes files (acting as rm), while 'rm' touches files.",
+          "touch and rm are swapped",
         encodedContent: encodeHex(
-          "CLEANUP PROTOCOL: 'touch' and 'rm' have swapped functions. Typing 'touch' deletes files (acting as rm), while 'rm' touches files.",
+          "touch and rm are swapped",
         ),
         hintNote: "",
       },
@@ -1581,9 +1581,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Creation Remap",
         type: "base64",
         plaintextAnswer:
-          "CLUE: 'find' creates directories (acting as mkdir), and 'cat' copies files (acting as cp). Run 'find /workspace/secure', then 'cat /workspace/key.dat /workspace/secure/key.dat'.",
+          "find and mkdir are swapped",
         encodedContent: encodeBase64(
-          "CLUE: 'find' creates directories (acting as mkdir), and 'cat' copies files (acting as cp). Run 'find /workspace/secure', then 'cat /workspace/key.dat /workspace/secure/key.dat'.",
+          "find and mkdir are swapped",
         ),
         hintNote: "",
       },
@@ -1592,9 +1592,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Placement Step",
         type: "hex",
         plaintextAnswer:
-          "STEP: Run 'find /workspace/secure' then 'cat /workspace/key.dat /workspace/secure/key.dat'.",
+          "cat and cp are swapped",
         encodedContent: encodeHex(
-          "STEP: Run 'find /workspace/secure' then 'cat /workspace/key.dat /workspace/secure/key.dat'.",
+          "cat and cp are swapped",
         ),
         hintNote: "",
       },
@@ -1678,9 +1678,9 @@ export const SEED_CHALLENGES: SeedChallengeDef[] = [
         title: "Final Operation Directive",
         type: "base64",
         plaintextAnswer:
-          "FINAL: 'cd /workspace/production' creates folder. 'cp artifact.dat production/'. 'mv old_cache.tmp' deletes cache.",
+          "cd and mkdir are swapped. mv and rm are swapped",
         encodedContent: encodeBase64(
-          "FINAL: 'cd /workspace/production' creates folder. 'cp artifact.dat production/'. 'mv old_cache.tmp' deletes cache.",
+          "cd and mkdir are swapped. mv and rm are swapped",
         ),
         hintNote: "",
       },

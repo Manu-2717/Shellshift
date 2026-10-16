@@ -60,15 +60,69 @@ export function CompletionSummary({
             <span className="text-sm font-bold text-white">{runData.commandCount}</span>
           </div>
 
-          <div className="flex items-center justify-between pt-0.5">
-            <span className="text-xs text-zinc-400">Final Score</span>
-            <span className="text-xl font-extrabold tabular-nums text-cyan-300">
-              {typeof runData.finalScore === "number" && runData.finalScore > 0
-                ? (runData.finalScore % 1 === 0 ? runData.finalScore : runData.finalScore.toFixed(2))
-                : (runData.objectivePoints || 0)}{" "}
-              PTS
-            </span>
-          </div>
+          {(() => {
+            const breakdown = runData.scoringBreakdown;
+            const scoreVal =
+              typeof runData.finalScore === "number" && runData.finalScore > 0
+                ? runData.finalScore
+                : typeof breakdown?.finalScore === "number" && breakdown.finalScore > 0
+                ? breakdown.finalScore
+                : typeof runData.baseScore === "number" && runData.baseScore > 0
+                ? runData.baseScore
+                : (runData.objectivePoints || 0);
+
+            const displayFinalScore =
+              scoreVal % 1 === 0 ? scoreVal : scoreVal.toFixed(2);
+
+            return (
+              <>
+                {breakdown && (
+                  <div className="grid grid-cols-2 gap-2 border-b border-zinc-800/80 pb-2.5 text-[11px]">
+                    <div>
+                      <span className="text-zinc-500">Milestone:</span>{" "}
+                      <span className="font-semibold text-emerald-400">+{breakdown.objectivePoints || runData.objectivePoints || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Completion:</span>{" "}
+                      <span className="font-semibold text-emerald-400">+{breakdown.completionBonus || runData.completionBonus || 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-zinc-500">Speed Bonus:</span>{" "}
+                      <span className="font-semibold text-emerald-400">+{Math.round((breakdown.speedBonus || runData.speedBonus || 0) * 10) / 10}</span>
+                    </div>
+                    {breakdown.hintPenalty > 0 && (
+                      <div>
+                        <span className="text-zinc-500">Hint Penalty:</span>{" "}
+                        <span className="font-semibold text-rose-400">-{breakdown.hintPenalty}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-xs text-zinc-400">Final Score</span>
+                  <span className="text-xl font-extrabold tabular-nums text-cyan-300">
+                    +{displayFinalScore} PTS
+                  </span>
+                </div>
+
+                {typeof runData.totalEventScore === "number" && runData.totalEventScore > 0 && (
+                  <div className="flex items-center justify-between border-t border-zinc-800/80 pt-2 text-xs">
+                    <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                      <Trophy className="size-3.5 text-amber-400" />
+                      <span>Event Leaderboard Score</span>
+                    </span>
+                    <span className="text-base font-extrabold tabular-nums text-amber-300">
+                      {runData.totalEventScore % 1 === 0
+                        ? runData.totalEventScore
+                        : runData.totalEventScore.toFixed(2)}{" "}
+                      PTS
+                    </span>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         <div className="space-y-2.5 pt-1">

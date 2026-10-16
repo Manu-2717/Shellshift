@@ -251,7 +251,7 @@ export function LiveOperations({ game: initialGame, initialData }: LiveOperation
 
       {activeTab === "standings" && (
         <div className="rounded-xl border border-zinc-800 bg-[#0e1016] p-4">
-          <StandingsTable rows={data?.standings ?? []} />
+          <StandingsTable rows={data?.standings ?? []} gameId={game.id} />
         </div>
       )}
 

@@ -29,7 +29,7 @@ export default async function Game({
         ? { where: { userId: user.id, status: "REGISTERED" } }
         : false,
       runs: user
-        ? { where: { userId: user.id, status: "COMPLETED" } }
+        ? { where: { userId: user.id } }
         : false,
     },
   });
@@ -140,7 +140,8 @@ export default async function Game({
               phase={phase}
               signedIn={!!user}
               registered={!!(g.registrations && g.registrations.length)}
-              hasResults={!!(g.runs && g.runs.length)}
+              hasResults={!!(g.runs && g.runs.some((r) => r.status === "COMPLETED"))}
+              hasStarted={!!(g.runs && g.runs.length > 0)}
             />
             <p className="mt-4 text-xs leading-5 text-zinc-500">
               Times shown in {g.timezone}. Your browser countdown stays synchronized with the authoritative schedule.

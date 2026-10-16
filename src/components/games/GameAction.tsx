@@ -11,30 +11,23 @@ export function GameAction({
   signedIn,
   registered,
   hasResults,
+  hasStarted = false,
 }: {
   gameId: string;
   phase: string;
   signedIn: boolean;
   registered: boolean;
   hasResults: boolean;
+  hasStarted?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (hasResults) {
-    return (
-      <Link className="btn-primary" href={`/games/${gameId}/standings`}>
-        View results
-        <ArrowRight className="size-4" />
-      </Link>
-    );
-  }
-
   if (phase === "ENDED") {
     return (
       <Link className="btn-primary" href={`/games/${gameId}/standings`}>
-        View Leaderboard
+        {hasResults ? "View results" : "View Leaderboard"}
         <ArrowRight className="size-4" />
       </Link>
     );
@@ -100,10 +93,20 @@ export function GameAction({
 
   if (registered && phase === "LIVE") {
     return (
-      <Link className="btn-primary" href={`/games/${gameId}/lobby`}>
-        Start competing
-        <ArrowRight className="size-4" />
-      </Link>
+      <div className="flex flex-col gap-2.5">
+        <Link className="btn-primary" href={`/games/${gameId}/lobby`}>
+          {hasStarted ? "Continue playing" : "Start competing"}
+          <ArrowRight className="size-4" />
+        </Link>
+        {hasResults && (
+          <Link
+            className="btn-secondary text-center text-xs font-semibold py-2.5"
+            href={`/games/${gameId}/standings`}
+          >
+            View results
+          </Link>
+        )}
+      </div>
     );
   }
 
@@ -141,6 +144,15 @@ export function GameAction({
         </button>
         {error ? <p className="mt-2 text-sm text-rose-300">{error}</p> : null}
       </div>
+    );
+  }
+
+  if (hasResults) {
+    return (
+      <Link className="btn-primary" href={`/games/${gameId}/standings`}>
+        View results
+        <ArrowRight className="size-4" />
+      </Link>
     );
   }
 

@@ -21,7 +21,10 @@ export default function PlayChallengePage() {
   // Fetch run state from server
   const fetchRunState = useCallback(async () => {
     try {
-      const res = await fetch(`/api/runs/${runId}`);
+      const res = await fetch(`/api/runs/${runId}`, {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
+      });
       if (!res.ok) {
         const err = await res.json();
         setErrorMsg(err.error || "Failed to load challenge run.");
@@ -30,7 +33,22 @@ export default function PlayChallengePage() {
       }
 
       const data = await res.json();
-      setRunData(data.run);
+      setRunData((prev: any) => {
+        const serverRun = data.run;
+        if (prev?.finalScore && (!serverRun.finalScore || serverRun.finalScore === 0)) {
+          return {
+            ...serverRun,
+            finalScore: prev.finalScore,
+            objectivePoints: prev.objectivePoints || serverRun.objectivePoints,
+            scoringBreakdown: prev.scoringBreakdown || serverRun.scoringBreakdown,
+            totalEventScore: serverRun.totalEventScore ?? prev.totalEventScore,
+          };
+        }
+        return {
+          ...serverRun,
+          totalEventScore: serverRun.totalEventScore ?? prev?.totalEventScore,
+        };
+      });
       if (data.run.status === "COMPLETED") {
         setIsCompleted(true);
         setFinalDuration(data.run.durationMs);
@@ -49,18 +67,41 @@ export default function PlayChallengePage() {
   }, [runId, fetchRunState]);
 
   const handleCommandExecuted = (result: any) => {
-    if (result.cwd && runData) {
-      setRunData((prev: any) => ({
-        ...prev,
-        currentWorkingDir: result.cwd,
-        commandCount: result.commandCount,
-        objectiveEvaluation: result.objectiveEvaluation || prev.objectiveEvaluation,
-      }));
+    if (result) {
+      setRunData((prev: any) => {
+        if (!prev) return prev;
+        const bd = result.scoreBreakdown;
+        const finalSc = bd?.finalScore ?? (result.isCompleted ? prev.finalScore : prev.finalScore);
+        const objPts = bd?.objectivePoints ?? prev.objectivePoints;
+        const durMs = result.durationMs ?? prev.durationMs;
+
+        let updatedEventScore =
+          typeof result.totalEventScore === "number"
+            ? result.totalEventScore
+            : prev.totalEventScore;
+
+        return {
+          ...prev,
+          currentWorkingDir: result.cwd || prev.currentWorkingDir,
+          commandCount: result.commandCount ?? prev.commandCount,
+          objectiveEvaluation: result.objectiveEvaluation || prev.objectiveEvaluation,
+          finalScore: finalSc,
+          objectivePoints: objPts,
+          baseScore: bd?.baseScore ?? prev.baseScore,
+          completionBonus: bd?.completionBonus ?? prev.completionBonus,
+          speedBonus: bd?.speedBonus ?? prev.speedBonus,
+          hintPenalty: bd?.hintPenalty ?? prev.hintPenalty,
+          durationMs: durMs,
+          status: result.isCompleted ? "COMPLETED" : prev.status,
+          scoringBreakdown: bd ?? prev.scoringBreakdown,
+          totalEventScore: updatedEventScore,
+        };
+      });
     }
 
-    if (result.isCompleted) {
-      setIsCompleted(true);
+    if (result?.isCompleted) {
       setFinalDuration(result.durationMs);
+      setIsCompleted(true);
       fetchRunState();
     } else {
       fetchRunState();

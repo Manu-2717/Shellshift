@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
-import { formatDuration } from "../api/leaderboard/route";
+import { formatDuration } from "@/lib/format";
 
 interface AdminClientProps {
   initialEvent: any;

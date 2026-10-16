@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { formatDuration } from "@/app/api/leaderboard/route";
+import { formatDuration } from "@/lib/format";
 import {
   Trophy,
   Clock,
